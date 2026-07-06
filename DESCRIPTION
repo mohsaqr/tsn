@@ -19,11 +19,12 @@ Imports:
     checkmate,
     cli,
     dplyr,
+    mclust,
     rlang,
     stats,
     tibble,
-    tidyr,
-Suggests: 
+    tidyr
+Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)

@@ -147,7 +147,7 @@ test_that("pleasure tutorial combined network plots render through cograph", {
   ))
 })
 
-test_that("pleasure tutorial covers every export and five combined plots", {
+test_that("pleasure tutorial covers every export and plots every transition result", {
   tutorial_candidates <- c(
     testthat::test_path(
       "..", "..", "vignettes", "pleasure-all-functions.Rmd"
@@ -180,17 +180,30 @@ test_that("pleasure tutorial covers every export and five combined plots", {
     },
     logical(1L)
   )
-  combined_matches <- gregexpr(
-    "type[[:space:]]*=[[:space:]]*\"combined\"",
-    tutorial,
-    perl = TRUE
-  )[[1L]]
+  # plot.ts_tna() already defaults to type = "combined", so the tutorial plots
+  # each transition result without naming the type. Check that every transition
+  # constructor's result reaches plot() rather than counting a literal argument.
+  transition_results <- c("counts", "probabilities", "cooccurrence", "attention")
+  plotted <- vapply(
+    transition_results,
+    function(object) {
+      grepl(
+        sprintf("plot\\([[:space:]]*%s[,)]", object),
+        tutorial,
+        perl = TRUE
+      )
+    },
+    logical(1L)
+  )
 
   expect_true(all(demonstrated), info = paste(
     "Missing exported verbs:",
     paste(exports[!demonstrated], collapse = ", ")
   ))
-  expect_identical(length(combined_matches), 5L)
+  expect_true(all(plotted), info = paste(
+    "Transition results never plotted:",
+    paste(transition_results[!plotted], collapse = ", ")
+  ))
   expect_false(grepl("task_context_type", tutorial, fixed = TRUE))
   expect_false(grepl("occasion_time", tutorial, fixed = TRUE))
 })

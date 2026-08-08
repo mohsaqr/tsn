@@ -1,0 +1,236 @@
+---
+output: github_document
+---
+
+# tsn
+
+`tsn` constructs networks directly from time-series geometry. Its core
+constructor handles whole-series distances, sliding-window distances, natural
+visibility, horizontal visibility, and visibility networks over discretized
+states. Focused verbs expose discretization, trend classification, and
+Nestimate transition-network models. Core network results are list-backed
+objects containing a tidy dyad table and carrying the
+`netobject`/`cograph_network` classes for downstream use.
+
+Core construction uses base R only. `Nestimate` is an optional dependency for
+the `ts_tna()` transition-network family. Network plots use `cograph`
+exclusively; the source-series diagnostic plot remains available without it.
+
+> Not to be confused with `tsnet` (Bayesian graphical VAR), `tsna` (temporal
+> social networks), or `ts2net` (a related but distinct time-series-to-network
+> toolkit). `tsn` emphasizes a compact, dependency-light R interface with
+> irregular-time visibility support, fifteen discretizers, and optional
+> transition-network integration.
+
+## Installation
+
+The package is not currently published on CRAN. Install the development release
+from GitHub:
+
+```r
+install.packages("remotes")
+remotes::install_github("mohsaqr/tsn")
+```
+
+## One-liner API
+
+The fastest path is a bare series and a method string, or the `vg()` verb:
+
+```r
+library(tsn)
+
+tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "hvg")        # horizontal visibility graph
+tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "nvg")        # natural visibility graph
+tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "ordinal")    # ordinal (permutation) network
+tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "distance")   # distance network
+
+vg(c(3, 1, 4, 2, 5, 3, 6, 2, 7))                # natural visibility graph
+vg(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "horizontal")  # horizontal visibility graph
+```
+
+`vg()` is the discoverable verb for visibility graphs; it forwards every
+visibility-relevant argument to `tsn()` and returns an equivalent object (with
+the wrapper call retained as provenance).
+The method-string shortcuts (`"hvg"`, `"nvg"`, and every discretizer name)
+keep working.
+
+## Method map
+
+| Goal | Main call | Choices |
+|---|---|---|
+| Compare complete series or windows | `tsn(method = "distance")` | 15 distances; full, nearest, threshold, percentile, or Gaussian connections |
+| Map time-series geometry | `vg()` or `tsn(method = "visibility")` | natural/horizontal, directed, penetrable, elapsed-time limit/decay |
+| Collapse visibility to states | `tsn(unit = "state")` | 15 discretizers; count, sum, mean, or maximum aggregation |
+| Inspect state assignments | `discretize()` | scalar and group-safe temporal methods |
+| Classify rolling direction | `trend()` | OLS, Theil-Sen, Spearman, Kendall, or growth factor |
+| Model state transitions | `ts_tna()` family | probability, frequency, co-occurrence, or attention networks via Nestimate |
+
+## The full verb
+
+```r
+series <- list(
+  first = c(1, 2, 3, 2, 1),
+  second = c(1, 1, 2, 3, 5),
+  third = c(5, 4, 3, 2, 1)
+)
+
+tsn(
+  data = series,
+  method = "distance",
+  unit = "series",
+  distance = "dtw",
+  connect = "nearest",
+  neighbors = 2
+)
+```
+
+Long data uses explicit, readable column names:
+
+```r
+observations <- data.frame(
+  student = rep(c("A", "B", "C"), each = 6),
+  week = rep(seq_len(6), times = 3),
+  score = c(1:6, 2:7, 7:2)
+)
+
+tsn(
+  data = observations,
+  value = "score",
+  id = "student",
+  time = "week",
+  method = "distance",
+  unit = "series",
+  distance = "correlation",
+  connect = "full"
+)
+```
+
+Network options include `chain = TRUE` (connect only consecutive series or
+windows, a transition chain), `directed = TRUE`, and `normalize = TRUE`.
+
+## Uniform results and plotting
+
+Every result supports the same standard methods and two plot views:
+
+```r
+network <- tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "hvg")
+
+network
+summary(network)
+as.data.frame(network)               # the tidy dyad table
+as.data.frame(network, what = "series")
+as.matrix(network)                   # the weighted adjacency matrix
+
+plot(network)                        # cograph network view
+plot(network, layout = "spring")     # any cograph layout/option
+plot(network, "series")              # tsn source-series view
+```
+
+For distance networks, weights are similarities: larger values indicate closer
+units. Visibility weights are edge strengths; state aggregation by `"count"` or
+`"sum"` can therefore exceed one.
+
+Network rendering belongs exclusively to `cograph`; a `tsn` result is already
+a `cograph_network`, and `plot(network)` delegates to `cograph::splot()`:
+
+```r
+install.packages("cograph")
+cograph::splot(network)
+```
+
+## Trends and discretization
+
+```r
+walk <- cumsum(rnorm(120))
+trend(walk, window = 15, slope = "ols")           # rolling trend classification
+
+discretize(walk, method = "quantile", n_states = 3)
+discretize(walk, method = "ordinal", m = 3)
+discretize(walk, method = "width", transform = "log",
+           labels = c("low", "mid", "high"))
+```
+
+`discretize()` exposes all fifteen state methods (`threshold`, `width`,
+`quantile`, `kde`, `kmeans`, `gaussian`, `hclust`, `ordinal`, `symbolic`,
+`change_points`, `entropy`, `magnitude`, `adaptive_magnitude`,
+`percentile_magnitude`, `dtw`); `tsn(unit = "state")` routes through the same
+engine, so the two agree exactly.
+
+Temporal discretizers are group-safe: ordinal patterns, adaptive-magnitude
+features, and DTW windows are computed separately within each selected series,
+then mapped to one shared state vocabulary.
+
+State visibility plots support both time-oriented and value-oriented context.
+The package dataset can be used directly; `series` selects a participant inside
+`tsn()`:
+
+
+``` r
+data(steps)
+state_network <- tsn(
+  data = steps,
+  value = "steps",
+  id = "id",
+  time = "day",
+  series = 536,
+  unit = "state",
+  discretization = "quantile"
+)
+
+plot(state_network, "series", overlay = "vertical")
+plot(state_network, "series", overlay = "horizontal")
+```
+
+`"vertical"` shades contiguous state runs along time. `"horizontal"` shades
+state value bands across the y-axis. Both use base graphics.
+
+Mixed wide data is equally direct:
+
+
+``` r
+data(motivation)
+tsn(
+  motivation,
+  series = c("autonomy", "competence", "relatedness", "mood"),
+  method = "distance",
+  distance = "correlation"
+)
+```
+
+## State transition networks
+
+The transition family discretizes each series, preserves a common state
+alphabet, and delegates network estimation to Nestimate:
+
+
+``` r
+install.packages("Nestimate")
+
+walks <- list(
+  first = cumsum(rnorm(80)),
+  second = cumsum(rnorm(80))
+)
+model <- ts_tna(walks, n_states = 3,
+                labels = c("low", "mid", "high"))
+model$weights
+
+per_series <- series_networks(model)
+plot(model, ribbon = TRUE)                    # series + per-series networks
+plot(model, network = "summary")              # pooled transition network
+Nestimate::net_centrality(model)
+```
+
+Inferential methods retain their usual sampling requirements. In particular,
+sequence bootstrap is not informative for a model built from only one
+sequence.
+
+See `vignette("tsn-step-analysis")` for a worked comparison of analysis
+lenses, and `vignette("pleasure-all-functions")` for a tutorial that applies
+every exported tsn function to the packaged `motivation$pleasure` series.
+
+## Package boundaries
+
+`tsn` owns time-series-to-network construction and the bridge from numeric
+series to state sequences. Nestimate owns transition-network estimation and
+inference; tsn calls its builders rather than reimplementing them. cograph owns
+generic graph conversion, analytics, layouts, and network rendering.

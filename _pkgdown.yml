@@ -1,0 +1,61 @@
+url: https://pak.dynasite.org/tsn
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1a5276"
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+
+reference:
+- title: Package
+  contents:
+  - tsn-package
+
+- title: Network construction
+  desc: >
+    Build distance, visibility, and state-transition networks from one or
+    many univariate time series.
+  contents:
+  - tsn
+  - vg
+
+- title: Discretization and trends
+  desc: >
+    Turn continuous measurements into states, and classify the direction of
+    change between consecutive observations.
+  contents:
+  - discretize
+  - trend
+
+- title: Nestimate bridge
+  desc: >
+    Discretize a series and hand it to the matching Nestimate
+    transition-network model, keeping the source data attached.
+  contents:
+  - ts_tna
+  - series_networks
+
+- title: Methods
+  desc: Standard interface shared by every result object.
+  contents:
+  - as.data.frame.tsn
+  - as.matrix.tsn
+  - plot.tsn
+  - plot.tsn_states
+  - plot.tsn_trend
+  - plot.ts_tna
+  - print.tsn
+  - print.tsn_states
+  - print.tsn_trend
+  - summary.tsn
+  - summary.tsn_states
+  - summary.tsn_trend
+
+- title: Data
+  contents:
+  - motivation
+  - steps

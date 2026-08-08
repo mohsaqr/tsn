@@ -1,0 +1,317 @@
+---
+title: "One Series, Every Lens: Network Analysis of 50 Days of Steps"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{One Series, Every Lens: Network Analysis of 50 Days of Steps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 4.2, dpi = 150, out.width = "100%"
+)
+has_nestimate <- requireNamespace("Nestimate", quietly = TRUE)
+has_cograph <- requireNamespace("cograph", quietly = TRUE)
+```
+
+A time series hides more structure than its line plot shows. The same 50
+numbers contain *levels* (which days were low, which high), *direction*
+(when the person was improving or declining), *geometry* (which peaks
+dominate their surroundings), *similarity* (which stretches of days
+resemble each other), and *dynamics* (how likely a low day is to follow
+a high one). Each of these questions has a network representation, and
+tsn builds all of them from one input with one family of verbs.
+
+This vignette runs every analysis type in the package on a single short
+series — the first 50 days of one participant's daily step counts — so
+you can see what each lens adds that the others miss:
+
+1. **Levels** — `discretize()` turns values into ordered states and
+   plots them as shading, ribbons, and guide lines.
+2. **Direction** — `trend()` classifies each day as ascending,
+   descending, flat, or turbulent from a rolling slope.
+3. **Geometry** — `vg()` builds visibility graphs whose hubs are the
+   days that dominate the series' skyline.
+4. **Similarity** — `tsn(unit = "window")` connects stretches of days
+   that behave alike, revealing regimes.
+5. **Dynamics** — `ts_tna()` builds a state transition network and
+   opens the door to compatible Nestimate analyses.
+
+| Question | Verb | Returns |
+|---|---|---|
+| Which days were low/mid/high? | `discretize()` | `tsn_states` (tidy states) |
+| When was the person improving? | `trend()` | `tsn_trend` (tidy classification) |
+| Which days dominate the skyline? | `vg()` | `tsn` network (tidy dyads) |
+| Which stretches resemble each other? | `tsn(unit = "window")` | `tsn` network (tidy dyads) |
+| How do states follow each other? | `ts_tna()` | Nestimate `netobject` |
+
+# The series
+
+The bundled `steps` data holds daily step counts for 151 individuals.
+One participant's first 50 complete days are enough to demonstrate
+everything:
+
+```{r data}
+library(tsn)
+data(steps)
+steps_50 <- head(subset(steps, id == 536), 50)
+head(steps_50, 3)
+```
+
+# Levels: from values to states
+
+Step counts on their own are hard to compare across days — 11,000 steps
+is meaningful only relative to what this person usually does.
+`discretize()` makes the comparison explicit by cutting the series into
+ordered states. Quantile cuts target similarly occupied states, although ties
+at a cut point can make their counts unequal:
+
+```{r discretize}
+states <- discretize(steps_50$steps, method = "quantile", n_states = 3,
+                     labels = c("low", "mid", "high"))
+summary(states)
+```
+
+The default plot shades the series by state, which answers a question
+the line plot cannot: not *what* the values were, but *when the person
+occupied each regime and for how long*. Adding `lines = "horizontal"`
+draws the cut points, so you can also see how close each day came to
+switching state:
+
+```{r states-overlay}
+plot(states, series = "series_1", lines = "horizontal")
+```
+
+The ribbon view moves the same information into a strip under a clean
+line, which is the form you want when the values themselves matter and
+the shading would cover them:
+
+```{r states-ribbon}
+plot(states, "ribbon", points = TRUE)
+```
+
+# Direction: trend classification
+
+States say where the series *is*; they say nothing about where it is
+*going* — a mid day during recovery and a mid day during decline are
+the same state but opposite situations. `trend()` separates them by
+classifying each day from a rolling regression slope:
+
+```{r trend}
+classified <- trend(steps_50$steps, window = 7)
+summary(classified)
+```
+
+For this participant the 50 days split into
+`r sum(as.character(classified$state) == "Ascending")` ascending and
+`r sum(as.character(classified$state) == "Descending")`
+descending days with a turbulent stretch — direction changes are
+frequent, which already predicts what the transition network will show
+at the end of this vignette: little persistence outside the high state.
+The panel view stacks the values above the rolling slope they were
+classified on, so every label is traceable to the metric that produced
+it:
+
+```{r trend-panels, fig.height = 5}
+plot(classified, "panels")
+```
+
+Because states and trend answer complementary questions, the most
+informative single picture of the series combines them: one clean line
+with both classifications as ribbons underneath. Disagreements between
+the two strips are the interesting days — high-state days that are
+already descending, low-state days that are ascending:
+
+```{r multi-ribbon, fig.height = 4.6}
+plot(states, "ribbon", series = "series_1",
+     ribbons = list(Trend = classified), points = TRUE)
+```
+
+# Geometry: visibility graphs
+
+A visibility graph connects two days if a straight line between their
+values clears every day in between — the series' skyline turned into a
+network. Its value is that peaks become *hubs*: a single exceptional
+day is visible from many others, so degree concentrates on the days
+that dominate their surroundings, and the degree distribution
+distinguishes periodic, random, and fractal series:
+
+```{r nvg}
+nvg <- vg(steps_50$steps)
+summary(nvg)
+```
+
+The network object contains a tidy dyad table, available directly through
+`as.data.frame()`:
+
+```{r nvg-edges}
+head(as.data.frame(nvg), 3)
+```
+
+The horizontal variant (`vg(x, "horizontal")`) only connects days that
+see each other over a *flat* line. Its edges are a subset of the natural
+visibility edges (and can coincide with them for some series), it has known
+theoretical baselines (an i.i.d. series has asymptotic mean degree 4), and it
+is often useful when comparing ordering structure across series:
+
+```{r hvg}
+vg(steps_50$steps, "horizontal")
+```
+
+With cograph installed, any tsn network renders directly through
+`cograph::splot()` — tsn results are dual-class cograph objects:
+
+```{r nvg-splot, eval = has_cograph, fig.height = 5}
+cograph::splot(nvg, layout = "spring", labels = FALSE,
+               scale_nodes_by = "degree", node_size_range = c(2, 9),
+               node_fill = "#4E79A7", edge_label_style = "none",
+               edge_color = "#B9C2CC")
+```
+
+Node size is degree, so the large nodes *are* the skyline-dominating
+days — the hubs the geometry lens contributes. Visibility also
+composes with discretization: `tsn(x, "quantile")` collapses the
+visibility network onto states, connecting states whose days see each
+other:
+
+```{r state-visibility}
+tsn(steps_50$steps, "quantile")
+```
+
+# Similarity: windowed distance networks
+
+The lenses so far treat single days. To ask which *stretches* of days
+resemble each other, `tsn()` slides a window along the series and
+connects windows by similarity. With a 10-day window stepping by 5,
+the 50 days become 9 overlapping ten-day stretches; keeping the closest
+quarter of pairs leaves only the strongest resemblances:
+
+```{r window}
+win <- tsn(steps_50$steps, method = "distance", unit = "window",
+           window = 10, step = 5, distance = "correlation",
+           connect = "percentile", percentile = 0.25)
+summary(win)
+```
+
+Edges between non-adjacent windows are the finding here: they mean the
+participant *returned* to an earlier pattern — regime recurrence that
+no chronological plot shows. The `from_start`/`from_end` columns map
+every window back to its days:
+
+```{r window-edges}
+head(as.data.frame(win), 3)
+```
+
+Setting `chain = TRUE` asks a different question of the same windows:
+not "which windows are alike" but "how much does each ten-day stretch differ
+from the next". The chain of consecutive distances is a change profile
+of the series — spikes in `distance` locate the moments the routine
+shifted. Dynamic time warping tolerates a few days' misalignment, so
+the spikes reflect genuine pattern change rather than shifted timing:
+
+```{r chain}
+chain <- tsn(steps_50$steps, method = "distance", unit = "window",
+             window = 10, step = 5, distance = "dtw", chain = TRUE)
+as.data.frame(chain)
+```
+
+Thirteen other distance measures are available in addition to correlation and
+DTW, including cross-correlation (`"ccf"`) and information-theoretic
+(`"nmi"`, `"voi"`) distances. The event-based measures (`"event_sync"` and
+`"van_rossum"`) instead expect each series unit to be a strictly increasing
+vector of event times. The choice of `distance` determines what "similar"
+means; its input must still satisfy that measure's domain.
+
+# Dynamics: state transition networks
+
+The state sequence from the levels section is itself a process: does
+this person *stay* low once they are low? `ts_tna()` discretizes the
+series and hands the state sequence to Nestimate, returning a full
+transition-network model in which edges are the probabilities of
+moving between states:
+
+```{r ts-tna, eval = has_nestimate}
+network <- ts_tna(steps_50$steps, n_states = 3,
+                  labels = c("low", "mid", "high"))
+round(network$weights, 2)
+```
+
+The rows answer the persistence question directly: high days repeat
+(`high → high` is
+`r if (has_nestimate) sprintf("%.2f", network$weights["high", "high"]) else "0.62"`),
+while low and mid days are nearly coin flips among destinations — the
+volatility the trend section anticipated. The default plot places the
+shaded series beside its transition network, sharing one colour
+mapping so the shading, the strip, and the network nodes read as one
+story. Nodes are sized by in-strength (self-loops excluded), so the
+state the person keeps *arriving in* is the visually dominant one:
+
+```{r ts-tna-plot, eval = has_nestimate && has_cograph, fig.width = 10, fig.height = 4}
+plot(network, ribbon = TRUE)
+```
+
+When probabilities are not enough, `ts_ftna()` exposes the raw transition
+counts, making the denominator behind each row of probabilities visible:
+
+```{r ts-ftna, eval = has_nestimate}
+counts <- ts_ftna(steps_50$steps, n_states = 3,
+                  labels = c("low", "mid", "high"))
+counts$weights
+```
+
+Because the result is a genuine Nestimate `netobject` that keeps its source
+data, compatible Nestimate analyses apply without conversion. Centralities
+summarize each state's role in the dynamics — in-strength ranks states by how
+much of the traffic flows into them:
+
+```{r centrality, eval = has_nestimate}
+Nestimate::net_centrality(network)
+```
+
+One confirmatory tool deliberately does *not* apply yet:
+`Nestimate::bootstrap_network()` resamples whole sequences, so a single
+series gives it nothing to resample — Nestimate warns and returns
+degenerate intervals. Validation becomes possible exactly when the next
+section's step is taken.
+
+# From one series to many
+
+Every verb above accepts many series as readily as one — a named list,
+a wide matrix, or long data with `id`/`time`/`value` columns. With
+several series, the transition-network plot pairs each series with its
+**own** network built from its own transitions (`series_networks()`
+splits the pooled model formally, sharing one node set so the networks
+are directly comparable), and `network = "summary"` pools everything
+into a single model instead:
+
+```{r two-series, eval = has_nestimate && has_cograph, fig.width = 10, fig.height = 6}
+two <- rbind(head(subset(steps, id == 536), 50),
+             head(subset(steps, id == 88), 50))
+pair <- ts_tna(two, value = "steps", id = "id", time = "day",
+               n_states = 3, labels = c("low", "mid", "high"))
+plot(pair, ribbon = TRUE, overlay = "none")
+```
+
+With sequences to resample, the bootstrap now runs — and its verdict is
+itself the finding:
+
+```{r bootstrap, eval = has_nestimate}
+boot <- Nestimate::bootstrap_network(pair, iter = 200, seed = 1)
+boot
+```
+
+No edge is certified stable, because two 50-day series are thin
+evidence for nine transition probabilities. That is the bootstrap doing
+its job: the pooled matrix above is a description of these 100 days,
+not yet a validated model of the behavior — add participants and the
+intervals tighten.
+
+Two participants, two different dynamics, one shared colour and node
+vocabulary — which is the point of the whole design: every lens in this
+vignette used the same compact family of verbs, and every result provides
+tidy tabular access and plotting methods. The 50 days never changed; only the
+question did.

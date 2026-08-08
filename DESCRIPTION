@@ -1,0 +1,40 @@
+Package: tsn
+Title: Time-Series Network Construction
+Version: 1.1.0
+Authors@R: c(
+    person("Santtu", "Tikka",
+           email = "santtuth@gmail.com", role = c("aut", "cre", "cph")),
+    person("Mohammed", "Saqr", role = c("aut", "cph")),
+    person("Sonsoles", "L\u00f3pez-Pernas", role = c("aut", "cph"))
+  )
+Description: Constructs distance, visibility, and state-transition networks
+    from univariate time series. The core constructor provides whole-series
+    and sliding-window distance networks, natural and horizontal visibility
+    graphs following Lacasa et al. (2008)
+    <doi:10.1073/pnas.0709247105> and Luque et al. (2009)
+    <doi:10.1103/PhysRevE.80.046103>, and optional state aggregation.
+    Companion verbs expose discretization, trend classification, and an
+    optional bridge to the 'Nestimate' transition-network models. Core network
+    construction uses only packages distributed with R.
+License: MIT + file LICENSE
+URL: https://github.com/mohsaqr/tsn/, https://pak.dynasite.org/tsn/
+BugReports: https://github.com/mohsaqr/tsn/issues/
+Depends:
+    R (>= 4.1.0)
+Imports:
+    graphics,
+    grDevices,
+    stats,
+    utils
+Suggests:
+    cograph,
+    knitr,
+    Nestimate,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr, rmarkdown
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

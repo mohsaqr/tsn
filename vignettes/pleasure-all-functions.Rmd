@@ -1,0 +1,396 @@
+---
+title: "Every tsn Function with Pleasure"
+author: "tsn package authors"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Every tsn Function with Pleasure}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 9,
+  fig.height = 5,
+  dpi = 120
+)
+library(tsn)
+has_cograph <- requireNamespace("cograph", quietly = TRUE)
+has_nestimate <- requireNamespace("Nestimate", quietly = TRUE)
+```
+
+This tutorial uses one variable:
+
+```r
+motivation$pleasure
+```
+
+There is no context grouping, balancing, pseudo-time construction, reordering,
+or transformation. The same consecutive series is passed to all nine exported
+functions.
+
+The complete vector has 4,871 observations. A 300-observation prefix is used
+because a 4,871-node network is not readable in an HTML tutorial and the
+co-occurrence model becomes unnecessarily expensive. The selection is simply
+`motivation$pleasure[1:300]`; no values are changed.
+
+Network plots are drawn exclusively by **cograph**. The four transition
+constructors and `series_networks()` require **Nestimate**.
+
+# Data
+
+```{r data}
+data("motivation", package = "tsn")
+
+pleasure_full <- motivation$pleasure
+pleasure <- pleasure_full[seq_len(300L)]
+
+class(pleasure_full)
+length(pleasure_full)
+head(pleasure_full)
+summary(pleasure_full)
+
+class(pleasure)
+length(pleasure)
+head(pleasure)
+summary(pleasure)
+
+stopifnot(
+  is.integer(pleasure),
+  length(pleasure) == 300L,
+  !anyNA(pleasure),
+  identical(pleasure, motivation$pleasure[seq_len(300L)])
+)
+```
+
+The x-axis below is observation order.
+
+```{r raw-plot}
+plot(
+  pleasure,
+  type = "l",
+  xlab = "Observation",
+  ylab = "Pleasure",
+  main = "The 300 pleasure observations used throughout"
+)
+```
+
+# `discretize()`
+
+`discretize()` converts the numeric values into states. Here, quantile
+boundaries create Low, Middle, and High pleasure states. Tied ratings mean the
+three state counts need not be identical.
+
+```{r discretize}
+pleasure_states <- discretize(
+  pleasure,
+  method = "quantile",
+  n_states = 3L,
+  labels = c("Low", "Middle", "High")
+)
+
+class(pleasure_states)
+head(pleasure_states)
+table(pleasure_states$state)
+attr(pleasure_states, "breaks")
+```
+
+This plot combines the original series with state shading and state-boundary
+guides.
+
+```{r discretize-combined}
+plot(
+  pleasure_states,
+  type = "overlay",
+  overlay = "vertical",
+  lines = "horizontal",
+  points = FALSE,
+  xlab = "Observation",
+  ylab = "Pleasure"
+)
+```
+
+# `trend()`
+
+`trend()` classifies the local direction of the same series. A centered window
+of 30 means 30 observations, not 30 days.
+
+```{r trend}
+pleasure_trend <- trend(
+  pleasure,
+  window = 30L,
+  method = "slope",
+  slope = "robust",
+  align = "center"
+)
+
+class(pleasure_trend)
+head(pleasure_trend)
+table(pleasure_trend$state)
+summary(pleasure_trend)
+```
+
+The panels view combines pleasure with the rolling slope used for
+classification.
+
+```{r trend-combined}
+plot(
+  pleasure_trend,
+  type = "panels",
+  xlab = "Observation",
+  ylab = "Pleasure"
+)
+```
+
+# `vg()`
+
+`vg()` constructs a visibility graph. The horizontal visibility rule connects
+two observations when every value between them is lower than both endpoints.
+
+```{r vg}
+pleasure_hvg <- vg(pleasure, type = "horizontal")
+
+class(pleasure_hvg)
+summary(pleasure_hvg)
+head(as.data.frame(pleasure_hvg))
+```
+
+The network plot below is cograph output. There is no second or fallback
+network renderer.
+
+```{r vg-network, eval=has_cograph}
+plot(
+  pleasure_hvg,
+  layout = "spring",
+  labels = FALSE,
+  node_fill = "#4E79A7"
+)
+```
+
+The source-series view is local to tsn and displays the data behind the
+network.
+
+```{r vg-series}
+plot(
+  pleasure_hvg,
+  type = "series",
+  xlab = "Observation",
+  ylab = "Pleasure"
+)
+```
+
+# `tsn()`
+
+`tsn()` is the general constructor. Here it makes overlapping
+30-observation windows, advances ten observations at a time, measures
+correlation distance, and connects each window to its two nearest neighbors.
+
+```{r tsn}
+pleasure_windows <- tsn(
+  pleasure,
+  method = "distance",
+  unit = "window",
+  window = 30L,
+  step = 10L,
+  distance = "correlation",
+  connect = "nearest",
+  neighbors = 2L,
+  similarity = "normalized_inverse"
+)
+
+class(pleasure_windows)
+summary(pleasure_windows)
+
+window_dyads <- as.data.frame(pleasure_windows)
+head(window_dyads)
+head(window_dyads[window_dyads$connected, , drop = FALSE])
+```
+
+`as.data.frame()` contains every evaluated dyad, so the second table filters
+to retained edges. Larger connected weights mean more similar window shapes.
+
+```{r tsn-network, eval=has_cograph}
+plot(
+  pleasure_windows,
+  layout = "spring",
+  labels = TRUE,
+  node_fill = "#F28E2B"
+)
+```
+
+## Common network accessors
+
+```{r network-accessors}
+head(as.data.frame(pleasure_windows))
+head(as.data.frame(pleasure_windows, what = "series"))
+dim(as.matrix(pleasure_windows))
+print(pleasure_windows)
+summary(pleasure_windows)
+```
+
+# Transition-network functions
+
+All four transition functions reuse `pleasure_states`. They therefore operate
+on exactly the same Low--Middle--High sequence.
+
+## `ts_ftna()`: frequency transition network
+
+`ts_ftna()` reports raw adjacent-transition counts. A 300-observation sequence
+contains 299 transitions.
+
+```{r ts-ftna, eval=has_nestimate}
+pleasure_ftna <- ts_ftna(pleasure_states)
+
+class(pleasure_ftna)
+pleasure_ftna$weights
+sum(pleasure_ftna$weights)
+```
+
+### Combined plot
+
+The left panel is the pleasure state sequence; the right panel is the cograph
+frequency network.
+
+```{r ts-ftna-combined, eval=has_nestimate && has_cograph, fig.width=11, fig.height=5}
+plot(
+  pleasure_ftna,
+  type = "combined",
+  network = "summary",
+  ribbon = TRUE,
+  show_weights = TRUE,
+  layout = "circle"
+)
+```
+
+## `ts_tna()`: transition probabilities
+
+`ts_tna()` row-normalizes the adjacent counts. Rows are source states, columns
+are next states, and nonempty rows sum to one.
+
+```{r ts-tna, eval=has_nestimate}
+pleasure_tna <- ts_tna(pleasure_states)
+
+class(pleasure_tna)
+round(pleasure_tna$weights, 3)
+rowSums(pleasure_tna$weights)
+```
+
+### Combined plot
+
+```{r ts-tna-combined, eval=has_nestimate && has_cograph, fig.width=11, fig.height=5}
+plot(
+  pleasure_tna,
+  type = "combined",
+  network = "summary",
+  ribbon = TRUE,
+  show_weights = TRUE,
+  layout = "circle"
+)
+```
+
+## `ts_cna()`: co-occurrence network
+
+`ts_cna()` counts state co-occurrence within the sequence. It discards
+direction, so its matrix is symmetric. Its weights are counts, not
+probabilities.
+
+```{r ts-cna, eval=has_nestimate}
+pleasure_cna <- ts_cna(pleasure_states)
+
+class(pleasure_cna)
+pleasure_cna$weights
+isSymmetric(pleasure_cna$weights)
+```
+
+### Combined plot
+
+```{r ts-cna-combined, eval=has_nestimate && has_cograph, fig.width=11, fig.height=5}
+plot(
+  pleasure_cna,
+  type = "combined",
+  network = "summary",
+  ribbon = TRUE,
+  show_weights = FALSE,
+  layout = "circle"
+)
+```
+
+## `ts_atna()`: attention transition network
+
+`ts_atna()` applies Nestimate's attention weighting to directed relationships
+between states. The raw weights are not probabilities.
+
+```{r ts-atna, eval=has_nestimate}
+pleasure_atna <- ts_atna(pleasure_states)
+
+class(pleasure_atna)
+round(pleasure_atna$weights, 2)
+```
+
+### Combined plot
+
+```{r ts-atna-combined, eval=has_nestimate && has_cograph, fig.width=11, fig.height=5}
+plot(
+  pleasure_atna,
+  type = "combined",
+  network = "summary",
+  ribbon = TRUE,
+  show_weights = FALSE,
+  layout = "circle"
+)
+```
+
+# `series_networks()`
+
+`series_networks()` splits a pooled transition model into one model for each
+input series. This tutorial supplied one raw pleasure series, so the honest
+result is a one-element list named `series_1`.
+
+```{r series-networks, eval=has_nestimate}
+pleasure_series_networks <- series_networks(pleasure_tna)
+
+class(pleasure_series_networks)
+length(pleasure_series_networks)
+names(pleasure_series_networks)
+pleasure_series_networks$series_1$weights
+```
+
+### Combined plot
+
+This final combined plot is drawn from the model returned by
+`series_networks()`.
+
+```{r series-networks-combined, eval=has_nestimate && has_cograph, fig.width=11, fig.height=5}
+plot(
+  pleasure_series_networks$series_1,
+  type = "combined",
+  network = "summary",
+  ribbon = TRUE,
+  show_weights = TRUE,
+  layout = "circle"
+)
+```
+
+# Function checklist
+
+| Export | Demonstrated result |
+|---|---|
+| `discretize()` | Low, Middle, and High pleasure states |
+| `trend()` | Rolling pleasure direction |
+| `vg()` | Horizontal visibility network |
+| `tsn()` | Nearest-neighbor window-distance network |
+| `ts_ftna()` | Raw transition counts plus combined plot |
+| `ts_tna()` | Conditional transition probabilities plus combined plot |
+| `ts_cna()` | Undirected co-occurrence counts plus combined plot |
+| `ts_atna()` | Attention-weighted transitions plus combined plot |
+| `series_networks()` | One model for the one supplied series plus combined plot |
+
+The functions describe different properties of the same unchanged-order
+pleasure segment. None of these representations creates independent
+participants or supports an inferential claim by itself.

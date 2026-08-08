@@ -43,6 +43,9 @@ jobs:
       - name: Deploy to GitHub pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
-          clean: false
+          # true, not the r-lib default of false: 1.1.0 dropped functions that
+          # existed in 0.1.0 (complexity, detect_regimes, build_network, ...),
+          # and a non-clean deploy leaves their pages live on the site.
+          clean: true
           branch: gh-pages
           folder: docs

@@ -21,7 +21,10 @@ knitr::opts_chunk$set(
   dpi = 120
 )
 library(tsn)
-has_cograph <- requireNamespace("cograph", quietly = TRUE)
+# cograph's centrality node sizing (the default for network plots) calls
+# igraph, which cograph only Suggests -- so require both here.
+has_cograph <- requireNamespace("cograph", quietly = TRUE) &&
+  requireNamespace("igraph", quietly = TRUE)
 has_nestimate <- requireNamespace("Nestimate", quietly = TRUE)
 ```
 
@@ -207,9 +210,8 @@ pleasure_windows <- tsn(
 class(pleasure_windows)
 summary(pleasure_windows)
 
-window_dyads <- as.data.frame(pleasure_windows)
-head(window_dyads)
-head(window_dyads[window_dyads$connected, , drop = FALSE])
+head(as.data.frame(pleasure_windows))
+head(as.data.frame(pleasure_windows, connected = TRUE))
 ```
 
 `as.data.frame()` contains every evaluated dyad, so the second table filters

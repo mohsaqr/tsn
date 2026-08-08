@@ -143,7 +143,7 @@ the discretized series.
 }
 \examples{
 data(steps)
-complete <- steps[!is.na(steps$steps), ]
+complete <- subset(steps, !is.na(steps))
 states <- discretize(
   complete,
   value = "steps", id = "id", time = "day",
@@ -156,7 +156,7 @@ plot(states, "heatmap", max_series = 12, sort = "mean")
 plot(states, "heatmap", palette = "viridis", max_series = 12)
 
 # Stack: original series read against the states of its rolling volatility.
-one <- complete[complete$id == 536, ]
+one <- subset(complete, id == 536)
 volatility <- abs(c(0, diff(one$steps)))
 vol_states <- discretize(
   data.frame(id = one$id, day = one$day, vol = volatility),

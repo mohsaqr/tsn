@@ -371,7 +371,7 @@ summary.tsn_trend <- function(object, ...) {
 #' @return `x`, invisibly.
 #' @examples
 #' data(steps)
-#' complete <- steps[!is.na(steps$steps), ]
+#' complete <- subset(steps, !is.na(steps))
 #' classified <- trend(
 #'   complete,
 #'   value = "steps", id = "id", time = "day", window = 7

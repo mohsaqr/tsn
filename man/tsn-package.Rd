@@ -14,18 +14,19 @@ transition-network models require the suggested Nestimate package.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/santikka/tsn/}
-  \item Report bugs at \url{https://github.com/santikka/tsn/issues/}
+  \item \url{https://github.com/mohsaqr/tsn/}
+  \item \url{https://pak.dynasite.org/tsn/}
+  \item Report bugs at \url{https://github.com/mohsaqr/tsn/issues/}
 }
 
 }
 \author{
-\strong{Maintainer}: Santtu Tikka \email{santtuth@gmail.com}
+\strong{Maintainer}: Santtu Tikka \email{santtuth@gmail.com} [copyright holder]
 
 Authors:
 \itemize{
-  \item Mohammed Saqr
-  \item Sonsoles López-Pernas
+  \item Mohammed Saqr [copyright holder]
+  \item Sonsoles López-Pernas [copyright holder]
 }
 
 }

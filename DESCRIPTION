@@ -28,6 +28,7 @@ Imports:
     utils
 Suggests:
     cograph,
+    igraph,
     knitr,
     Nestimate,
     rmarkdown,

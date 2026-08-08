@@ -9,6 +9,7 @@
   row.names = NULL,
   optional = FALSE,
   what = c("edges", "series"),
+  connected = FALSE,
   ...
 )
 }
@@ -22,6 +23,11 @@
 \item{what}{Which table to return: \code{"edges"} (the stable dyad schema, the
 default) or \code{"series"} (the tidy source time series, including the
 discretized \code{state} column when the network uses states).}
+
+\item{connected}{Return only the retained edges? The edge table lists every
+evaluated dyad; \code{TRUE} keeps the rows whose \code{connected} flag is set, i.e.
+the edges that survived the \code{connect} rule. Ignored when
+\code{what = "series"}.}
 
 \item{...}{Ignored.}
 }

@@ -84,7 +84,7 @@ against the metric that produced it.
 }
 \examples{
 data(steps)
-complete <- steps[!is.na(steps$steps), ]
+complete <- subset(steps, !is.na(steps))
 classified <- trend(
   complete,
   value = "steps", id = "id", time = "day", window = 7

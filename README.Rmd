@@ -221,9 +221,8 @@ Inferential methods retain their usual sampling requirements. In particular,
 sequence bootstrap is not informative for a model built from only one
 sequence.
 
-See `vignette("tsn-step-analysis")` for a worked comparison of analysis
-lenses, and `vignette("pleasure-all-functions")` for a tutorial that applies
-every exported tsn function to the packaged `motivation$pleasure` series.
+See `vignette("pleasure-all-functions")` for a tutorial that applies every
+exported tsn function to the packaged `motivation$pleasure` series.
 
 ## Package boundaries
 

@@ -10,10 +10,12 @@
 #' @param ... Arguments forwarded to the network or series renderer.
 #'   See details.
 #' @details
-#' Network rendering belongs exclusively to cograph; `...` is passed directly
-#' to [cograph::splot()]. tsn results already implement the
-#' `cograph_network` contract. Source-series views remain tsn-specific because
-#' they visualize the original observations rather than a generic network.
+#' Network rendering belongs exclusively to cograph. tsn supplies restrained
+#' defaults that keep edges visible and avoid meaningless per-node rainbow
+#' fills; named arguments in `...` override any of them. tsn results already
+#' implement the `cograph_network` contract. Source-series views remain
+#' tsn-specific because they visualize the original observations rather than a
+#' generic network.
 #'
 #' For `type = "network"`, use cograph arguments such as `layout`, `labels`,
 #' `scale_nodes_by`, `node_size_range`, and `edge_label_style`. For
@@ -53,7 +55,8 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
 #'
 #' @inheritParams plot.tsn
 #' @param series Optional character vector of series IDs to display.
-#' @param overlay State shading: `"vertical"`, `"horizontal"`, or `"none"`.
+#' @param overlay State shading: `"horizontal"` (default), `"vertical"`, or
+#'   `"none"`.
 #' @param points Whether to draw observations over each line.
 #' @param trend Whether to add a least-squares trend line.
 #' @param columns Number of panel columns.
@@ -63,7 +66,7 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
 #' @return `x`, invisibly.
 #' @noRd
 .tsn_plot_series <- function(x, series = NULL,
-                             overlay = c("vertical", "horizontal", "none"),
+                             overlay = c("horizontal", "vertical", "none"),
                              points = FALSE, trend = FALSE, columns = NULL,
                              max_series = 10L,
                              scales = c("free", "fixed", "free_x", "free_y"),
@@ -86,7 +89,7 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
 #' @return `NULL`, invisibly.
 #' @noRd
 .tsn_plot_series_frame <- function(source, series = NULL,
-                                   overlay = "vertical", points = FALSE,
+                                   overlay = "horizontal", points = FALSE,
                                    trend = FALSE, columns = NULL,
                                    max_series = 10L, scales = "free",
                                    palette = NULL, strip = FALSE,
@@ -362,13 +365,37 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
 #' a generic graph.
 #'
 #' @param x A `tsn` result.
-#' @param ... Passed directly to [cograph::splot()].
+#' @param ... Passed to [cograph::splot()], overriding tsn's network defaults.
 #' @return `x`, invisibly.
 #' @noRd
 .tsn_plot_network <- function(x, ...) {
   .tsn_require_cograph()
-  cograph::splot(x, ...)
+  arguments <- .tsn_network_plot_arguments(...)
+  do.call(cograph::splot, c(list(x), arguments))
   invisible(x)
+}
+
+#' Resolve Presentation Defaults for Generic Network Plots
+#'
+#' Keeps the public `plot(network)` call readable while preserving cograph's
+#' complete customization surface. Caller-supplied named arguments always win.
+#'
+#' @param ... Named cograph plotting arguments.
+#' @return A named argument list for `cograph::splot()`.
+#' @noRd
+.tsn_network_plot_arguments <- function(...) {
+  supplied <- list(...)
+  defaults <- list(
+    layout = "spring",
+    labels = FALSE,
+    scale_nodes_by = "degree",
+    node_size_range = c(2, 9),
+    node_fill = "#4E79A7",
+    edge_label_style = "none",
+    edge_color = "#B9C2CC"
+  )
+  defaults[names(supplied)] <- NULL
+  c(defaults, supplied)
 }
 
 #' Require cograph for Generic Network Rendering

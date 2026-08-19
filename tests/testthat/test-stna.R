@@ -154,6 +154,7 @@ test_that("series_networks splits a pooled model per series", {
   pooled <- ts_tna(series, n_states = 3, labels = c("low", "mid", "high"))
   networks <- series_networks(pooled)
 
+  expect_s3_class(networks, "tsn_series_networks")
   expect_named(networks, c("a", "b", "c"))
   # Shared alphabet: every split model has the SAME node set, in the same
   # order, matching the pooled model.
@@ -172,6 +173,41 @@ test_that("series_networks splits a pooled model per series", {
   # Subset + validation.
   expect_named(series_networks(pooled, series = "b"), "b")
   expect_error(series_networks(pooled, series = "zz"), "Unknown series")
+})
+
+test_that("series network collections have tidy accessors and safe plotting", {
+  skip_if_not_installed("Nestimate")
+  skip_if_not_installed("cograph")
+  pooled <- ts_tna(
+    .make_stna_series(),
+    n_states = 3,
+    labels = c("low", "mid", "high")
+  )
+  networks <- series_networks(pooled)
+  index <- summary(networks)
+
+  expect_s3_class(index, "data.frame")
+  expect_identical(
+    names(index),
+    c("series", "type", "observations", "states", "edges")
+  )
+  expect_identical(index$series, c("a", "b", "c"))
+  expect_identical(index$observations, c(60L, 60L, 45L))
+  expect_identical(as.data.frame(networks), index)
+  expect_output(print(networks), "series")
+
+  output <- tempfile(fileext = ".pdf")
+  grDevices::pdf(output)
+  on.exit({
+    grDevices::dev.off()
+    unlink(output)
+  }, add = TRUE)
+  expect_invisible(plot(networks, series = "a", type = "network"))
+  expect_error(plot(networks), "Select exactly one")
+  expect_error(plot(networks, series = "zz"), "Unknown series")
+
+  one <- series_networks(pooled, series = "a")
+  expect_invisible(plot(one, type = "network"))
 })
 
 test_that("per-series ftna counts partition the pooled counts", {
@@ -233,6 +269,7 @@ test_that("plot.ts_tna draws every combination", {
   }, add = TRUE)
 
   expect_invisible(plot(network))
+  expect_invisible(plot(network, overlay = "vertical"))
   expect_invisible(plot(network, network = "summary"))
   expect_invisible(plot(network, overlay = "none"))
   expect_invisible(plot(network, ribbon = TRUE))
@@ -249,6 +286,13 @@ test_that("plot.ts_tna draws every combination", {
   expect_error(plot(network, node_size = "pagerank"))
   expect_error(plot(network, network = "grouped"))
   expect_error(plot(network, network_width = 0))
+})
+
+test_that("TNA plots default to horizontal value bands", {
+  expect_identical(
+    formals(plot.ts_tna)$overlay,
+    quote(c("horizontal", "vertical", "none"))
+  )
 })
 
 test_that("ts_tna class does not break Nestimate dispatch", {

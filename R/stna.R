@@ -258,13 +258,16 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 #' @param x A `ts_tna` result from [ts_tna()], [ts_ftna()], [ts_cna()], or
 #'   [ts_atna()].
 #' @param series Optional series IDs to keep (default: all).
-#' @return A named list of `ts_tna` objects, one per series.
+#' @return A named `tsn_series_networks` collection containing one `ts_tna`
+#'   object per series. Its print, summary, and data-frame methods return a tidy
+#'   one-row-per-series index; `plot()` draws the sole model or a model selected
+#'   with its `series` argument.
 #' @examplesIf requireNamespace("Nestimate", quietly = TRUE) && requireNamespace("cograph", quietly = TRUE)
 #' set.seed(1)
 #' series <- list(a = cumsum(rnorm(80)), b = cumsum(rnorm(80)))
 #' pooled <- ts_tna(series, n_states = 3, labels = c("low", "mid", "high"))
 #' networks <- series_networks(pooled)
-#' plot(networks$a)
+#' plot(networks, series = "a")
 #' @export
 series_networks <- function(x, series = NULL) {
   stopifnot(inherits(x, "ts_tna"))
@@ -307,7 +310,85 @@ series_networks <- function(x, series = NULL) {
     network
   })
   names(networks) <- selected
-  networks
+  structure(networks, class = c("tsn_series_networks", "list"))
+}
+
+#' Summarize Per-Series Transition Networks
+#'
+#' @param object A `tsn_series_networks` result from [series_networks()].
+#' @param ... Ignored.
+#' @return A tidy data frame with one row per series.
+#' @export
+summary.tsn_series_networks <- function(object, ...) {
+  stopifnot(
+    inherits(object, "tsn_series_networks"),
+    is.list(object),
+    !is.null(names(object)),
+    !anyDuplicated(names(object))
+  )
+  rows <- Map(
+    function(network, series_id) {
+      data.frame(
+        series = series_id,
+        type = network$meta$tsn$type,
+        observations = nrow(network$ts_source),
+        states = nrow(network$nodes),
+        edges = nrow(network$edges),
+        stringsAsFactors = FALSE
+      )
+    },
+    object,
+    names(object)
+  )
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  out
+}
+
+#' @rdname summary.tsn_series_networks
+#' @param x A `tsn_series_networks` result.
+#' @param row.names,optional Ignored.
+#' @export
+as.data.frame.tsn_series_networks <- function(x, row.names = NULL,
+                                              optional = FALSE, ...) {
+  summary(x)
+}
+
+#' @rdname summary.tsn_series_networks
+#' @export
+print.tsn_series_networks <- function(x, ...) {
+  print.data.frame(summary(x), row.names = FALSE)
+  invisible(x)
+}
+
+#' Plot One Per-Series Transition Network
+#'
+#' @param x A `tsn_series_networks` result from [series_networks()].
+#' @param y Ignored.
+#' @param series Series ID to draw. It may be omitted when the collection holds
+#'   exactly one model.
+#' @param ... Passed to [plot.ts_tna()].
+#' @return `x`, invisibly.
+#' @examplesIf requireNamespace("Nestimate", quietly = TRUE) && requireNamespace("cograph", quietly = TRUE)
+#' states <- discretize(c(3, 1, 4, 2, 5, 3, 6, 2, 7))
+#' networks <- series_networks(ts_tna(states))
+#' plot(networks, type = "network")
+#' @export
+plot.tsn_series_networks <- function(x, y = NULL, series = NULL, ...) {
+  stopifnot(inherits(x, "tsn_series_networks"), is.null(y))
+  available <- names(x)
+  selected <- if (is.null(series)) available else unique(as.character(series))
+  unknown <- setdiff(selected, available)
+  if (length(unknown) > 0L) {
+    stop(sprintf("Unknown series: %s.", paste(unknown, collapse = ", ")),
+         call. = FALSE)
+  }
+  if (length(selected) != 1L) {
+    stop("Select exactly one model with `series` before plotting a collection.",
+         call. = FALSE)
+  }
+  plot(x[[selected]], ...)
+  invisible(x)
 }
 
 #' Plot a Time-Series Transition Network
@@ -345,7 +426,8 @@ series_networks <- function(x, series = NULL) {
 #' @param network Which network(s) to draw: `"per_series"` (default) —
 #'   one network per series, each built from that series' own transitions
 #'   — or `"summary"` — the single pooled model across all series.
-#' @param overlay Series shading: `"vertical"` (default) or `"none"`.
+#' @param overlay Series shading: `"horizontal"` (default), `"vertical"`, or
+#'   `"none"`.
 #' @param ribbon Whether to run the state strip under each series panel.
 #' @param points Whether to draw state-coloured observation points.
 #' @param node_size Node sizing rule: `"instrength"` (default),
@@ -381,7 +463,8 @@ series_networks <- function(x, series = NULL) {
 plot.ts_tna <- function(x, type = c("combined", "network", "series"),
                         series = NULL, max_series = 3L,
                         network = c("per_series", "summary"),
-                        overlay = c("vertical", "none"), ribbon = FALSE,
+                        overlay = c("horizontal", "vertical", "none"),
+                        ribbon = FALSE,
                         points = FALSE,
                         node_size = c("instrength", "outstrength", "strength"),
                         node_scale = 1, network_width = 0.85,
@@ -454,6 +537,8 @@ plot.ts_tna <- function(x, type = c("combined", "network", "series"),
     )
     if (overlay == "vertical") {
       .tsn_draw_vertical_overlay(one, state_colors, alpha = alpha)
+    } else if (overlay == "horizontal") {
+      .tsn_draw_horizontal_overlay(one, state_colors, alpha = alpha)
     }
     if (ribbon) {
       .tsn_draw_state_strip(one, state_colors,

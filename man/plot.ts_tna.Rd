@@ -10,7 +10,7 @@
   series = NULL,
   max_series = 3L,
   network = c("per_series", "summary"),
-  overlay = c("vertical", "none"),
+  overlay = c("horizontal", "vertical", "none"),
   ribbon = FALSE,
   points = FALSE,
   node_size = c("instrength", "outstrength", "strength"),
@@ -46,7 +46,8 @@
 one network per series, each built from that series' own transitions
 — or \code{"summary"} — the single pooled model across all series.}
 
-\item{overlay}{Series shading: \code{"vertical"} (default) or \code{"none"}.}
+\item{overlay}{Series shading: \code{"horizontal"} (default), \code{"vertical"}, or
+\code{"none"}.}
 
 \item{ribbon}{Whether to run the state strip under each series panel.}
 

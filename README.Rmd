@@ -180,8 +180,8 @@ plot(state_network, "series", overlay = "vertical")
 plot(state_network, "series", overlay = "horizontal")
 ```
 
-`"vertical"` shades contiguous state runs along time. `"horizontal"` shades
-state value bands across the y-axis. Both use base graphics.
+`"horizontal"` (the default) shades state value bands across the y-axis.
+`"vertical"` shades contiguous state runs along time. Both use base graphics.
 
 Mixed wide data is equally direct:
 
@@ -209,20 +209,34 @@ walks <- list(
 )
 model <- ts_tna(walks, n_states = 3,
                 labels = c("low", "mid", "high"))
-model$weights
+model                                         # weight matrix and initial states
+summary(model)                                # tidy network metrics
 
 per_series <- series_networks(model)
+per_series                                    # one row per series
+summary(per_series)                           # the same table as a data frame
+plot(per_series, series = "first")            # one series' own network
+
 plot(model, ribbon = TRUE)                    # series + per-series networks
 plot(model, network = "summary")              # pooled transition network
 Nestimate::net_centrality(model)
 ```
 
+`series_networks()` returns a `tsn_series_networks` collection rather than a
+bare list, so `print()`, `summary()`, `as.data.frame()`, and `plot()` all work
+on it directly; `series` selects one model by name when the collection holds
+more than one.
+
 Inferential methods retain their usual sampling requirements. In particular,
 sequence bootstrap is not informative for a model built from only one
 sequence.
 
-See `vignette("pleasure-all-functions")` for a tutorial that applies every
-exported tsn function to the packaged `motivation$pleasure` series.
+## Vignettes
+
+- `vignette("pleasure-all-functions")` applies every exported tsn function to
+  the packaged `motivation` pleasure series, end to end.
+- `vignette("plotting-time-series-networks")` covers the plotting surface: the
+  network and source-series views, state overlays, and transition-model plots.
 
 ## Package boundaries
 

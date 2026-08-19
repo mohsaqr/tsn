@@ -1,7 +1,8 @@
 data("motivation", package = "tsn", envir = environment())
 
 pleasure_tutorial_full <- motivation$pleasure
-pleasure_tutorial_values <- pleasure_tutorial_full[seq_len(300L)]
+pleasure_tutorial_data <- utils::head(motivation, 300L)
+pleasure_tutorial_values <- pleasure_tutorial_data$pleasure
 
 test_that("pleasure tutorial uses one direct unchanged-order series", {
   expect_identical(class(pleasure_tutorial_full), "integer")
@@ -19,28 +20,32 @@ test_that("pleasure tutorial uses one direct unchanged-order series", {
 
 test_that("pleasure tutorial core pipelines return stable objects", {
   states <- discretize(
-    pleasure_tutorial_values,
-    method = "quantile",
-    n_states = 3L,
+    pleasure_tutorial_data,
+    series = "pleasure",
     labels = c("Low", "Middle", "High")
   )
   trend_result <- trend(
-    pleasure_tutorial_values,
-    window = 30L,
-    slope = "robust",
-    align = "center"
+    pleasure_tutorial_data,
+    series = "pleasure"
   )
-  visibility <- vg(pleasure_tutorial_values, type = "horizontal")
+  visibility <- vg(
+    pleasure_tutorial_data,
+    type = "horizontal",
+    series = "pleasure"
+  )
   windows <- tsn(
-    pleasure_tutorial_values,
+    pleasure_tutorial_data,
     method = "distance",
-    unit = "window",
-    window = 30L,
+    series = "pleasure",
+    step = 10L
+  )
+  sparse <- tsn(
+    pleasure_tutorial_data,
+    method = "distance",
+    series = "pleasure",
     step = 10L,
-    distance = "correlation",
     connect = "nearest",
-    neighbors = 2L,
-    similarity = "normalized_inverse"
+    neighbors = 2L
   )
 
   expect_s3_class(states, "tsn_states")
@@ -55,8 +60,10 @@ test_that("pleasure tutorial core pipelines return stable objects", {
   expect_identical(visibility$n_edges, 560L)
   expect_s3_class(windows, "tsn")
   expect_identical(windows$n_nodes, 28L)
-  expect_identical(windows$n_edges, 36L)
-  expect_identical(dim(as.matrix(windows)), c(28L, 28L))
+  expect_identical(windows$n_edges, 378L)
+  expect_s3_class(sparse, "tsn")
+  expect_identical(sparse$n_edges, 37L)
+  expect_identical(dim(as.matrix(sparse)), c(28L, 28L))
   expect_identical(
     nrow(as.data.frame(windows, what = "series")),
     length(pleasure_tutorial_values)
@@ -67,9 +74,8 @@ test_that("pleasure tutorial transition pipelines use the same state series", {
   skip_if_not_installed("Nestimate")
 
   states <- discretize(
-    pleasure_tutorial_values,
-    method = "quantile",
-    n_states = 3L,
+    pleasure_tutorial_data,
+    series = "pleasure",
     labels = c("Low", "Middle", "High")
   )
   models <- list(
@@ -96,9 +102,9 @@ test_that("pleasure tutorial transition pipelines use the same state series", {
   expect_true(isSymmetric(models$cna$weights))
   expect_true(all(is.finite(models$atna$weights)))
   expect_identical(length(per_series), 1L)
-  expect_identical(names(per_series), "series_1")
+  expect_identical(names(per_series), "pleasure")
   expect_identical(
-    per_series$series_1$ts_source$value,
+    per_series$pleasure$ts_source$value,
     as.numeric(pleasure_tutorial_values)
   )
 })
@@ -108,9 +114,8 @@ test_that("pleasure tutorial combined network plots render through cograph", {
   skip_if_not_installed("cograph")
 
   states <- discretize(
-    pleasure_tutorial_values,
-    method = "quantile",
-    n_states = 3L,
+    pleasure_tutorial_data,
+    series = "pleasure",
     labels = c("Low", "Middle", "High")
   )
   models <- list(
@@ -138,12 +143,8 @@ test_that("pleasure tutorial combined network plots render through cograph", {
     ))
   }))
   expect_invisible(plot(
-    per_series$series_1,
-    type = "combined",
-    network = "summary",
-    ribbon = TRUE,
-    show_weights = FALSE,
-    layout = "circle"
+    per_series,
+    type = "network"
   ))
 })
 
@@ -204,6 +205,32 @@ test_that("pleasure tutorial covers every export and plots every transition resu
     "Transition results never plotted:",
     paste(transition_results[!plotted], collapse = ", ")
   ))
+  expect_match(
+    tutorial,
+    "plot\\([[:space:]]*individual[[:space:]]*\\)",
+    perl = TRUE
+  )
+  tutorial_lines <- readLines(tutorial_path, warn = FALSE)
+  starts <- which(grepl("^```\\{r", tutorial_lines))
+  ends <- vapply(
+    starts,
+    function(start) {
+      following <- seq.int(start + 1L, length(tutorial_lines))
+      following[which(tutorial_lines[following] == "```")[1L]]
+    },
+    integer(1L)
+  )
+  visible <- !grepl("include=FALSE", tutorial_lines[starts], fixed = TRUE)
+  public_code <- unlist(
+    Map(
+      function(start, end) tutorial_lines[seq.int(start + 1L, end - 1L)],
+      starts[visible],
+      ends[visible]
+    ),
+    use.names = FALSE
+  )
+  expect_false(any(grepl("$", public_code, fixed = TRUE)))
+  expect_false(any(grepl("[", public_code, fixed = TRUE)))
   expect_false(grepl("task_context_type", tutorial, fixed = TRUE))
   expect_false(grepl("occasion_time", tutorial, fixed = TRUE))
 })

@@ -457,8 +457,8 @@ summary.tsn_states <- function(object, ...) {
 #'   e.g. the original time series read against the states of its rolling
 #'   complexity.
 #' @param series Optional character vector of series IDs to display.
-#' @param overlay Colour shading for the overlay view: `"vertical"` (time
-#'   runs), `"horizontal"` (value bands), or `"none"`.
+#' @param overlay Colour shading for the overlay view: `"horizontal"` (default;
+#'   value bands), `"vertical"` (time runs), or `"none"`.
 #' @param lines Dashed guide lines complementing the shading:
 #'   `"horizontal"` draws grey lines at the state boundaries (the
 #'   discretization breaks when available, empirical boundaries otherwise).
@@ -541,7 +541,7 @@ summary.tsn_states <- function(object, ...) {
 plot.tsn_states <- function(x, type = c("overlay", "ribbon", "heatmap",
                                         "stack"),
                             series = NULL,
-                            overlay = c("vertical", "horizontal", "none"),
+                            overlay = c("horizontal", "vertical", "none"),
                             lines = "none", min_run = 1L,
                             points = TRUE, max_series = NULL, columns = NULL,
                             palette = NULL, alpha = NULL,

@@ -46,6 +46,25 @@ test_that("raw-series plot remains available without state shading", {
   expect_invisible(plot(result, "series", overlay = "vertical"))
 })
 
+test_that("generic network plot defaults are readable and caller-overridable", {
+  defaults <- tsn:::.tsn_network_plot_arguments()
+  customized <- tsn:::.tsn_network_plot_arguments(
+    layout = "circle",
+    labels = TRUE,
+    node_fill = "#F28E2B"
+  )
+
+  expect_identical(defaults$layout, "spring")
+  expect_false(defaults$labels)
+  expect_identical(defaults$scale_nodes_by, "degree")
+  expect_identical(defaults$node_size_range, c(2, 9))
+  expect_identical(defaults$edge_label_style, "none")
+  expect_identical(customized$layout, "circle")
+  expect_true(customized$labels)
+  expect_identical(customized$node_fill, "#F28E2B")
+  expect_identical(customized$edge_color, "#B9C2CC")
+})
+
 test_that("state segments follow midpoint boundaries in both orientations", {
   vertical <- tsn:::.tsn_overlay_segments(
     position = c(1, 2, 4, 7),

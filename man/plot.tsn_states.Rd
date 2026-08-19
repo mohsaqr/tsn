@@ -8,7 +8,7 @@
   x,
   type = c("overlay", "ribbon", "heatmap", "stack"),
   series = NULL,
-  overlay = c("vertical", "horizontal", "none"),
+  overlay = c("horizontal", "vertical", "none"),
   lines = "none",
   min_run = 1L,
   points = TRUE,
@@ -48,8 +48,8 @@ complexity.}
 
 \item{series}{Optional character vector of series IDs to display.}
 
-\item{overlay}{Colour shading for the overlay view: \code{"vertical"} (time
-runs), \code{"horizontal"} (value bands), or \code{"none"}.}
+\item{overlay}{Colour shading for the overlay view: \code{"horizontal"} (default;
+value bands), \code{"vertical"} (time runs), or \code{"none"}.}
 
 \item{lines}{Dashed guide lines complementing the shading:
 \code{"horizontal"} draws grey lines at the state boundaries (the

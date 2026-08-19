@@ -13,7 +13,10 @@ series_networks(x, series = NULL)
 \item{series}{Optional series IDs to keep (default: all).}
 }
 \value{
-A named list of \code{ts_tna} objects, one per series.
+A named \code{tsn_series_networks} collection containing one \code{ts_tna}
+object per series. Its print, summary, and data-frame methods return a tidy
+one-row-per-series index; \code{plot()} draws the sole model or a model selected
+with its \code{series} argument.
 }
 \description{
 Split a pooled \code{ts_tna()}-family model into one full model per source
@@ -32,6 +35,6 @@ set.seed(1)
 series <- list(a = cumsum(rnorm(80)), b = cumsum(rnorm(80)))
 pooled <- ts_tna(series, n_states = 3, labels = c("low", "mid", "high"))
 networks <- series_networks(pooled)
-plot(networks$a)
+plot(networks, series = "a")
 \dontshow{\}) # examplesIf}
 }

@@ -24,10 +24,12 @@ shading) remains available via \code{type = "series"} and does not require
 cograph.
 }
 \details{
-Network rendering belongs exclusively to cograph; \code{...} is passed directly
-to \code{\link[cograph:splot]{cograph::splot()}}. tsn results already implement the
-\code{cograph_network} contract. Source-series views remain tsn-specific because
-they visualize the original observations rather than a generic network.
+Network rendering belongs exclusively to cograph. tsn supplies restrained
+defaults that keep edges visible and avoid meaningless per-node rainbow
+fills; named arguments in \code{...} override any of them. tsn results already
+implement the \code{cograph_network} contract. Source-series views remain
+tsn-specific because they visualize the original observations rather than a
+generic network.
 
 For \code{type = "network"}, use cograph arguments such as \code{layout}, \code{labels},
 \code{scale_nodes_by}, \code{node_size_range}, and \code{edge_label_style}. For

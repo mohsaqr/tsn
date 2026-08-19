@@ -45,6 +45,13 @@ test_that("state plot types all render", {
   expect_invisible(plot(states, overlay = "horizontal", series = c("a", "b")))
 })
 
+test_that("state overlays default to horizontal value bands", {
+  expect_identical(
+    formals(plot.tsn_states)$overlay,
+    quote(c("horizontal", "vertical", "none"))
+  )
+})
+
 test_that("trend plot types all render", {
   classified <- .make_trend_fixture()
   output <- tempfile(fileext = ".pdf")

@@ -1,3 +1,27 @@
+# tsn (development version)
+
+- `series_networks()` now returns a `tsn_series_networks` collection instead of
+  a bare list. `print()` and `summary()` give a tidy one-row-per-series table
+  (series, type, observations, states, edges), `as.data.frame()` returns the
+  same table as a data frame, and `plot()` draws one model directly. `series`
+  selects the model by name; it may be omitted only when the collection holds
+  exactly one model.
+- `plot()` on a network result now applies restrained presentation defaults
+  (spring layout, nodes scaled by degree, one node fill, muted edges, no edge
+  labels) so a bare `plot(network)` is readable. Every default is a named
+  `cograph::splot()` argument and any value supplied through `...` overrides it,
+  so the full cograph surface is unchanged.
+- The `overlay` default for state and source-series views is now `"horizontal"`
+  (value bands) rather than `"vertical"` (time runs), affecting
+  `plot.tsn_states()`, `plot(type = "series")`, and `plot.ts_tna()`. Pass
+  `overlay = "vertical"` to restore the previous shading.
+- New `vignette("plotting-time-series-networks")`: the plotting surface end to
+  end — network and source-series views, state overlays, ribbon, heatmap, and
+  stack types, and transition-model plots.
+- `vignette("pleasure-all-functions")` was rewritten around the packaged
+  `motivation` pleasure series, selecting it through each verb's `series`
+  argument rather than extracting the column.
+
 # tsn 1.1.0
 
 - New `vignette("pleasure-all-functions")`: a complete tutorial using the

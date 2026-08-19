@@ -119,11 +119,27 @@ summary(network)
 as.data.frame(network)               # the tidy dyad table
 as.data.frame(network, what = "series")
 as.matrix(network)                   # the weighted adjacency matrix
+```
+
+`plot()` gives the network view, and `plot(x, "series")` the source
+series the network was built from:
+
+``` r
+network <- tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "hvg")
 
 plot(network)                        # cograph network view
-plot(network, layout = "spring")     # any cograph layout/option
+```
+
+<img src="man/figures/README-hvg-network-1.png" alt="Horizontal visibility graph of a nine-point series, drawn as a spring-layout network with nodes sized by degree." width="100%" style="display: block; margin: auto;" />
+
+``` r
 plot(network, "series")              # tsn source-series view
 ```
+
+<img src="man/figures/README-hvg-series-1.png" alt="The nine-point source series the visibility graph was built from, plotted against time." width="100%" style="display: block; margin: auto;" />
+
+Any cograph option passes straight through, for example
+`plot(network, layout = "circle", labels = TRUE)`.
 
 For distance networks, weights are similarities: larger values indicate
 closer units. Visibility weights are edge strengths; state aggregation
@@ -177,9 +193,16 @@ state_network <- tsn(
   discretization = "quantile"
 )
 
-plot(state_network, "series", overlay = "vertical")
 plot(state_network, "series", overlay = "horizontal")
 ```
+
+<img src="man/figures/README-state-overlay-1.png" alt="Daily step counts for one participant with horizontal shading marking the three quantile state bands across the y-axis." width="100%" style="display: block; margin: auto;" />
+
+``` r
+plot(state_network, "series", overlay = "vertical")
+```
+
+<img src="man/figures/README-state-overlay-2.png" alt="The same step series with vertical shading marking contiguous runs of each state along time." width="100%" style="display: block; margin: auto;" />
 
 `"horizontal"` (the default) shades state value bands across the y-axis.
 `"vertical"` shades contiguous state runs along time. Both use base

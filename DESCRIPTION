@@ -1,6 +1,6 @@
 Package: tsn
 Title: Time-Series Network Construction
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: c(
     person("Santtu", "Tikka",
            email = "santtuth@gmail.com", role = c("aut", "cre", "cph")),

@@ -2,6 +2,22 @@
 output: github_document
 ---
 
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5,
+  dpi = 150,
+  out.width = "100%"
+)
+
+library(tsn)
+set.seed(2026)
+```
+
 # tsn
 
 `tsn` constructs networks directly from time-series geometry. Its core
@@ -120,11 +136,23 @@ summary(network)
 as.data.frame(network)               # the tidy dyad table
 as.data.frame(network, what = "series")
 as.matrix(network)                   # the weighted adjacency matrix
+```
+
+`plot()` gives the network view, and `plot(x, "series")` the source series
+the network was built from:
+
+```{r hvg-network, fig.height = 4, fig.alt = "Horizontal visibility graph of a nine-point series, drawn as a spring-layout network with nodes sized by degree."}
+network <- tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "hvg")
 
 plot(network)                        # cograph network view
-plot(network, layout = "spring")     # any cograph layout/option
+```
+
+```{r hvg-series, fig.height = 3, fig.alt = "The nine-point source series the visibility graph was built from, plotted against time."}
 plot(network, "series")              # tsn source-series view
 ```
+
+Any cograph option passes straight through, for example
+`plot(network, layout = "circle", labels = TRUE)`.
 
 For distance networks, weights are similarities: larger values indicate closer
 units. Visibility weights are edge strengths; state aggregation by `"count"` or
@@ -164,7 +192,7 @@ State visibility plots support both time-oriented and value-oriented context.
 The package dataset can be used directly; `series` selects a participant inside
 `tsn()`:
 
-```{r eval=FALSE}
+```{r state-overlay, fig.height = 3.2, fig.alt = c("Daily step counts for one participant with horizontal shading marking the three quantile state bands across the y-axis.", "The same step series with vertical shading marking contiguous runs of each state along time.")}
 data(steps)
 state_network <- tsn(
   data = steps,
@@ -176,8 +204,8 @@ state_network <- tsn(
   discretization = "quantile"
 )
 
-plot(state_network, "series", overlay = "vertical")
 plot(state_network, "series", overlay = "horizontal")
+plot(state_network, "series", overlay = "vertical")
 ```
 
 `"horizontal"` (the default) shades state value bands across the y-axis.

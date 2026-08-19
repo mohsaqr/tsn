@@ -1,4 +1,4 @@
-# tsn (development version)
+# tsn 1.2.0
 
 - `series_networks()` now returns a `tsn_series_networks` collection instead of
   a bare list. `print()` and `summary()` give a tidy one-row-per-series table

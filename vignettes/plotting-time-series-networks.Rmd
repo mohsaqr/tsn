@@ -63,15 +63,15 @@ sequence, the state representation, or the network structure.
 
 # Data
 
-The examples use the first 120 observations of `pleasure` from the `motivation`
-data. A 40-observation segment is used for visibility analysis so that
+The examples use the first 60 observations of `pleasure` from the `motivation`
+data. A 25-observation segment is used for visibility analysis so that
 individual nodes and edges remain distinguishable.
 
 ```{r data}
 data("motivation", package = "tsn")
 
-pleasure <- head(motivation, 120)
-short <- head(pleasure, 40)
+pleasure <- head(motivation, 60)
+short <- head(pleasure, 25)
 ```
 
 # Discrete-state plots

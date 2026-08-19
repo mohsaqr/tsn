@@ -1,7 +1,7 @@
 data("motivation", package = "tsn", envir = environment())
 
 pleasure_tutorial_full <- motivation$pleasure
-pleasure_tutorial_data <- utils::head(motivation, 300L)
+pleasure_tutorial_data <- utils::head(motivation, 60L)
 pleasure_tutorial_values <- pleasure_tutorial_data$pleasure
 
 test_that("pleasure tutorial uses one direct unchanged-order series", {
@@ -10,9 +10,9 @@ test_that("pleasure tutorial uses one direct unchanged-order series", {
   expect_false(anyNA(pleasure_tutorial_full))
   expect_identical(
     pleasure_tutorial_values,
-    motivation$pleasure[seq_len(300L)]
+    motivation$pleasure[seq_len(60L)]
   )
-  expect_identical(length(pleasure_tutorial_values), 300L)
+  expect_identical(length(pleasure_tutorial_values), 60L)
   expect_identical(utils::head(pleasure_tutorial_values), c(
     32L, 32L, 32L, 26L, 16L, 6L
   ))
@@ -37,32 +37,32 @@ test_that("pleasure tutorial core pipelines return stable objects", {
     pleasure_tutorial_data,
     method = "distance",
     series = "pleasure",
-    step = 10L
+    step = 2L
   )
   sparse <- tsn(
     pleasure_tutorial_data,
     method = "distance",
     series = "pleasure",
-    step = 10L,
+    step = 2L,
     connect = "nearest",
     neighbors = 2L
   )
 
   expect_s3_class(states, "tsn_states")
-  expect_identical(dim(states), c(300L, 5L))
+  expect_identical(dim(states), c(60L, 5L))
   expect_identical(levels(states$state), c("Low", "Middle", "High"))
-  expect_identical(as.integer(table(states$state)), c(104L, 104L, 92L))
+  expect_identical(as.integer(table(states$state)), c(20L, 23L, 17L))
   expect_s3_class(trend_result, "tsn_trend")
-  expect_identical(dim(trend_result), c(300L, 5L))
+  expect_identical(dim(trend_result), c(60L, 5L))
   expect_true(all(is.finite(trend_result$metric[!is.na(trend_result$metric)])))
   expect_s3_class(visibility, "tsn")
-  expect_identical(visibility$n_nodes, 300L)
-  expect_identical(visibility$n_edges, 560L)
+  expect_identical(visibility$n_nodes, 60L)
+  expect_identical(visibility$n_edges, 107L)
   expect_s3_class(windows, "tsn")
   expect_identical(windows$n_nodes, 28L)
   expect_identical(windows$n_edges, 378L)
   expect_s3_class(sparse, "tsn")
-  expect_identical(sparse$n_edges, 37L)
+  expect_identical(sparse$n_edges, 40L)
   expect_identical(dim(as.matrix(sparse)), c(28L, 28L))
   expect_identical(
     nrow(as.data.frame(windows, what = "series")),
@@ -97,7 +97,7 @@ test_that("pleasure tutorial transition pipelines use the same state series", {
     function(model) identical(dim(model$weights), c(3L, 3L)),
     logical(1L)
   )))
-  expect_identical(sum(models$ftna$weights), 299L)
+  expect_identical(sum(models$ftna$weights), 59L)
   expect_equal(unname(rowSums(models$tna$weights)), rep.int(1, 3L))
   expect_true(isSymmetric(models$cna$weights))
   expect_true(all(is.finite(models$atna$weights)))

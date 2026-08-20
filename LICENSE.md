@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2025-2026 Santtu Tikka, Mohammed Saqr, and Sonsoles López-Pernas
+Copyright (c) 2025-2026 Mohammed Saqr and Sonsoles López-Pernas
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

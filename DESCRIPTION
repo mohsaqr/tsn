@@ -2,9 +2,8 @@ Package: tsn
 Title: Time-Series Network Construction
 Version: 1.2.0
 Authors@R: c(
-    person("Santtu", "Tikka",
-           email = "santtuth@gmail.com", role = c("aut", "cre", "cph")),
-    person("Mohammed", "Saqr", role = c("aut", "cph")),
+    person("Mohammed", "Saqr",
+           email = "saqr@saqr.me", role = c("aut", "cre", "cph")),
     person("Sonsoles", "L\u00f3pez-Pernas", role = c("aut", "cph")),
     person("Manuel Jesus", "Gomez", role = "aut",
            comment = c(affiliation = "University of Murcia"))

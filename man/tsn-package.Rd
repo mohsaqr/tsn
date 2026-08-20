@@ -21,12 +21,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Santtu Tikka \email{santtuth@gmail.com} [copyright holder]
+\strong{Maintainer}: Mohammed Saqr \email{saqr@saqr.me} [copyright holder]
 
 Authors:
 \itemize{
-  \item Mohammed Saqr [copyright holder]
   \item Sonsoles López-Pernas [copyright holder]
+  \item Manuel Jesus Gomez (University of Murcia)
 }
 
 }

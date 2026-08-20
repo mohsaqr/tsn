@@ -5,7 +5,9 @@ Authors@R: c(
     person("Santtu", "Tikka",
            email = "santtuth@gmail.com", role = c("aut", "cre", "cph")),
     person("Mohammed", "Saqr", role = c("aut", "cph")),
-    person("Sonsoles", "L\u00f3pez-Pernas", role = c("aut", "cph"))
+    person("Sonsoles", "L\u00f3pez-Pernas", role = c("aut", "cph")),
+    person("Manuel Jesus", "Gomez", role = "aut",
+           comment = c(affiliation = "University of Murcia"))
   )
 Description: Constructs distance, visibility, and state-transition networks
     from univariate time series. The core constructor provides whole-series

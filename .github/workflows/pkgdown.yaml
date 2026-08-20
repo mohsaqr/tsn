@@ -13,6 +13,10 @@ permissions: read-all
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
+    # Without this the job inherits GitHub's 6h ceiling. Dependency install has
+    # hung three times (2026-08-19), each burning 6h and — via the concurrency
+    # group below — blocking every later push. Fail fast and re-run instead.
+    timeout-minutes: 30
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}

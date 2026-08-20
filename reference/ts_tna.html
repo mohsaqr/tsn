@@ -30,7 +30,8 @@ transitions (ts_atna)."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">Time Series Networks</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/nestimate-workflow.html">Building a Model from a Time Series and Testing It with Nestimate</a></li>
+    <li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">Time Series Networks</a></li>
     <li><a class="dropdown-item" href="../articles/plotting-time-series-networks.html">Plotting Time Series Networks</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -75,6 +76,8 @@ transitions (<code>ts_atna</code>).</p>
 <span>  transform <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  m <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  segment <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  overlap <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
@@ -92,6 +95,8 @@ transitions (<code>ts_atna</code>).</p>
 <span>  transform <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  m <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  segment <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  overlap <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
@@ -109,6 +114,8 @@ transitions (<code>ts_atna</code>).</p>
 <span>  transform <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  m <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  segment <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  overlap <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
@@ -126,6 +133,8 @@ transitions (<code>ts_atna</code>).</p>
 <span>  transform <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  m <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tau <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  segment <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  overlap <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -184,6 +193,26 @@ names (e.g. <code>c("low", "mid", "high")</code>).</p></dd>
 <dd><p>Embedding arguments for <code>discretization = "ordinal"</code>.</p></dd>
 
 
+<dt id="arg-segment">segment<a class="anchor" aria-label="anchor" href="#arg-segment"></a></dt>
+<dd><p>Optional block width, in observations, used to cut each series
+into several shorter sequences. Sequence-based inference resamples whole
+sequences, so a single long series offers nothing to resample; segmenting
+supplies the units. Blocks never span an ID boundary, and segmentation is
+applied <em>after</em> discretization, so the state alphabet is still learned from
+the whole series. At least <code>2</code>.</p></dd>
+
+
+<dt id="arg-overlap">overlap<a class="anchor" aria-label="anchor" href="#arg-overlap"></a></dt>
+<dd><p>When segmenting, slide the block one observation at a time
+instead of partitioning (default <code>FALSE</code>). Partitioning loses the
+transition at every cut, roughly one per block. Sliding keeps every
+transition — at <code>segment = 2</code> the blocks are the consecutive lag-1 pairs
+and the network is identical to the unsegmented one — but the blocks share
+observations, so they are not independent and intervals computed from them
+run narrow. Partition for conservative intervals that tolerate dependence
+beyond one lag; slide to preserve the estimate exactly.</p></dd>
+
+
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional seed used by stochastic discretizers.</p></dd>
 
@@ -211,6 +240,11 @@ single sequence. The object keeps its data: <code>$data</code> holds the wide st
 sequences Nestimate built from, <code>$ts_source</code> the tidy per-observation table
 (<code>id</code>, <code>time</code>, <code>value</code>, <code>state</code>), and <code>$meta$tsn</code> the discretization and
 builder settings, so the network remains traceable back to the raw series.</p>
+<p>A single series supports every descriptive verb but no sequence-based test,
+because a bootstrap resamples sequences and one series is one sequence. The
+<code>segment</code> argument cuts a long series into blocks so that those tests have
+units to work with; see its documentation for the trade-off between
+partitioned and sliding blocks.</p>
 <p>Multiple series are supported through every tsn input form (named list,
 matrix, wide or long data frame). Scalar discretizers learn from pooled
 values. Temporal discretizers compute patterns or windows separately within
@@ -253,6 +287,39 @@ discretization and uses its states as-is.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   2             1.000  ████████████████████████████████████████</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1             0.000  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3             0.000  </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Cut one long series into blocks so sequence-based tests have units:</span></span></span>
+<span class="r-in"><span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">300</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ts_tna</span><span class="op">(</span><span class="va">long</span>, segment <span class="op">=</span> <span class="fl">10</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transition Network (relative probabilities) [directed]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Weights: [0.078, 0.922]  |  mean: 0.429</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Weight matrix:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          low   mid  high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   low  0.868 0.132 0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mid  0.124 0.775 0.101</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   high 0.000 0.078 0.922 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Initial probabilities:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mid           0.400  ████████████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   low           0.333  █████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   high          0.267  ███████████████████████████</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Sliding lag-1 pairs keep every transition and the exact estimate:</span></span></span>
+<span class="r-in"><span><span class="fu">ts_tna</span><span class="op">(</span><span class="va">long</span>, segment <span class="op">=</span> <span class="fl">2</span>, overlap <span class="op">=</span> <span class="cn">TRUE</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Transition Network (relative probabilities) [directed]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Weights: [0.090, 0.910]  |  mean: 0.429</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Weight matrix:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          low   mid  high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   low  0.880 0.120 0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mid  0.121 0.788 0.091</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   high 0.000 0.090 0.910 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Initial probabilities:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   low           0.334  ████████████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   high          0.334  ████████████████████████████████████████</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   mid           0.331  ████████████████████████████████████████</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

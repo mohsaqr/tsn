@@ -44,8 +44,12 @@ Standard interface shared by every result object.
 
 - [`as.data.frame(`*`<tsn>`*`)`](https://pak.dynasite.org/tsn/reference/as.data.frame.tsn.md)
   : Coerce a TSN result to a data frame
+- [`as.data.frame(`*`<ts_tna>`*`)`](https://pak.dynasite.org/tsn/reference/as.data.frame.ts_tna.md)
+  : Coerce a transition network to a tidy edge table
 - [`as.matrix(`*`<tsn>`*`)`](https://pak.dynasite.org/tsn/reference/as.matrix.tsn.md)
   : Coerce a TSN result to a weighted adjacency matrix
+- [`as.matrix(`*`<ts_tna>`*`)`](https://pak.dynasite.org/tsn/reference/as.matrix.ts_tna.md)
+  : Coerce a transition network to a weighted adjacency matrix
 - [`plot(`*`<tsn>`*`)`](https://pak.dynasite.org/tsn/reference/plot.tsn.md)
   : Plot a TSN Result
 - [`plot(`*`<tsn_series_networks>`*`)`](https://pak.dynasite.org/tsn/reference/plot.tsn_series_networks.md)

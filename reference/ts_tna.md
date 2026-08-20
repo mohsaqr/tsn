@@ -24,6 +24,8 @@ ts_tna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -41,6 +43,8 @@ ts_ftna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -58,6 +62,8 @@ ts_cna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -75,6 +81,8 @@ ts_atna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -131,6 +139,26 @@ ts_atna(
 
   Embedding arguments for `discretization = "ordinal"`.
 
+- segment:
+
+  Optional block width, in observations, used to cut each series into
+  several shorter sequences. Sequence-based inference resamples whole
+  sequences, so a single long series offers nothing to resample;
+  segmenting supplies the units. Blocks never span an ID boundary, and
+  segmentation is applied *after* discretization, so the state alphabet
+  is still learned from the whole series. At least `2`.
+
+- overlap:
+
+  When segmenting, slide the block one observation at a time instead of
+  partitioning (default `FALSE`). Partitioning loses the transition at
+  every cut, roughly one per block. Sliding keeps every transition — at
+  `segment = 2` the blocks are the consecutive lag-1 pairs and the
+  network is identical to the unsegmented one — but the blocks share
+  observations, so they are not independent and intervals computed from
+  them run narrow. Partition for conservative intervals that tolerate
+  dependence beyond one lag; slide to preserve the estimate exactly.
+
 - seed:
 
   Optional seed used by stochastic discretizers.
@@ -160,6 +188,12 @@ sequences Nestimate built from, `$ts_source` the tidy per-observation
 table (`id`, `time`, `value`, `state`), and `$meta$tsn` the
 discretization and builder settings, so the network remains traceable
 back to the raw series.
+
+A single series supports every descriptive verb but no sequence-based
+test, because a bootstrap resamples sequences and one series is one
+sequence. The `segment` argument cuts a long series into blocks so that
+those tests have units to work with; see its documentation for the
+trade-off between partitioned and sliding blocks.
 
 Multiple series are supported through every tsn input form (named list,
 matrix, wide or long data frame). Scalar discretizers learn from pooled
@@ -204,4 +238,37 @@ ts_tna(states)
 #>   2             1.000  ████████████████████████████████████████
 #>   1             0.000  
 #>   3             0.000  
+
+# Cut one long series into blocks so sequence-based tests have units:
+long <- cumsum(rnorm(300))
+ts_tna(long, segment = 10, labels = c("low", "mid", "high"))
+#> Transition Network (relative probabilities) [directed]
+#>   Weights: [0.078, 0.922]  |  mean: 0.429
+#> 
+#>   Weight matrix:
+#>          low   mid  high
+#>   low  0.868 0.132 0.000
+#>   mid  0.124 0.775 0.101
+#>   high 0.000 0.078 0.922 
+#> 
+#>   Initial probabilities:
+#>   mid           0.400  ████████████████████████████████████████
+#>   low           0.333  █████████████████████████████████
+#>   high          0.267  ███████████████████████████
+
+# Sliding lag-1 pairs keep every transition and the exact estimate:
+ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
+#> Transition Network (relative probabilities) [directed]
+#>   Weights: [0.090, 0.910]  |  mean: 0.429
+#> 
+#>   Weight matrix:
+#>          low   mid  high
+#>   low  0.880 0.120 0.000
+#>   mid  0.121 0.788 0.091
+#>   high 0.000 0.090 0.910 
+#> 
+#>   Initial probabilities:
+#>   low           0.334  ████████████████████████████████████████
+#>   high          0.334  ████████████████████████████████████████
+#>   mid           0.331  ████████████████████████████████████████
 ```

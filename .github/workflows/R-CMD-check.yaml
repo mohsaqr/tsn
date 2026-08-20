@@ -12,6 +12,12 @@ permissions: read-all
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+    # Without this each matrix job inherits GitHub's 6h ceiling. Dependency
+    # install has hung repeatedly (2026-08-19) in the same setup-r-dependencies
+    # step this job uses. Applies per matrix job. 30 min is roughly double the
+    # slowest legitimate run observed (ubuntu devel, ~13 min on a cold cache),
+    # so it fails fast on a hang without tripping on a slow-but-healthy build.
+    timeout-minutes: 30
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 

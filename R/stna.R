@@ -17,6 +17,12 @@
 #' (`id`, `time`, `value`, `state`), and `$meta$tsn` the discretization and
 #' builder settings, so the network remains traceable back to the raw series.
 #'
+#' A single series supports every descriptive verb but no sequence-based test,
+#' because a bootstrap resamples sequences and one series is one sequence. The
+#' `segment` argument cuts a long series into blocks so that those tests have
+#' units to work with; see its documentation for the trade-off between
+#' partitioned and sliding blocks.
+#'
 #' Multiple series are supported through every tsn input form (named list,
 #' matrix, wide or long data frame). Scalar discretizers learn from pooled
 #' values. Temporal discretizers compute patterns or windows separately within
@@ -40,6 +46,20 @@
 #' @param transform Pre-discretization transform: `"none"`, `"log"`, or
 #'   `"zscore"`.
 #' @param m,tau Embedding arguments for `discretization = "ordinal"`.
+#' @param segment Optional block width, in observations, used to cut each series
+#'   into several shorter sequences. Sequence-based inference resamples whole
+#'   sequences, so a single long series offers nothing to resample; segmenting
+#'   supplies the units. Blocks never span an ID boundary, and segmentation is
+#'   applied *after* discretization, so the state alphabet is still learned from
+#'   the whole series. At least `2`.
+#' @param overlap When segmenting, slide the block one observation at a time
+#'   instead of partitioning (default `FALSE`). Partitioning loses the
+#'   transition at every cut, roughly one per block. Sliding keeps every
+#'   transition — at `segment = 2` the blocks are the consecutive lag-1 pairs
+#'   and the network is identical to the unsegmented one — but the blocks share
+#'   observations, so they are not independent and intervals computed from them
+#'   run narrow. Partition for conservative intervals that tolerate dependence
+#'   beyond one lag; slide to preserve the estimate exactly.
 #' @param seed Optional seed used by stochastic discretizers.
 #' @param ... Passed on to the corresponding Nestimate builder
 #'   (`Nestimate::build_tna()` and friends), e.g. `start`, `end`,
@@ -64,15 +84,23 @@
 #' # Reuse an existing discretization:
 #' states <- discretize(series, method = "kmeans", n_states = 3)
 #' ts_tna(states)
+#'
+#' # Cut one long series into blocks so sequence-based tests have units:
+#' long <- cumsum(rnorm(300))
+#' ts_tna(long, segment = 10, labels = c("low", "mid", "high"))
+#'
+#' # Sliding lag-1 pairs keep every transition and the exact estimate:
+#' ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
 #' @export
 ts_tna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                    discretization = "quantile", n_states = 3L, breaks = NULL,
                    labels = NULL, transform = "none", m = NULL, tau = NULL,
-                   seed = NULL, ...) {
+                   segment = NULL, overlap = FALSE, seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "tna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
-    labels = labels, transform = transform, m = m, tau = tau, seed = seed, ...
+    labels = labels, transform = transform, m = m, tau = tau,
+    segment = segment, overlap = overlap, seed = seed, ...
   )
 }
 
@@ -81,11 +109,12 @@ ts_tna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 ts_ftna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                     discretization = "quantile", n_states = 3L, breaks = NULL,
                     labels = NULL, transform = "none", m = NULL, tau = NULL,
-                    seed = NULL, ...) {
+                    segment = NULL, overlap = FALSE, seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "ftna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
-    labels = labels, transform = transform, m = m, tau = tau, seed = seed, ...
+    labels = labels, transform = transform, m = m, tau = tau,
+    segment = segment, overlap = overlap, seed = seed, ...
   )
 }
 
@@ -94,11 +123,12 @@ ts_ftna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 ts_cna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                    discretization = "quantile", n_states = 3L, breaks = NULL,
                    labels = NULL, transform = "none", m = NULL, tau = NULL,
-                   seed = NULL, ...) {
+                   segment = NULL, overlap = FALSE, seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "cna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
-    labels = labels, transform = transform, m = m, tau = tau, seed = seed, ...
+    labels = labels, transform = transform, m = m, tau = tau,
+    segment = segment, overlap = overlap, seed = seed, ...
   )
 }
 
@@ -107,11 +137,12 @@ ts_cna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                     discretization = "quantile", n_states = 3L, breaks = NULL,
                     labels = NULL, transform = "none", m = NULL, tau = NULL,
-                    seed = NULL, ...) {
+                    segment = NULL, overlap = FALSE, seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "atna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
-    labels = labels, transform = transform, m = m, tau = tau, seed = seed, ...
+    labels = labels, transform = transform, m = m, tau = tau,
+    segment = segment, overlap = overlap, seed = seed, ...
   )
 }
 
@@ -128,7 +159,8 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 #' @noRd
 .tsn_build_stna <- function(data, type, value, id, time, series,
                             discretization, n_states, breaks, labels,
-                            transform, m, tau, seed, ...) {
+                            transform, m, tau, segment = NULL,
+                            overlap = FALSE, seed, ...) {
   if (!requireNamespace("Nestimate", quietly = TRUE)) {
     stop(
       sprintf("`ts_%s()` requires the Nestimate package. ", type),
@@ -146,6 +178,12 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
     )
   }
   source <- .tsn_transition_source(states)
+  # Segmentation happens after discretization on purpose: the state alphabet is
+  # learned from the whole series, so cutting it into blocks changes the unit of
+  # resampling without moving the cut points underneath it.
+  if (!is.null(segment)) {
+    source <- .tsn_segment_source(source, segment = segment, overlap = overlap)
+  }
   sequences <- .tsn_state_sequences(source)
   builder <- switch(
     type,
@@ -170,11 +208,82 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
     transform = attr(states, "parameters")$transform,
     n_states = attr(states, "parameters")$n_states,
     breaks = attr(states, "breaks"),
+    segment = segment,
+    overlap = overlap,
     series = unique(source$id),
     builder_args = dots
   )
   class(network) <- c("ts_tna", class(network))
   network
+}
+
+#' Cut Each Series into Shorter Sequences
+#'
+#' Sequence-based inference (bootstrap, permutation, stability) resamples whole
+#' sequences, so a single long series gives it nothing to resample. Splitting
+#' that series into blocks supplies the missing units. Blocks are cut within
+#' each series and never across an ID boundary.
+#'
+#' Two schemes, with different costs:
+#'
+#' * Non-overlapping (`overlap = FALSE`) partitions the series into consecutive
+#'   blocks. Each cut destroys the transition straddling it, so `n` observations
+#'   in blocks of `segment` yield about `n / segment` sequences and lose about
+#'   the same number of transitions.
+#' * Overlapping (`overlap = TRUE`) slides a window of width `segment` one
+#'   observation at a time, giving `n - segment + 1` blocks and keeping every
+#'   transition. At `segment = 2` the blocks are the consecutive lag-1 pairs and
+#'   the estimated network is identical to the unsegmented one. The blocks share
+#'   observations, so they are not independent and intervals derived from them
+#'   run narrow.
+#'
+#' @param source A tidy `id`/`time`/`value`/`state` table.
+#' @param segment Block width in observations; at least 2, since a block of one
+#'   observation contains no transition.
+#' @param overlap Slide the block by one observation instead of partitioning.
+#' @return The same table with `id` replaced by `<id>.<block>`.
+#' @noRd
+.tsn_segment_source <- function(source, segment, overlap = FALSE) {
+  stopifnot(
+    is.numeric(segment), length(segment) == 1L, !is.na(segment),
+    segment >= 2, segment == as.integer(segment),
+    is.logical(overlap), length(overlap) == 1L, !is.na(overlap)
+  )
+  segment <- as.integer(segment)
+  groups <- split(source, factor(source$id, levels = unique(source$id)))
+  blocks <- lapply(names(groups), function(key) {
+    group <- groups[[key]]
+    n <- nrow(group)
+    if (n < 2L) {
+      return(NULL)
+    }
+    starts <- if (overlap) {
+      seq_len(max(n - segment + 1L, 1L))
+    } else {
+      seq.int(1L, n, by = segment)
+    }
+    pieces <- lapply(seq_along(starts), function(index) {
+      rows <- seq.int(starts[index], min(starts[index] + segment - 1L, n))
+      # A trailing partial block of one observation carries no transition.
+      if (length(rows) < 2L) {
+        return(NULL)
+      }
+      piece <- group[rows, , drop = FALSE]
+      piece$id <- paste0(key, ".", index)
+      piece
+    })
+    do.call(rbind, pieces[!vapply(pieces, is.null, logical(1L))])
+  })
+  blocks <- blocks[!vapply(blocks, is.null, logical(1L))]
+  if (!length(blocks)) {
+    stop(
+      "`segment` left no sequence with at least two observations.",
+      call. = FALSE
+    )
+  }
+  segmented <- do.call(rbind, blocks)
+  row.names(segmented) <- NULL
+  segmented
 }
 
 #' Prepare Discretized States for Transition Counting

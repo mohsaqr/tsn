@@ -103,11 +103,10 @@ momentary report, collected between September 2018 and July 2021, and no values
 are missing. The thirteen columns fall into a few natural groups. Three record
 motivation (`autonomy`, `competence`, `relatedness`); three record appraisal of
 the current activity (`pleasure`, `interest`, `importance`); several describe
-the situation (`situation_requires`, `anxiety_guilt_avoidance`, `another_wants`,
-and a categorical `task_context_type` labelled Home, Work, Personal, or Other);
-and one records overall `mood`. The last two columns, `day` and `beep_number`,
-place each report in time, giving the calendar date and the position of the
-report within that day's sequence of prompts.
+the situation and its emotional framing, together with a categorical context
+label whose values are Home, Work, Personal, and Other; and one records overall
+`mood`. Two further columns place each report in time, giving the calendar date
+and the position of the report within that day's sequence of prompts.
 
 This vignette follows a single one of these signals, the `pleasure` rating,
 which captures how pleasant the respondent found the current activity at the
@@ -123,7 +122,6 @@ data("motivation", package = "tsn")
 pleasure <- head(motivation, 60)
 
 dim(pleasure)
-summary(pleasure$pleasure)
 ```
 
 These 60 reports were collected over 21 days, from 29 September to 19 October
@@ -414,40 +412,6 @@ plot(horizontal, type = "series")
 The source-series view recovers the measurements behind the network object and
 makes the short-run fluctuation that the visibility rule reads directly
 apparent.
-
-## From observations to states
-
-A visibility graph can also be summarized at the level of states rather than
-individual observations. With `unit = "state"`, `tsn()` discretizes the series,
-builds the visibility graph over its observations, and then aggregates the
-sightlines onto the state alphabet: the nodes become the states, and each edge
-weight is the total number of sightlines joining observations of that state
-pair. Supplying the state sequence from `discretize()` keeps the `Low`,
-`Middle`, and `High` labels used above.
-
-```{r vg-state}
-state_visibility <- tsn(
-  data = pleasure,
-  series = "pleasure",
-  unit = "state",
-  state = as.data.frame(states)$state
-)
-
-summary(state_visibility)
-as.matrix(state_visibility)
-```
-
-The six weights aggregate all 143 natural-visibility sightlines onto three
-states. The strongest connection joins `Middle` and `High` (44 sightlines),
-which reflects the upper ratings remaining mutually visible across the segment,
-while the `Low`-`Low` weight is the smallest (6). This state-level view compresses
-the 60-node visibility graph into the same three-state vocabulary used by the
-transition networks, offering a direct comparison between the geometric and the
-transition-based descriptions of the same series.
-
-```{r vg-state-network, eval=has_cograph, fig.alt="State-visibility network with Low, Middle, and High nodes, whose edges aggregate the natural-visibility sightlines between occurrences of each state pair."}
-plot(state_visibility)
-```
 
 # Window similarity with `tsn()`
 

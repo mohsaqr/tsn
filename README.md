@@ -37,11 +37,6 @@ The exported functions cover both strategies:
 | Classify local trend direction | `trend()` | Theil–Sen (default), OLS, Spearman, or Kendall slope; growth factor |
 | Build a distance or visibility network | `tsn()`, `vg()` | 15 distance measures; natural or horizontal visibility; full, nearest-neighbour, threshold, percentile, or Gaussian connectivity |
 
-Core network construction uses base R only. Transition-network
-estimation is delegated to the optional `Nestimate` package, and network
-rendering to `cograph` (with `igraph`); the source-series plots require
-neither.
-
 > **Related packages.** `tsn` is distinct from `tsnet` (Bayesian
 > graphical vector autoregression), `tsna` (temporal social-network
 > analysis), and `ts2net` (a related time-series-to-network toolkit).
@@ -224,10 +219,10 @@ itself through `cograph`, and `plot(x, "series")` shows the source
 series from which it was built.
 
 ``` r
-plot(network)
+plot(network, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
-<img src="man/figures/README-visibility-network-1.png" alt="Natural visibility graph of sixty pleasure ratings, drawn as a spring-layout network with nodes sized by degree; a few high-degree hubs correspond to peak observations that see far along the series." width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-visibility-network-1.png" alt="Natural visibility graph of sixty pleasure ratings, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the graph traces a near-linear backbone with side branches, and a few high-degree hubs correspond to peak observations that see far along the series." width="100%" style="display: block; margin: auto;" />
 
 ``` r
 plot(network, "series")
@@ -369,13 +364,13 @@ overrides them, for example
 
 ## Vignettes
 
-- `vignette("pleasure-all-functions")` applies every exported `tsn`
-  function to the packaged `motivation` pleasure series, building each
-  network representation in turn.
 - `vignette("nestimate-workflow")` builds a transition-network model
   from a series and tests it with `Nestimate`: bootstrap confidence
   intervals, centrality stability, a Markov-order test, and a
   permutation test comparing two periods.
+- `vignette("pleasure-all-functions")` applies every exported `tsn`
+  function to the packaged `motivation` pleasure series, building each
+  network representation in turn.
 - `vignette("plotting-time-series-networks")` documents the plotting
   surface: the network and source-series views, state overlays, and
   transition-model plots.

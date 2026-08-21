@@ -56,9 +56,6 @@ The exported functions cover both strategies:
 | Classify local trend direction | `trend()` | Theil–Sen (default), OLS, Spearman, or Kendall slope; growth factor |
 | Build a distance or visibility network | `tsn()`, `vg()` | 15 distance measures; natural or horizontal visibility; full, nearest-neighbour, threshold, percentile, or Gaussian connectivity |
 
-Core network construction uses base R only. Transition-network estimation is delegated to the optional `Nestimate`
-package, and network rendering to `cograph` (with `igraph`); the source-series
-plots require neither.
 
 > **Related packages.** `tsn` is distinct from `tsnet` (Bayesian graphical
 > vector autoregression), `tsna` (temporal social-network analysis), and
@@ -200,8 +197,8 @@ offers two complementary views: `plot(x)` draws the network itself through
 `cograph`, and `plot(x, "series")` shows the source series from which it was
 built.
 
-```{r visibility-network, fig.alt = "Natural visibility graph of sixty pleasure ratings, drawn as a spring-layout network with nodes sized by degree; a few high-degree hubs correspond to peak observations that see far along the series."}
-plot(network)
+```{r visibility-network, fig.alt = "Natural visibility graph of sixty pleasure ratings, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the graph traces a near-linear backbone with side branches, and a few high-degree hubs correspond to peak observations that see far along the series."}
+plot(network, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
 ```{r visibility-series, fig.height = 3, fig.alt = "The sixty pleasure ratings the visibility graph was built from, plotted as a line over observation order."}

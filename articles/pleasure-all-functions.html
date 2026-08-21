@@ -237,14 +237,12 @@ columns fall into a few natural groups. Three record motivation
 (<code>autonomy</code>, <code>competence</code>,
 <code>relatedness</code>); three record appraisal of the current
 activity (<code>pleasure</code>, <code>interest</code>,
-<code>importance</code>); several describe the situation
-(<code>situation_requires</code>, <code>anxiety_guilt_avoidance</code>,
-<code>another_wants</code>, and a categorical
-<code>task_context_type</code> labelled Home, Work, Personal, or Other);
-and one records overall <code>mood</code>. The last two columns,
-<code>day</code> and <code>beep_number</code>, place each report in
-time, giving the calendar date and the position of the report within
-that day’s sequence of prompts.</p>
+<code>importance</code>); several describe the situation and its
+emotional framing, together with a categorical context label whose
+values are Home, Work, Personal, and Other; and one records overall
+<code>mood</code>. Two further columns place each report in time, giving
+the calendar date and the position of the report within that day’s
+sequence of prompts.</p>
 <p>This vignette follows a single one of these signals, the
 <code>pleasure</code> rating, which captures how pleasant the respondent
 found the current activity at the moment of the prompt. To keep every
@@ -259,10 +257,7 @@ the flow of time.</p>
 <span><span class="va">pleasure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">motivation</span>, <span class="fl">60</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pleasure</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 60 13</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">pleasure</span><span class="op">$</span><span class="va">pleasure</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;    6.00   18.75   30.00   26.80   33.50   44.00</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 60 13</span></span></code></pre></div>
 <p>These 60 reports were collected over 21 days, from 29 September to 19
 October 2018. The pleasure ratings occupy the observed range 6 to 44,
 with a median of 30, a mean of 26.8, and a standard deviation of about
@@ -634,49 +629,6 @@ values around them.</p>
 <p>The source-series view recovers the measurements behind the network
 object and makes the short-run fluctuation that the visibility rule
 reads directly apparent.</p>
-<div class="section level3">
-<h3 id="from-observations-to-states">From observations to states<a class="anchor" aria-label="anchor" href="#from-observations-to-states"></a>
-</h3>
-<p>A visibility graph can also be summarized at the level of states
-rather than individual observations. With <code>unit = "state"</code>,
-<code><a href="../reference/tsn.html">tsn()</a></code> discretizes the series, builds the visibility graph
-over its observations, and then aggregates the sightlines onto the state
-alphabet: the nodes become the states, and each edge weight is the total
-number of sightlines joining observations of that state pair. Supplying
-the state sequence from <code><a href="../reference/discretize.html">discretize()</a></code> keeps the
-<code>Low</code>, <code>Middle</code>, and <code>High</code> labels used
-above.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">state_visibility</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
-<span>  unit <span class="op">=</span> <span class="st">"state"</span>,</span>
-<span>  state <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">states</span><span class="op">)</span><span class="op">$</span><span class="va">state</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">state_visibility</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       method  unit nodes dyads edges density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 visibility state     3     6     6       1              6             44</span></span>
-<span><span class="co">#&gt;   directed</span></span>
-<span><span class="co">#&gt; 1    FALSE</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">state_visibility</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        Middle Low High</span></span>
-<span><span class="co">#&gt; Middle     14  21   44</span></span>
-<span><span class="co">#&gt; Low        21   6   21</span></span>
-<span><span class="co">#&gt; High       44  21   37</span></span></code></pre></div>
-<p>The six weights aggregate all 143 natural-visibility sightlines onto
-three states. The strongest connection joins <code>Middle</code> and
-<code>High</code> (44 sightlines), which reflects the upper ratings
-remaining mutually visible across the segment, while the
-<code>Low</code>-<code>Low</code> weight is the smallest (6). This
-state-level view compresses the 60-node visibility graph into the same
-three-state vocabulary used by the transition networks, offering a
-direct comparison between the geometric and the transition-based
-descriptions of the same series.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">state_visibility</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/vg-state-network-1.png" class="r-plt" alt="State-visibility network with Low, Middle, and High nodes, whose edges aggregate the natural-visibility sightlines between occurrences of each state pair." width="100%" style="display: block; margin: auto;"></p>
-</div>
 </div>
 <div class="section level2">
 <h2 id="window-similarity-with-tsn">Window similarity with <code>tsn()</code><a class="anchor" aria-label="anchor" href="#window-similarity-with-tsn"></a>
@@ -686,7 +638,7 @@ descriptions of the same series.</p>
 sliding-window nodes. The window width defaults to one tenth of the
 series length, which is 6 here, and a step of 2 yields 28 overlapping
 windows.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">windows</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
@@ -702,7 +654,7 @@ windows.</p>
 <p>The default full connection rule evaluates and keeps all 378 window
 pairs. Each edge weight is <code>1 / (1 + distance)</code>, so larger
 weights mark more similar windows.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
@@ -720,7 +672,7 @@ weights mark more similar windows.</p>
 <p>Nearest-neighbour sparsification keeps 40 edges and lowers the
 density from 1 to 0.106, retaining the strongest local similarities
 instead of drawing every pair.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pleasure-all-functions_files/figure-html/tsn-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over twenty-eight sliding windows of the pleasure series, with edges joining the most similar windows." width="100%" style="display: block; margin: auto;"></p>
 <p>No retained edge joins immediately adjacent windows. The closest

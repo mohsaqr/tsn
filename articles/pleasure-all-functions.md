@@ -95,12 +95,11 @@ its 4,871 rows is one such momentary report, collected between September
 into a few natural groups. Three record motivation (`autonomy`,
 `competence`, `relatedness`); three record appraisal of the current
 activity (`pleasure`, `interest`, `importance`); several describe the
-situation (`situation_requires`, `anxiety_guilt_avoidance`,
-`another_wants`, and a categorical `task_context_type` labelled Home,
-Work, Personal, or Other); and one records overall `mood`. The last two
-columns, `day` and `beep_number`, place each report in time, giving the
-calendar date and the position of the report within that day’s sequence
-of prompts.
+situation and its emotional framing, together with a categorical context
+label whose values are Home, Work, Personal, and Other; and one records
+overall `mood`. Two further columns place each report in time, giving
+the calendar date and the position of the report within that day’s
+sequence of prompts.
 
 This vignette follows a single one of these signals, the `pleasure`
 rating, which captures how pleasant the respondent found the current
@@ -118,9 +117,6 @@ pleasure <- head(motivation, 60)
 
 dim(pleasure)
 #> [1] 60 13
-summary(pleasure$pleasure)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>    6.00   18.75   30.00   26.80   33.50   44.00
 ```
 
 These 60 reports were collected over 21 days, from 29 September to 19
@@ -586,58 +582,6 @@ order.](pleasure-all-functions_files/figure-html/vg-series-1.png)
 The source-series view recovers the measurements behind the network
 object and makes the short-run fluctuation that the visibility rule
 reads directly apparent.
-
-### From observations to states
-
-A visibility graph can also be summarized at the level of states rather
-than individual observations. With `unit = "state"`,
-[`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md) discretizes the
-series, builds the visibility graph over its observations, and then
-aggregates the sightlines onto the state alphabet: the nodes become the
-states, and each edge weight is the total number of sightlines joining
-observations of that state pair. Supplying the state sequence from
-[`discretize()`](https://pak.dynasite.org/tsn/reference/discretize.md)
-keeps the `Low`, `Middle`, and `High` labels used above.
-
-``` r
-
-state_visibility <- tsn(
-  data = pleasure,
-  series = "pleasure",
-  unit = "state",
-  state = as.data.frame(states)$state
-)
-
-summary(state_visibility)
-#>       method  unit nodes dyads edges density minimum_weight maximum_weight
-#> 1 visibility state     3     6     6       1              6             44
-#>   directed
-#> 1    FALSE
-as.matrix(state_visibility)
-#>        Middle Low High
-#> Middle     14  21   44
-#> Low        21   6   21
-#> High       44  21   37
-```
-
-The six weights aggregate all 143 natural-visibility sightlines onto
-three states. The strongest connection joins `Middle` and `High` (44
-sightlines), which reflects the upper ratings remaining mutually visible
-across the segment, while the `Low`-`Low` weight is the smallest (6).
-This state-level view compresses the 60-node visibility graph into the
-same three-state vocabulary used by the transition networks, offering a
-direct comparison between the geometric and the transition-based
-descriptions of the same series.
-
-``` r
-
-plot(state_visibility)
-```
-
-![State-visibility network with Low, Middle, and High nodes, whose edges
-aggregate the natural-visibility sightlines between occurrences of each
-state
-pair.](pleasure-all-functions_files/figure-html/vg-state-network-1.png)
 
 ## Window similarity with `tsn()`
 

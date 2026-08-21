@@ -2,8 +2,7 @@ url: https://pak.dynasite.org/tsn
 
 template:
   bootstrap: 5
-  bslib:
-    primary: "#1a5276"
+  bootswatch: journal
 
 navbar:
   structure:

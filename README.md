@@ -1,5 +1,5 @@
 
-# tsn
+# tsn <img src="man/figures/logo.png" align="right" height="139" alt="tsn logo" />
 
 `tsn` turns one or many time series into a network. What differs between
 analyses is only **what the nodes are**:

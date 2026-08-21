@@ -320,8 +320,13 @@ overrides them, for example `plot(network, layout = "circle", labels = TRUE)`.
 
 ## Vignettes
 
+- `vignette("nestimate-workflow")` builds a transition-network model from a
+  series and tests it with `Nestimate`: bootstrap confidence intervals,
+  centrality stability, a Markov-order test, and a permutation test comparing
+  two periods.
 - `vignette("pleasure-all-functions")` applies every exported `tsn` function
-  to the packaged `motivation` pleasure series, end to end.
+  to the packaged `motivation` pleasure series, building each network
+  representation in turn.
 - `vignette("plotting-time-series-networks")` documents the plotting surface:
   the network and source-series views, state overlays, and transition-model
   plots.

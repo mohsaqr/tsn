@@ -43,6 +43,7 @@ reference:
   contents:
   - as.data.frame.tsn
   - as.data.frame.ts_tna
+  - as.data.frame.ts_tna_group
   - as.matrix.tsn
   - as.matrix.ts_tna
   - plot.tsn

@@ -23,6 +23,13 @@
 #' units to work with; see its documentation for the trade-off between
 #' partitioned and sliding blocks.
 #'
+#' The `group` argument splits the model instead of pooling it: one network per
+#' condition, cohort, or context, all cut from one shared state alphabet so they
+#' can be compared. The result is a Nestimate `netobject_group`, so the grouped
+#' Nestimate verbs that suit a transition model apply to it directly. Verbs
+#' needing a precision matrix or a clustering attribute do not, and there is no
+#' grouped `plot()` method.
+#'
 #' Multiple series are supported through every tsn input form (named list,
 #' matrix, wide or long data frame). Scalar discretizers learn from pooled
 #' values. Temporal discretizers compute patterns or windows separately within
@@ -60,6 +67,17 @@
 #'   observations, so they are not independent and intervals computed from them
 #'   run narrow. Partition for conservative intervals that tolerate dependence
 #'   beyond one lag; slide to preserve the estimate exactly.
+#' @param group Optional name of a column of `data` holding each observation's
+#'   group, e.g. a condition, a cohort, or a context. Supplying it returns one
+#'   network per group instead of a single pooled network. States are
+#'   discretized from the pooled series first, so every group is cut on one
+#'   common scale and their networks share a node set and are directly
+#'   comparable. A sequence never spans a group boundary: where a series stays
+#'   in one group it contributes a single sequence (unless `segment` splits it
+#'   further), and where the group column alternates within a series each
+#'   contiguous run becomes its own sequence, so no transition is ever counted
+#'   between observations that were not adjacent in time. The transition across
+#'   a group change is dropped from both groups: it belongs to neither.
 #' @param seed Optional seed used by stochastic discretizers.
 #' @param ... Passed on to the corresponding Nestimate builder
 #'   (`Nestimate::build_tna()` and friends), e.g. `start`, `end`,
@@ -67,7 +85,12 @@
 #' @return A Nestimate `netobject` of class
 #'   `c("ts_tna", "netobject", "cograph_network")` with the additional fields
 #'   `$ts_source` (tidy `id`/`time`/`value`/`state` table) and `$meta$tsn`
-#'   (discretization settings).
+#'   (discretization settings). With `group`, a `c("ts_tna_group",
+#'   "netobject_group")` collection holding one such network per group, which
+#'   Nestimate's compatible grouped verbs (`net_prune()`,
+#'   `state_distribution()`, `net_centrality()`, `compare_model()`,
+#'   `permutation()`) accept directly and
+#'   [as.data.frame()][as.data.frame.ts_tna_group()] renders as a tidy table.
 #' @examplesIf requireNamespace("Nestimate", quietly = TRUE)
 #' set.seed(1)
 #' series <- list(
@@ -91,16 +114,26 @@
 #'
 #' # Sliding lag-1 pairs keep every transition and the exact estimate:
 #' ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
+#'
+#' # One network per context, on a shared alphabet:
+#' data(motivation)
+#' by_context <- ts_tna(
+#'   motivation,
+#'   series = "pleasure", group = "task_context_type",
+#'   labels = c("low", "mid", "high")
+#' )
+#' as.data.frame(by_context, what = "groups")
 #' @export
 ts_tna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                    discretization = "quantile", n_states = 3L, breaks = NULL,
                    labels = NULL, transform = "none", m = NULL, tau = NULL,
-                   segment = NULL, overlap = FALSE, seed = NULL, ...) {
+                   segment = NULL, overlap = FALSE, group = NULL,
+                   seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "tna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed, ...
   )
 }
 
@@ -109,12 +142,13 @@ ts_tna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 ts_ftna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                     discretization = "quantile", n_states = 3L, breaks = NULL,
                     labels = NULL, transform = "none", m = NULL, tau = NULL,
-                    segment = NULL, overlap = FALSE, seed = NULL, ...) {
+                    segment = NULL, overlap = FALSE, group = NULL,
+                    seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "ftna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed, ...
   )
 }
 
@@ -123,12 +157,13 @@ ts_ftna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 ts_cna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                    discretization = "quantile", n_states = 3L, breaks = NULL,
                    labels = NULL, transform = "none", m = NULL, tau = NULL,
-                   segment = NULL, overlap = FALSE, seed = NULL, ...) {
+                   segment = NULL, overlap = FALSE, group = NULL,
+                   seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "cna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed, ...
   )
 }
 
@@ -137,12 +172,13 @@ ts_cna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                     discretization = "quantile", n_states = 3L, breaks = NULL,
                     labels = NULL, transform = "none", m = NULL, tau = NULL,
-                    segment = NULL, overlap = FALSE, seed = NULL, ...) {
+                    segment = NULL, overlap = FALSE, group = NULL,
+                    seed = NULL, ...) {
   .tsn_build_stna(
     data, type = "atna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed, ...
   )
 }
 
@@ -160,7 +196,7 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 .tsn_build_stna <- function(data, type, value, id, time, series,
                             discretization, n_states, breaks, labels,
                             transform, m, tau, segment = NULL,
-                            overlap = FALSE, seed, ...) {
+                            overlap = FALSE, group = NULL, seed, ...) {
   if (!requireNamespace("Nestimate", quietly = TRUE)) {
     stop(
       sprintf("`ts_%s()` requires the Nestimate package. ", type),
@@ -168,25 +204,79 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
       call. = FALSE
     )
   }
+  measured <- data
+  if (!is.null(group) && is.data.frame(data) && !inherits(data, "tsn_states")) {
+    if (group %in% c(value, id, time)) {
+      stop(
+        "`group` must name a column of its own, not the `value`, `id`, or ",
+        "`time` column.",
+        call. = FALSE
+      )
+    }
+    # A numeric group column in wide data would otherwise be read as one more
+    # measured series: it would be discretized, shift the pooled cut points,
+    # and contribute its own nodes and transitions.
+    measured <- data[setdiff(names(data), group)]
+  }
   states <- if (inherits(data, "tsn_states")) {
     .tsn_select_canonical(data, series = series)
   } else {
     discretize(
-      data, value = value, id = id, time = time, series = series,
+      measured, value = value, id = id, time = time, series = series,
       method = discretization, n_states = n_states, breaks = breaks,
       labels = labels, transform = transform, m = m, tau = tau, seed = seed
     )
   }
   source <- .tsn_transition_source(states)
+  settings <- list(
+    type = type,
+    discretization = attr(states, "parameters")$method,
+    transform = attr(states, "parameters")$transform,
+    n_states = attr(states, "parameters")$n_states,
+    breaks = attr(states, "breaks"),
+    segment = segment,
+    overlap = overlap
+  )
+  dots <- list(...)
+  if (is.null(group)) {
+    return(.tsn_stna_network(source, settings = settings, dots = dots))
+  }
+  # Grouping happens after discretization for the same reason segmentation
+  # does: one alphabet is learned from the pooled series, so the groups are
+  # cut from a common scale and their networks stay comparable.
+  labels_by_row <- .tsn_group_labels(
+    source, data = data, group = group, id = id, time = time
+  )
+  .tsn_grouped_networks(
+    source, labels_by_row, settings = settings, dots = dots, group = group,
+    observed = unique(as.character(data[[group]]))
+  )
+}
+
+#' Build One Transition Network from a Tidy State Table
+#'
+#' The tail shared by grouped and ungrouped models: segment if asked, reshape
+#' into wide sequences, delegate to the requested Nestimate builder, and attach
+#' the tsn provenance. Keeping it in one place is what guarantees a group's
+#' network is built exactly the way the pooled network is.
+#'
+#' @param source A tidy `id`/`time`/`value`/`state` table.
+#' @param settings The `meta$tsn` provenance list, minus the per-model fields.
+#' @param dots Arguments forwarded to the Nestimate builder.
+#' @return A `ts_tna` netobject.
+#' @noRd
+.tsn_stna_network <- function(source, settings, dots) {
   # Segmentation happens after discretization on purpose: the state alphabet is
   # learned from the whole series, so cutting it into blocks changes the unit of
   # resampling without moving the cut points underneath it.
-  if (!is.null(segment)) {
-    source <- .tsn_segment_source(source, segment = segment, overlap = overlap)
+  if (!is.null(settings$segment)) {
+    source <- .tsn_segment_source(
+      source, segment = settings$segment, overlap = settings$overlap
+    )
   }
   sequences <- .tsn_state_sequences(source)
   builder <- switch(
-    type,
+    settings$type,
     tna = Nestimate::build_tna,
     ftna = Nestimate::build_ftna,
     cna = Nestimate::build_cna,
@@ -194,7 +284,8 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   )
   # Fix the node set to the state alphabet in level order, so nodes come
   # out low/mid/high (not alphabetical) and match series_networks() splits.
-  dots <- list(...)
+  # Subsetting a factor keeps its levels, so a group that never visits a
+  # state still carries that node, and every group's matrix stays aligned.
   params <- if (is.null(dots$params)) list() else dots$params
   if (is.null(params$alphabet)) {
     params$alphabet <- levels(source$state)
@@ -202,19 +293,275 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   dots$params <- params
   network <- do.call(builder, c(list(sequences), dots))
   network$ts_source <- source
-  network$meta$tsn <- list(
-    type = type,
-    discretization = attr(states, "parameters")$method,
-    transform = attr(states, "parameters")$transform,
-    n_states = attr(states, "parameters")$n_states,
-    breaks = attr(states, "breaks"),
-    segment = segment,
-    overlap = overlap,
-    series = unique(source$id),
-    builder_args = dots
+  network$meta$tsn <- c(
+    settings,
+    list(series = unique(source$id), builder_args = dots)
   )
   class(network) <- c("ts_tna", class(network))
   network
+}
+
+#' Resolve Each Observation's Group Label
+#'
+#' The group column lives in the raw input, while the tidy state table is what
+#' comes out of [discretize()] -- which may drop rows (ordinal embedding) or
+#' renumber time. Labels are therefore matched back through the same key the
+#' tidy table was built on: the named `id` and `time` columns where the caller
+#' supplied them, a `tsn_states` object's own canonical columns where it carries
+#' them, and the input row number only for wide data, where that is genuinely
+#' what [discretize()] used as the time index.
+#'
+#' @param source The tidy `id`/`time`/`value`/`state` table.
+#' @param data The raw input data frame.
+#' @param group Name of the column holding each observation's group.
+#' @param id,time The column names the caller passed to the verb, used to
+#'   rebuild the key `discretize()` used.
+#' @return A factor of group labels, one per row of `source`.
+#' @noRd
+.tsn_group_labels <- function(source, data, group, id, time) {
+  if (!is.data.frame(data)) {
+    stop(
+      "`group` names a column, so it requires `data` to be a data frame.",
+      call. = FALSE
+    )
+  }
+  stopifnot(
+    is.character(group), length(group) == 1L, !is.na(group), nzchar(group)
+  )
+  if (!group %in% names(data)) {
+    stop(
+      sprintf("`group` column \"%s\" is not a column of `data`.", group),
+      call. = FALSE
+    )
+  }
+  values <- data[[group]]
+  if (anyNA(values)) {
+    stop(
+      "`group` column contains NA; every observation needs a group.",
+      call. = FALSE
+    )
+  }
+  if (is.character(values) || is.factor(values)) {
+    if (any(!nzchar(as.character(values)))) {
+      stop(
+        "`group` column contains an empty label; every group needs a name.",
+        call. = FALSE
+      )
+    }
+  }
+  # A tsn_states input already carries the canonical id/time columns, so key on
+  # those rather than on whatever the caller happened to name. Reading the key
+  # off the call arguments instead would treat repeated times across series as
+  # the same observation and collapse whole groups into one.
+  if (inherits(data, "tsn_states")) {
+    raw_id <- as.character(data$id)
+    raw_time <- data$time
+  } else {
+    raw_id <- if (is.null(id)) NULL else as.character(data[[id]])
+    raw_time <- if (!is.null(time)) {
+      data[[time]]
+    } else if (!is.null(raw_id)) {
+      # discretize() numbers time within each series when no time column is named.
+      stats::ave(seq_len(nrow(data)), raw_id, FUN = seq_along)
+    } else {
+      # Wide data: the group is a row-level column and discretize() uses the
+      # input row number as the time index.
+      seq_len(nrow(data))
+    }
+  }
+  position <- match(
+    .tsn_match_key(source$id, source$time, raw_id, raw_time, side = "source"),
+    .tsn_match_key(source$id, source$time, raw_id, raw_time, side = "raw")
+  )
+  if (anyNA(position)) {
+    stop(
+      "Could not align `group` with the discretized series. ",
+      "Name the `id` and `time` columns explicitly.",
+      call. = FALSE
+    )
+  }
+  matched <- as.character(values)[position]
+  levels <- if (is.factor(values)) {
+    intersect(levels(values), matched)
+  } else {
+    # Radix order is locale-independent, so the group order of a character
+    # column does not change between machines.
+    sort(unique(matched), method = "radix")
+  }
+  factor(matched, levels = levels)
+}
+
+#' Build an Exact Key Linking Tidy Rows Back to Input Rows
+#'
+#' Keys are integer codes from [match()], not `as.character()` output. String
+#' coercion is not injective on doubles -- `0.1 + 0.2` and `0.3` both render as
+#' `"0.3"`, as do `1` and `1 + .Machine$double.eps`, and large values collapse
+#' into shared scientific notation -- so a character key can silently map an
+#' observation onto the wrong input row and assign it the wrong group.
+#' `match()` compares the underlying values, and integer codes cannot contain
+#' the separator.
+#'
+#' @param source_id,source_time The tidy table's key columns.
+#' @param raw_id,raw_time The input's key columns; `raw_id` may be `NULL` when
+#'   the input has no series column, in which case time alone is the key.
+#' @param side Which side of the join to encode.
+#' @return A character vector of keys for the requested side.
+#' @noRd
+.tsn_match_key <- function(source_id, source_time, raw_id, raw_time, side) {
+  times <- unique(c(raw_time, source_time))
+  time_code <- if (identical(side, "source")) {
+    match(source_time, times)
+  } else {
+    match(raw_time, times)
+  }
+  if (is.null(raw_id)) {
+    return(as.character(time_code))
+  }
+  ids <- unique(c(raw_id, as.character(source_id)))
+  id_code <- if (identical(side, "source")) {
+    match(as.character(source_id), ids)
+  } else {
+    match(raw_id, ids)
+  }
+  paste0(id_code, "\r", time_code)
+}
+
+#' Append a Run or Block Index Without Colliding With a Caller's Own IDs
+#'
+#' Suffixing is not injective on its own: a series called `"1"` split into runs
+#' produces `"1.1"`, which is indistinguishable from a series the caller already
+#' named `"1.1"`. `.tsn_state_sequences()` groups by ID, so the collision would
+#' silently weld two unrelated series into one sequence and count a transition
+#' between them. The separator is therefore widened until the generated IDs are
+#' as numerous as the blocks they name.
+#'
+#' @param base Row-level series IDs.
+#' @param index Row-level run or block index.
+#' @param suffix Row-level flag for whether this row's ID takes an index.
+#' @return A character vector of collision-free sequence IDs.
+#' @noRd
+.tsn_indexed_ids <- function(base, index, suffix = TRUE) {
+  base <- as.character(base)
+  suffix <- rep_len(suffix, length(base))
+  blocks <- length(unique(paste0(
+    match(base, unique(base)), "\r", ifelse(suffix, index, 0L)
+  )))
+  candidates <- lapply(c(".", "..", "..."), function(separator) {
+    ifelse(suffix, paste0(base, separator, index), base)
+  })
+  usable <- Find(function(out) length(unique(out)) == blocks, candidates)
+  if (is.null(usable)) {
+    stop(
+      "Could not build unique sequence IDs: the series IDs collide with the ",
+      "generated `<id>.<index>` names. Rename the series IDs.",
+      call. = FALSE
+    )
+  }
+  usable
+}
+
+#' Name the Sequence Each Observation Belongs To Once Groups Are Cut
+#'
+#' A sequence never spans a group boundary, for the same reason a segment block
+#' never spans an ID boundary: the transition straddling a cut did not happen
+#' within either side of it. Where a series stays in one group -- a cohort, a
+#' condition, one contiguous phase -- it contributes a single sequence and keeps
+#' its plain ID. Where the group column alternates within a series, each
+#' contiguous run becomes its own sequence, named `<id>.<run>`, so no transition
+#' is ever counted across a gap in time. Runs are numbered across the whole
+#' series, so a sequence ID identifies its data no matter which group it lands
+#' in.
+#'
+#' @param ids Series IDs, in temporal order.
+#' @param labels Group labels aligned with `ids`.
+#' @return A character vector of sequence IDs.
+#' @noRd
+.tsn_group_sequence_ids <- function(ids, labels) {
+  ids <- as.character(ids)
+  runs <- rle(paste0(ids, "\r", as.character(labels)))
+  # The series each run belongs to, taken at the run's first row.
+  run_ids <- ids[cumsum(c(1L, utils::head(runs$lengths, -1L)))]
+  # Runs are numbered across the whole series rather than within one group, so
+  # a series that appears in two groups yields two distinct sequence IDs. If
+  # they restarted per group, segmenting would produce the same "<id>.1" in
+  # every group and the IDs would no longer identify a sequence on their own.
+  position <- stats::ave(seq_along(runs$values), run_ids, FUN = seq_along)
+  total <- as.integer(table(run_ids)[run_ids])
+  .tsn_indexed_ids(
+    base = ids,
+    index = rep(position, runs$lengths),
+    suffix = rep(total > 1L, runs$lengths)
+  )
+}
+
+#' Build One Network per Group
+#'
+#' Splits the tidy state table by group and runs each part through the same
+#' builder the pooled model uses. A group's network is therefore built exactly
+#' the way the pooled one is, but it is not simply the pooled model restricted
+#' to those rows: sequences are re-cut at every group change, so transitions
+#' spanning a boundary are absent from it.
+#'
+#' @param source The tidy `id`/`time`/`value`/`state` table.
+#' @param labels A factor of group labels, one per row of `source`.
+#' @param settings The shared `meta$tsn` provenance list.
+#' @param dots Arguments forwarded to the Nestimate builder.
+#' @param group Name of the grouping column, recorded on the result.
+#' @param observed Every group label present in the input, used to report any
+#'   group that discretization removed before the split.
+#' @return A `ts_tna_group` collection.
+#' @noRd
+.tsn_grouped_networks <- function(source, labels, settings, dots, group,
+                                  observed) {
+  source$id <- .tsn_group_sequence_ids(source$id, labels)
+  parts <- split(source, labels, drop = TRUE)
+  # Discretization can drop rows before the split -- ordinal embedding trims the
+  # tail of every series -- which can remove a group from the data entirely. It
+  # would otherwise be absent from the result with nothing said.
+  dropped <- setdiff(observed, names(parts))
+  if (length(dropped) > 0L) {
+    warning(
+      sprintf(
+        paste0(
+          "Group(s) %s had observations in `data` but none survived ",
+          "discretization, so they are absent from the result."
+        ),
+        paste0("\"", dropped, "\"", collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  # Indexed rather than named iteration: `parts[[key]]` is a lookup that can
+  # miss, and a silent NULL here would surface much later as an unrelated error.
+  networks <- lapply(seq_along(parts), function(index) {
+    key <- names(parts)[[index]]
+    part <- parts[[index]]
+    rownames(part) <- NULL
+    # A group whose observations are never adjacent in time has no transition
+    # to count, and would otherwise come back as a silently empty network.
+    if (!any(table(part$id) >= 2L)) {
+      warning(
+        sprintf(
+          paste0(
+            "Group \"%s\" has no two observations adjacent in time, so its ",
+            "network has no transitions. Its rows are scattered between other ",
+            "groups rather than forming runs."
+          ),
+          key
+        ),
+        call. = FALSE
+      )
+    }
+    settings$group <- group
+    settings$group_label <- key
+    .tsn_stna_network(part, settings = settings, dots = dots)
+  })
+  names(networks) <- names(parts)
+  structure(
+    networks,
+    group_col = group,
+    class = c("ts_tna_group", "netobject_group")
+  )
 }
 
 #' Cut Each Series into Shorter Sequences
@@ -269,7 +616,8 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
         return(NULL)
       }
       piece <- group[rows, , drop = FALSE]
-      piece$id <- paste0(key, ".", index)
+      piece$id <- key
+      piece$.tsn_block <- index
       piece
     })
     do.call(rbind, pieces[!vapply(pieces, is.null, logical(1L))])
@@ -282,6 +630,8 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
     )
   }
   segmented <- do.call(rbind, blocks)
+  segmented$id <- .tsn_indexed_ids(segmented$id, segmented$.tsn_block)
+  segmented$.tsn_block <- NULL
   row.names(segmented) <- NULL
   segmented
 }

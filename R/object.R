@@ -256,3 +256,65 @@ as.data.frame.ts_tna <- function(x, row.names = NULL, optional = FALSE,
   rownames(out) <- NULL
   out
 }
+
+#' Coerce a grouped transition network to a tidy data frame
+#'
+#' A grouped model is a collection of networks, one per group. This method is
+#' the tidy view of it: every table it returns carries a `group` column, so a
+#' comparison across groups is a data frame you can read, sort, or join rather
+#' than a set of objects you have to reach into one at a time.
+#'
+#' @param x A `ts_tna_group` result from [ts_tna()] and friends, built with
+#'   their `group` argument.
+#' @param row.names Optional row names.
+#' @param optional Ignored.
+#' @param what Which table to return: `"edges"` (one row per group and state
+#'   pair, the default), `"series"` (the per-observation source table for every
+#'   group), or `"groups"` (a one-row-per-group index of how much data backs
+#'   each network).
+#' @param ... Ignored.
+#' @return A base data frame whose first column is `group`.
+#' @seealso [ts_tna()] for the `group` argument that builds these models.
+#' @examplesIf requireNamespace("Nestimate", quietly = TRUE)
+#' data(motivation)
+#' networks <- ts_tna(
+#'   motivation,
+#'   series = "pleasure", group = "task_context_type",
+#'   labels = c("low", "mid", "high")
+#' )
+#' as.data.frame(networks, what = "groups")
+#' head(as.data.frame(networks))
+#' @export
+as.data.frame.ts_tna_group <- function(x, row.names = NULL, optional = FALSE,
+                                       what = c("edges", "series", "groups"),
+                                       ...) {
+  stopifnot(inherits(x, "ts_tna_group"), !is.null(names(x)))
+  what <- match.arg(what)
+  rows <- Map(
+    function(network, key) {
+      part <- switch(
+        what,
+        edges = as.data.frame(network),
+        series = as.data.frame(network, what = "series"),
+        groups = data.frame(
+          type = network$meta$tsn$type,
+          sequences = nrow(network$data),
+          observations = nrow(network$ts_source),
+          states = nrow(network$nodes),
+          edges = nrow(network$edges),
+          stringsAsFactors = FALSE
+        )
+      )
+      cbind(
+        group = factor(key, levels = names(x)),
+        part,
+        stringsAsFactors = FALSE
+      )
+    },
+    x,
+    names(x)
+  )
+  out <- do.call(rbind, rows)
+  rownames(out) <- NULL
+  out
+}

@@ -38,11 +38,6 @@ The exported functions cover both strategies:
 | Classify local trend direction | [`trend()`](https://pak.dynasite.org/tsn/reference/trend.md) | Theil–Sen (default), OLS, Spearman, or Kendall slope; growth factor |
 | Build a distance or visibility network | [`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md), [`vg()`](https://pak.dynasite.org/tsn/reference/vg.md) | 15 distance measures; natural or horizontal visibility; full, nearest-neighbour, threshold, percentile, or Gaussian connectivity |
 
-Core network construction uses base R only. Transition-network
-estimation is delegated to the optional `Nestimate` package, and network
-rendering to `cograph` (with `igraph`); the source-series plots require
-neither.
-
 > **Related packages.** `tsn` is distinct from `tsnet` (Bayesian
 > graphical vector autoregression), `tsna` (temporal social-network
 > analysis), and `ts2net` (a related time-series-to-network toolkit).
@@ -247,11 +242,12 @@ series from which it was built.
 
 ``` r
 
-plot(network)
+plot(network, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
-![Natural visibility graph of sixty pleasure ratings, drawn as a
-spring-layout network with nodes sized by degree; a few high-degree hubs
+![Natural visibility graph of sixty pleasure ratings, drawn with a
+Fruchterman-Reingold layout and nodes sized by degree; the graph traces
+a near-linear backbone with side branches, and a few high-degree hubs
 correspond to peak observations that see far along the
 series.](reference/figures/README-visibility-network-1.png)
 
@@ -410,13 +406,13 @@ example `plot(network, layout = "circle", labels = TRUE)`.
 
 ## Vignettes
 
-- [`vignette("pleasure-all-functions")`](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md)
-  applies every exported `tsn` function to the packaged `motivation`
-  pleasure series, building each network representation in turn.
 - [`vignette("nestimate-workflow")`](https://pak.dynasite.org/tsn/articles/nestimate-workflow.md)
   builds a transition-network model from a series and tests it with
   `Nestimate`: bootstrap confidence intervals, centrality stability, a
   Markov-order test, and a permutation test comparing two periods.
+- [`vignette("pleasure-all-functions")`](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md)
+  applies every exported `tsn` function to the packaged `motivation`
+  pleasure series, building each network representation in turn.
 - [`vignette("plotting-time-series-networks")`](https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.md)
   documents the plotting surface: the network and source-series views,
   state overlays, and transition-model plots.

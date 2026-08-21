@@ -63,24 +63,34 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plotting Time Series Networks</h1>
-                        <h4 data-toc-skip class="author">tsn package
-authors</h4>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/plotting-time-series-networks.Rmd" class="external-link"><code>vignettes/plotting-time-series-networks.Rmd</code></a></small>
+                        <h4 data-toc-skip class="author">Mohammed
+Saqr</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Sonsoles
+López-Pernas</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Manuel
+J. Gómez</h4>
+            <address class="author_afil">
+      University of Murcia<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/plotting-time-series-networks.Rmd" class="external-link"><code>vignettes/plotting-time-series-networks.Rmd</code></a></small>
       <div class="d-none name"><code>plotting-time-series-networks.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
     
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>A plot of a time series network determines which aspect of the data
-is shown: the measured temporal sequence, the states assigned to
-observations, or the relational structure defined by the network. These
-views describe different aspects of the same analysis and should not be
-interpreted as equivalent representations.</p>
+<p>Which plot is drawn from a time series network selects which aspect
+of the data becomes visible: the measured temporal sequence, the states
+assigned to observations, or the relational structure defined by the
+network. These views describe different aspects of the same analysis and
+should not be interpreted as equivalent representations.</p>
 <p>The plotting methods in <strong>tsn</strong> select the
 representation with the <code>type</code> argument. Additional arguments
 control the visual encoding within that representation, including state
@@ -146,14 +156,14 @@ representation explicit.</p>
 </tbody>
 </table>
 <p>For network objects, <code>"network"</code> displays the nodes and
-edges defined by the model, whereas <code>"series"</code> places the
-network structure in relation to the original time series. For
-TNA-family models, <code>"combined"</code> displays the state sequence
-together with the corresponding transition network, while
-<code>"network"</code> focuses on the state-to-state relationships
-alone. The choice of plot type therefore determines whether the figure
-is used to examine the temporal sequence, the state representation, or
-the network structure.</p>
+edges defined by the model, whereas <code>"series"</code> shows the
+source time series from which the network was constructed, with no
+network structure drawn over it. For TNA-family models,
+<code>"combined"</code> displays the state sequence together with the
+corresponding transition network, while <code>"network"</code> focuses
+on the state-to-state relationships alone. The choice of plot type
+therefore determines whether the figure is used to examine the temporal
+sequence, the state representation, or the network structure.</p>
 </div>
 <div class="section level2">
 <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
@@ -345,7 +355,10 @@ default point representation.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">directions</span><span class="op">)</span></span></code></pre></div>
 <p><img src="plotting-time-series-networks_files/figure-html/trend-points-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
-<p>Colour encodes the local trend state at each observation. The view
+<p>Colour encodes the local trend state at each observation:
+<em>ascending</em>, <em>descending</em>, and <em>flat</em> record the
+direction of the window centred on that point, while <em>turbulent</em>
+marks intervals too volatile to read as a single direction. The view
 retains individual measurements and is therefore suited to locating
 directional changes precisely in time.</p>
 </div>
@@ -454,6 +467,56 @@ values.</p>
 diagnostic complement to the network rather than an alternative network
 model.</p>
 </div>
+<div class="section level3">
+<h3 id="weighted-distance-network">Weighted distance network<a class="anchor" aria-label="anchor" href="#weighted-distance-network"></a>
+</h3>
+<p>The visibility graph above is unweighted: an edge is either present
+or absent. <code><a href="../reference/tsn.html">tsn()</a></code> with <code>method = "distance"</code>
+instead joins sliding windows of the series and assigns each edge a
+weight equal to <code>1 / (1 + distance)</code>, so the same
+<code>"network"</code> plot type now carries continuous structure. The
+<code>connect = "nearest"</code> rule retains only each window’s two
+nearest neighbours, which keeps the figure legible.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">windows</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">short</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  step <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  connect <span class="op">=</span> <span class="st">"nearest"</span>,</span>
+<span>  neighbors <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">windows</span><span class="op">)</span></span></code></pre></div>
+<p><img src="plotting-time-series-networks_files/figure-html/distance-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over sliding windows of the short pleasure series; node size encodes degree and edges join the most similar windows." width="100%" style="display: block; margin: auto;"></p>
+<p>Node size still encodes degree, but the edges now express graded
+similarity rather than presence alone. The same plot type therefore
+reports a different kind of structure once the underlying model changes
+from visibility to distance: the constructor, not the plot argument,
+determines what an edge means.</p>
+</div>
+<div class="section level3">
+<h3 id="adjusting-the-network-encoding">Adjusting the network encoding<a class="anchor" aria-label="anchor" href="#adjusting-the-network-encoding"></a>
+</h3>
+<p>Graphical arguments change how a network is drawn without changing
+the fitted object. Here the visibility graph is redrawn with a circular
+layout; the nodes, edges, and weights are identical to the default view
+above.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">visibility</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vg.html">vg</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">short</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"horizontal"</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"pleasure"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">visibility</span>, layout <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="plotting-time-series-networks_files/figure-html/network-encoding-1.png" class="r-plt" alt="The horizontal visibility graph redrawn with a circular layout, showing that the layout rearranges the same twenty-five nodes and forty-three edges." width="100%" style="display: block; margin: auto;"></p>
+<p>The circular layout places the observations evenly around a ring, but
+the graph itself is unchanged. This separation matters for
+interpretation: a claim about central or peripheral observations must
+rest on the edges stored in the model, not on the visual prominence a
+particular layout happens to give a node.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="transition-network-analysis-plots">Transition Network Analysis plots<a class="anchor" aria-label="anchor" href="#transition-network-analysis-plots"></a>
@@ -509,9 +572,9 @@ source sequence.</p>
 <div class="section level3">
 <h3 id="combined">Combined<a class="anchor" aria-label="anchor" href="#combined"></a>
 </h3>
-<p>The state sequence is converted to a Transition Network and
+<p>The state sequence is converted to a transition network and
 immediately plotted. The combined representation is the default.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">probabilities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span><span class="va">states</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">probabilities</span><span class="op">)</span></span></code></pre></div>
@@ -524,7 +587,7 @@ the derivation of the relational structure explicit.</p>
 <div class="section level3">
 <h3 id="network-1">Network<a class="anchor" aria-label="anchor" href="#network-1"></a>
 </h3>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">probabilities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span><span class="va">states</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">probabilities</span>, <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
@@ -536,7 +599,7 @@ probabilities and self-loops encode persistence.</p>
 <div class="section level3">
 <h3 id="source-series-1">Source series<a class="anchor" aria-label="anchor" href="#source-series-1"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">probabilities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span><span class="va">states</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">probabilities</span>, <span class="st">"series"</span><span class="op">)</span></span></code></pre></div>
@@ -554,7 +617,7 @@ source-specific network models. Its <code>series</code> argument selects
 a model when the collection contains more than one source. With the
 single series used here, no selection argument is required. The model is
 extracted and plotted in the same code block.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">probabilities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span><span class="va">states</span><span class="op">)</span></span>
 <span><span class="va">individual</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">probabilities</span><span class="op">)</span></span>
 <span></span>

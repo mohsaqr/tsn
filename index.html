@@ -123,7 +123,6 @@
 </tr>
 </tbody>
 </table>
-<p>Core network construction uses base R only. Transition-network estimation is delegated to the optional <code>Nestimate</code> package, and network rendering to <code>cograph</code> (with <code>igraph</code>); the source-series plots require neither.</p>
 <blockquote>
 <p><strong>Related packages.</strong> <code>tsn</code> is distinct from <code>tsnet</code> (Bayesian graphical vector autoregression), <code>tsna</code> (temporal social-network analysis), and <code>ts2net</code> (a related time-series-to-network toolkit). Its emphasis is a compact, dependency-light interface that supports irregularly spaced visibility graphs, fifteen discretizers, and an optional bridge to transition-network models.</p>
 </blockquote>
@@ -242,8 +241,8 @@
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
 <p>The 60 observations become 60 nodes joined by 143 sightlines. Every network offers two complementary views: <code>plot(x)</code> draws the network itself through <code>cograph</code>, and <code>plot(x, "series")</code> shows the source series from which it was built.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-visibility-network-1.png" alt="Natural visibility graph of sixty pleasure ratings, drawn as a spring-layout network with nodes sized by degree; a few high-degree hubs correspond to peak observations that see far along the series." width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span>, layout <span class="op">=</span> <span class="st">"fr"</span>, node_size_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.4</span>, <span class="fl">4.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-visibility-network-1.png" alt="Natural visibility graph of sixty pleasure ratings, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the graph traces a near-linear backbone with side branches, and a few high-degree hubs correspond to peak observations that see far along the series." width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span>, <span class="st">"series"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-visibility-series-1.png" alt="The sixty pleasure ratings the visibility graph was built from, plotted as a line over observation order." width="100%" style="display: block; margin: auto;"></p>
@@ -335,9 +334,9 @@
 </h2>
 <ul>
 <li>
-<code><a href="articles/pleasure-all-functions.html">vignette("pleasure-all-functions")</a></code> applies every exported <code>tsn</code> function to the packaged <code>motivation</code> pleasure series, building each network representation in turn.</li>
-<li>
 <code><a href="articles/nestimate-workflow.html">vignette("nestimate-workflow")</a></code> builds a transition-network model from a series and tests it with <code>Nestimate</code>: bootstrap confidence intervals, centrality stability, a Markov-order test, and a permutation test comparing two periods.</li>
+<li>
+<code><a href="articles/pleasure-all-functions.html">vignette("pleasure-all-functions")</a></code> applies every exported <code>tsn</code> function to the packaged <code>motivation</code> pleasure series, building each network representation in turn.</li>
 <li>
 <code><a href="articles/plotting-time-series-networks.html">vignette("plotting-time-series-networks")</a></code> documents the plotting surface: the network and source-series views, state overlays, and transition-model plots.</li>
 </ul>

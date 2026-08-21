@@ -2,11 +2,11 @@
 
 ## Introduction
 
-A plot of a time series network determines which aspect of the data is
-shown: the measured temporal sequence, the states assigned to
-observations, or the relational structure defined by the network. These
-views describe different aspects of the same analysis and should not be
-interpreted as equivalent representations.
+Which plot is drawn from a time series network selects which aspect of
+the data becomes visible: the measured temporal sequence, the states
+assigned to observations, or the relational structure defined by the
+network. These views describe different aspects of the same analysis and
+should not be interpreted as equivalent representations.
 
 The plotting methods in **tsn** select the representation with the
 `type` argument. Additional arguments control the visual encoding within
@@ -29,13 +29,13 @@ explicit.
 | Model collection from [`series_networks()`](https://pak.dynasite.org/tsn/reference/series_networks.md) | `"network"` | `"network"` |
 
 For network objects, `"network"` displays the nodes and edges defined by
-the model, whereas `"series"` places the network structure in relation
-to the original time series. For TNA-family models, `"combined"`
-displays the state sequence together with the corresponding transition
-network, while `"network"` focuses on the state-to-state relationships
-alone. The choice of plot type therefore determines whether the figure
-is used to examine the temporal sequence, the state representation, or
-the network structure.
+the model, whereas `"series"` shows the source time series from which
+the network was constructed, with no network structure drawn over it.
+For TNA-family models, `"combined"` displays the state sequence together
+with the corresponding transition network, while `"network"` focuses on
+the state-to-state relationships alone. The choice of plot type
+therefore determines whether the figure is used to examine the temporal
+sequence, the state representation, or the network structure.
 
 ## Data
 
@@ -187,9 +187,11 @@ plot(directions)
 
 ![](plotting-time-series-networks_files/figure-html/trend-points-1.png)
 
-Colour encodes the local trend state at each observation. The view
-retains individual measurements and is therefore suited to locating
-directional changes precisely in time.
+Colour encodes the local trend state at each observation: *ascending*,
+*descending*, and *flat* record the direction of the window centred on
+that point, while *turbulent* marks intervals too volatile to read as a
+single direction. The view retains individual measurements and is
+therefore suited to locating directional changes precisely in time.
 
 ### Ribbon
 
@@ -290,6 +292,70 @@ The source-series view restores magnitude and temporal order. It is a
 diagnostic complement to the network rather than an alternative network
 model.
 
+### Weighted distance network
+
+The visibility graph above is unweighted: an edge is either present or
+absent. [`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md) with
+`method = "distance"` instead joins sliding windows of the series and
+assigns each edge a weight equal to `1 / (1 + distance)`, so the same
+`"network"` plot type now carries continuous structure. The
+`connect = "nearest"` rule retains only each window’s two nearest
+neighbours, which keeps the figure legible.
+
+``` r
+
+windows <- tsn(
+  data = short,
+  method = "distance",
+  series = "pleasure",
+  step = 2,
+  connect = "nearest",
+  neighbors = 2
+)
+
+plot(windows)
+```
+
+![Nearest-neighbour distance network over sliding windows of the short
+pleasure series; node size encodes degree and edges join the most
+similar
+windows.](plotting-time-series-networks_files/figure-html/distance-network-1.png)
+
+Node size still encodes degree, but the edges now express graded
+similarity rather than presence alone. The same plot type therefore
+reports a different kind of structure once the underlying model changes
+from visibility to distance: the constructor, not the plot argument,
+determines what an edge means.
+
+### Adjusting the network encoding
+
+Graphical arguments change how a network is drawn without changing the
+fitted object. Here the visibility graph is redrawn with a circular
+layout; the nodes, edges, and weights are identical to the default view
+above.
+
+``` r
+
+visibility <- vg(
+  data = short,
+  type = "horizontal",
+  series = "pleasure"
+)
+
+plot(visibility, layout = "circle")
+```
+
+![The horizontal visibility graph redrawn with a circular layout,
+showing that the layout rearranges the same twenty-five nodes and
+forty-three
+edges.](plotting-time-series-networks_files/figure-html/network-encoding-1.png)
+
+The circular layout places the observations evenly around a ring, but
+the graph itself is unchanged. This separation matters for
+interpretation: a claim about central or peripheral observations must
+rest on the edges stored in the model, not on the visual prominence a
+particular layout happens to give a node.
+
 ## Transition Network Analysis plots
 
 The TNA family comprises models returned by
@@ -320,7 +386,7 @@ relevant only when a model contains more than one source sequence.
 
 ### Combined
 
-The state sequence is converted to a Transition Network and immediately
+The state sequence is converted to a transition network and immediately
 plotted. The combined representation is the default.
 
 ``` r

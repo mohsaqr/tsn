@@ -1,12 +1,18 @@
 ---
-title: "Time Series Networks"
-author: "tsn package authors"
+title: "From Time Series to Networks"
+author:
+  - name: "Mohammed Saqr"
+    affiliation: "University of Eastern Finland"
+  - name: "Sonsoles López-Pernas"
+    affiliation: "University of Eastern Finland"
+  - name: "Manuel J. Gómez"
+    affiliation: "University of Murcia"
 output:
   rmarkdown::html_vignette:
     toc: true
     number_sections: true
 vignette: >
-  %\VignetteIndexEntry{Time Series Networks}
+  %\VignetteIndexEntry{From Time Series to Networks}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -29,76 +35,87 @@ has_nestimate <- requireNamespace("Nestimate", quietly = TRUE)
 
 # Introduction
 
-Time series analysis traditionally represents temporal data through observations
-indexed by time, with emphasis placed on quantities such as level, variation,
-dependence, and temporal change. A network-based representation provides a
-complementary perspective by replacing, or augmenting, the explicit time index
-with a relational structure. In this framework, observations, temporal states,
-or local windows can be represented as nodes, while edges encode relationships
-defined by geometric visibility, similarity, state transitions, co-occurrence,
-or weighted dependence. The resulting network is therefore not a unique
-property of a time series. It is determined by the representation used and by
-the structural question that the representation is designed to answer.
+Time series analysis traditionally represents temporal data as observations
+indexed by time, with attention directed to quantities such as level,
+variation, dependence, and change. A network representation offers a
+complementary view: it replaces, or augments, the explicit time index with a
+relational structure in which nodes stand for observations, temporal states, or
+local windows, and edges encode a defined relationship between them. That
+relationship may be geometric visibility, numerical similarity, a state
+transition, a co-occurrence, or a weighted dependence. A time series therefore
+does not have a single canonical network. The network that results is
+determined jointly by the chosen representation and by the structural question
+that representation is designed to answer.
 
-The **tsn** R package implements a collection of network representations for
-time series while keeping these modelling choices explicit. The `discretize()`
-function maps continuous observations to a finite set of states, providing a
-symbolic representation of the series. The `trend()` function characterizes
-local direction and captures short-range increases, decreases, and stable or
-turbulent behaviour. The `vg()` function constructs a visibility graph in which
-observations are connected according to their geometric visibility. The `tsn()`
-function constructs distance networks over complete series, local windows, or
-individual observations. This vignette uses local windows and connects them
-according to their similarity.
+The **tsn** package provides a set of these representations while keeping the
+modelling choices explicit at every step. `discretize()` maps continuous
+observations onto a finite set of ordered states and so yields a symbolic
+version of the series. `trend()` characterizes local direction and separates
+short-range increase, decrease, stability, and turbulence. `vg()` constructs a
+visibility graph, in which observations are joined when the geometry of the
+series makes them mutually visible. `tsn()` is the general distance-network
+constructor over complete series, local windows, or individual observations;
+this vignette applies it to overlapping windows joined by their similarity.
 
-Once a time series has been represented as a sequence of discrete states, its
-temporal dynamics can be studied through Transition Network Analysis (TNA). The
-`ts_tna()` function constructs a Transition Network (TNA). The `ts_ftna()`
-function constructs a Frequency Transition Network (FTNA), `ts_cna()` constructs
-a Co-occurrence Network (CNA), and `ts_atna()` constructs an Attention-Weighted
-Transition Network (ATNA). These constructions emphasize different properties
-of the same symbolic sequence and should be interpreted as complementary rather
-than interchangeable models.
+Once a series has been reduced to a sequence of states, its dynamics can be
+examined through transition network analysis. `ts_tna()` builds a transition
+network whose edges carry conditional transition probabilities. `ts_ftna()`
+builds the corresponding frequency network, `ts_cna()` a co-occurrence network,
+and `ts_atna()` an attention-weighted transition network. These four
+constructions summarize different properties of the same symbolic sequence and
+are complementary rather than interchangeable. Finally, `series_networks()`
+extracts and indexes the network model attached to each source series,
+retaining the model type, the shared state alphabet, and the provenance needed
+to trace a network back to its data.
 
-The package also provides `series_networks()` for extracting and organizing the
-network model associated with each source series. The function retains the
-model type, shared state alphabet, provenance, and source index. In this
-single-series vignette, it returns one indexed model and provides a direct way to
-print, summarize, or plot that model.
-
-This vignette develops every representation using one unchanged segment of one
-measured variable. The examples show how each function is called and how the
-resulting structure can be interpreted. Network figures are generated through
-the package's `plot()` methods using cograph. The four transition-network
-constructors require the Nestimate package.
-
-The functions and their returned representations are:
+Every representation in this vignette is developed on one fixed segment of one
+measured variable, so that the constructions can be compared without any change
+in the underlying data. Network figures are produced by the package's `plot()`
+methods through **cograph**, and the four transition-network constructors
+require the **Nestimate** package; both are optional and used only where noted.
 
 | Scientific question | Function | Result | What it captures |
 |---|---|---|---|
-| **How can the continuous series be represented as a sequence of discrete states?** | `discretize()` | Tidy state table | Converts continuous observations into a finite state representation, making recurring levels, ranges, or regimes explicit. |
-| **How does the series change locally over time?** | `trend()` | Tidy trend table | Captures local directional behaviour, distinguishing periods of increase, decrease, stability, or turbulence. |
-| **Which observations are connected by geometric visibility?** | `vg()` | Visibility network | Captures the geometric organization of the series by connecting observations according to their visibility relationships. |
-| **Which time windows show similar values or patterns?** | `tsn()` | Distance network | Represents relationships among local windows according to their proximity or similarity, revealing repeated or structurally similar temporal patterns. |
-| **How likely is one state to transition to another?** | `ts_tna()` | Transition Network (TNA) | Weights directed edges between states by the conditional probability of each successive transition. |
-| **How frequently does the series transition from one state to another?** | `ts_ftna()` | Frequency Transition Network (FTNA) | Weights directed edges between states by the observed frequency of each successive transition. |
-| **Which states are connected through co-occurrence in the sequence?** | `ts_cna()` | Co-occurrence Network (CNA) | Uses undirected edges to represent state co-occurrence within the sequence. |
-| **Which transitions receive greater attention weight?** | `ts_atna()` | Attention-Weighted Transition Network (ATNA) | Weights directed edges between states by their attention values. |
-| **How are network representations associated with their source series?** | `series_networks()` | Indexed model collection | Organizes extracted network models by source series while preserving their correspondence and provenance. |
+| **How can a continuous series be represented as a sequence of discrete states?** | `discretize()` | Tidy state table | Maps continuous observations onto a finite, ordered state alphabet, making recurring levels and ranges explicit. |
+| **How does the series change locally over time?** | `trend()` | Tidy trend table | Labels each observation by its local direction: increase, decrease, stability, or turbulence. |
+| **Which observations are connected by geometric visibility?** | `vg()` | Visibility network | Connects observations that can "see" each other over the intervening values. |
+| **Which time windows are similar in value or shape?** | `tsn()` | Distance network | Relates local windows by their proximity, exposing repeated or structurally similar segments. |
+| **How likely is one state to be followed by another?** | `ts_tna()` | Transition network (TNA) | Weights directed edges by the conditional probability of each successive transition. |
+| **How often does the series move from one state to another?** | `ts_ftna()` | Frequency network (FTNA) | Weights directed edges by the observed count of each successive transition. |
+| **Which states co-occur within the sequence?** | `ts_cna()` | Co-occurrence network (CNA) | Uses undirected edges to represent state co-occurrence, ignoring direction. |
+| **Which transitions receive the greatest attention weight?** | `ts_atna()` | Attention-weighted network (ATNA) | Weights directed edges by model-assigned attention rather than raw counts. |
+| **How is each network associated with its source series?** | `series_networks()` | Indexed model collection | Organizes extracted models by source series while preserving their correspondence and provenance. |
 
-The conceptual distinction is therefore clear. `discretize()` defines the
-**states**, `trend()` describes **local direction**, `vg()` describes
-**geometric visibility**, and `tsn()` describes **similarity between temporal
-windows**. The `ts_tna()` family constructs transition-network representations
-from the resulting sequence, differing in the information assigned to their edges.
-`series_networks()` organizes the extracted models by source series.
+In short, `discretize()` defines the **states**, `trend()` describes **local
+direction**, `vg()` describes **geometric visibility**, and `tsn()` describes
+**similarity between temporal windows**. The `ts_tna()` family then builds
+transition networks from the state sequence, differing only in the quantity
+assigned to their edges, and `series_networks()` indexes the results by source
+series.
 
 # Data
 
-The `motivation` data set contains 4,871 intensive longitudinal observations.
-The analysis uses the first 60 rows and selects the `pleasure` measurement
-inside each tsn verb. Keeping the data as a data frame avoids manual column
-extraction and preserves its original row order.
+The `motivation` data set bundled with the package is an example of
+experience-sampling, or intensive longitudinal, data: the same respondent was
+prompted several times a day and asked to report, in the moment, how they felt
+about the activity they were engaged in. Each of its 4,871 rows is one such
+momentary report, collected between September 2018 and July 2021, and no values
+are missing. The thirteen columns fall into a few natural groups. Three record
+motivation (`autonomy`, `competence`, `relatedness`); three record appraisal of
+the current activity (`pleasure`, `interest`, `importance`); several describe
+the situation (`situation_requires`, `anxiety_guilt_avoidance`, `another_wants`,
+and a categorical `task_context_type` labelled Home, Work, Personal, or Other);
+and one records overall `mood`. The last two columns, `day` and `beep_number`,
+place each report in time, giving the calendar date and the position of the
+report within that day's sequence of prompts.
+
+This vignette follows a single one of these signals, the `pleasure` rating,
+which captures how pleasant the respondent found the current activity at the
+moment of the prompt. To keep every network small enough to read in full, the
+analysis uses only the first 60 reports, which each verb selects by name from
+the data frame. Passing the data frame rather than a bare vector preserves the
+recorded order of the observations, and that order is what every method below
+treats as the flow of time.
 
 ```{r data}
 data("motivation", package = "tsn")
@@ -106,28 +123,33 @@ data("motivation", package = "tsn")
 pleasure <- head(motivation, 60)
 
 dim(pleasure)
+summary(pleasure$pleasure)
 ```
 
-The selected ratings range from 6 to 44. Their mean is 26.8 and their median
-is 30. The first twenty observations average 27.5 and the final twenty average
-27.0, so this short segment carries no pronounced drift. The later plots should
-therefore be read as short-run fluctuation around a roughly stable level rather
-than as a trending series.
+These 60 reports were collected over 21 days, from 29 September to 19 October
+2018. The pleasure ratings occupy the observed range 6 to 44, with a median of
+30, a mean of 26.8, and a standard deviation of about 10, so they spread across
+a wide band rather than clustering near a single value. The segment carries no
+systematic trend: the first twenty reports average 27.5 and the last twenty
+average 27.0, essentially unchanged. The representations that follow should
+therefore be read as descriptions of short-run fluctuation around a roughly
+constant level, not of a rising or falling series. The distinction matters for
+interpretation, because several of the constructions below, in particular the
+visibility graph and the trend labels, respond to the local rises and falls of
+the series rather than to its overall direction.
 
 # Transition Network Analysis
 
-Transition network analysis begins by transforming the observed time series
-into a finite sequence of states. The purpose of this transformation is not to
-replace the measured values, but to provide a symbolic representation in which
-temporal dynamics can be examined as transitions among a defined set of states.
-`discretize()` performs this transformation by assigning each observation to a
-state and returning one tidy row per observation.
+Transition Network Analysis starts by turning the observed series into a finite
+sequence of states. The aim is not to discard the measured values but to obtain
+a symbolic representation in which dynamics can be studied as movement among a
+fixed set of states. `discretize()` performs this step, assigning each
+observation to one state and returning one tidy row per observation.
 
-For this example, the default quantile-based discretization divides the observed
-values into three empirical groups. The state labels are supplied as `Low`,
-`Middle`, and `High`. Thus, the resulting sequence preserves the temporal
-ordering of the observations while replacing their continuous values with
-categorical states.
+Here the default quantile discretization splits the values into three empirical
+groups, labelled `Low`, `Middle`, and `High`. The resulting sequence keeps the
+temporal order of the observations and replaces their continuous values with
+ordered categorical states.
 
 ```{r discretize}
 states <- discretize(
@@ -140,37 +162,36 @@ states
 summary(states)
 ```
 
-The resulting object retains the source identifier, time index, observed value,
-assigned state, and assignment probability. The state labels are ordered
-according to the corresponding values, so `Low`, `Middle`, and `High` retain
-their ordinal interpretation. Because the discretization is based on empirical
-quantiles, ties at the boundaries can prevent the three categories from
-containing exactly the same number of observations. Here, the resulting state
-frequencies are 20 `Low`, 23 `Middle`, and 17 `High`.
+Each row records the source identifier, the time index, the observed value, the
+assigned state, and an assignment probability. The `probability` column reports
+the confidence of the assignment: it equals 1 for a hard partition such as the
+quantile rule used here, and takes values in the unit interval for probabilistic
+discretizers such as `gaussian` or `kde`. Because the state labels follow the
+ordering of the values, `Low`, `Middle`, and `High` retain a strict ordinal
+meaning. Quantile boundaries do not, in general, divide the observations into
+exactly equal groups when values are tied; in this segment the counts are 20
+`Low`, 23 `Middle`, and 17 `High`.
 
-The state sequence is the intermediate representation from which the transition
-networks are constructed. The three states define the network nodes, while
-successive observations in the sequence define the possible state-to-state
-transitions. The different transition-network constructors applied below use
-this same state sequence; what changes is the quantity used to represent the
-relationships between states.
+The state sequence is the intermediate object from which every transition
+network below is built. Its three states become the network nodes, and each
+adjacent pair of observations defines one possible state-to-state transition.
+The four constructors that follow all read this same sequence; what differs
+between them is the quantity placed on the edges.
 
-```{r discretize-plot}
+```{r discretize-plot, fig.alt="Ribbon plot of the pleasure series with a strip of Low, Middle, and High states drawn beneath the measured values along observation order."}
 plot(states, type = "ribbon")
 ```
 
-The ribbon representation displays the state sequence beneath the measured
-series. This preserves the temporal correspondence between the original
-observations and their discrete representation without obscuring the measured
-values with a full-panel categorical overlay.
+The ribbon view places the discrete states beneath the measured series, so the
+correspondence between an observation and its assigned state stays visible
+without a full-panel overlay obscuring the values themselves.
 
-## Transition Network with `ts_tna()`
+## Transition probabilities with `ts_tna()`
 
-`ts_tna()` constructs a transition network from the discrete state sequence in
-which directed edges represent transitions from the current state to the
-subsequent state. Edge weights are conditional transition probabilities. For a
-given source state, the outgoing edge weights therefore describe the
-distribution of possible next states.
+`ts_tna()` builds a directed network in which an edge runs from the current
+state to the next, weighted by the conditional probability of that transition.
+Each row of the weight matrix is a probability distribution over the possible
+next states, so the outgoing weights of a state sum to one.
 
 ```{r ts-tna, eval=has_nestimate}
 probabilities <- ts_tna(states)
@@ -178,34 +199,32 @@ probabilities <- ts_tna(states)
 probabilities
 ```
 
-The diagonal entries quantify persistence, that is, the probability that the
-next observation remains in the current state. In this example, the
-self-transition probabilities are 0.300 for `Low`, 0.409 for `Middle`, and
-0.294 for `High`. Each exceeds the corresponding marginal state proportion,
-indicating that consecutive observations are more likely to remain in the same
-state than the marginal frequencies alone would imply.
+The diagonal entries measure persistence, the probability that the next
+observation stays in the current state: 0.300 for `Low`, 0.409 for `Middle`,
+and 0.294 for `High`. Comparing these with the marginal state proportions
+(0.333, 0.383, and 0.283) separates persistence from mere prevalence. `Middle`
+and `High` both persist above their marginal share, so a `Middle` or `High`
+observation is more likely to be followed by its own state than random ordering
+would imply. `Low` sits marginally below its share (0.300 against 0.333),
+indicating no such tendency to persist over this short segment.
 
-```{r ts-tna-plot, eval=has_nestimate && has_cograph, fig.width=9}
+```{r ts-tna-plot, eval=has_nestimate && has_cograph, fig.width=9, fig.alt="Directed transition-probability network over the Low, Middle, and High states, with arrows labelled by conditional probabilities."}
 plot(probabilities)
 ```
 
-Row normalization is central to the interpretation of this representation. Each
-row describes the conditional distribution of the next state given the current
-state, making outgoing transition patterns directly comparable even when the
-states have different marginal frequencies.
+Row normalization is what makes this representation interpretable. Each row is
+the conditional distribution of the next state given the current one, so the
+outgoing patterns of different states remain comparable even though the states
+have different marginal frequencies. A sequence of 60 observations is thereby
+reduced to three nodes and the directed relationships among them, with the
+temporal order retained as the basis for the estimates.
 
-The combined representation links the original state sequence to the resulting
-transition network. A sequence of 60 observations is therefore reduced to
-three state nodes and the directed relationships connecting them, while the
-temporal ordering remains the basis for estimating those relationships.
+## Transition frequencies with `ts_ftna()`
 
-## Frequency Transition Network (FTNA) with `ts_ftna()`
-
-`ts_ftna()` constructs a transition network using the observed frequency of
-each state-to-state transition. Unlike `ts_tna()`, the edge weights are not
-normalized by the number of transitions originating from each state. The
-resulting network therefore retains information about the absolute frequency
-with which transitions occur.
+`ts_ftna()` weights each directed edge by the observed count of the
+corresponding transition, without the row normalization applied by `ts_tna()`.
+The network therefore preserves the absolute number of times each transition
+occurred.
 
 ```{r ts-ftna, eval=has_nestimate}
 counts <- ts_ftna(states)
@@ -213,28 +232,26 @@ counts <- ts_ftna(states)
 counts
 ```
 
-With 60 observations, there are 59 adjacent observation pairs and consequently
-59 observed transitions. The transition-count matrix therefore sums to 59.
-The diagonal entries are the largest entries in each row, indicating that
-remaining in the current state occurs more frequently than transitioning to
-either of the alternative states.
+The 60 observations form 59 adjacent pairs, so the count matrix sums to 59. The
+most frequent single transition is `Middle` to `Middle`, which occurs 9 times
+and is the only self-transition that is also the largest count in its row. The
+`Low` and `High` rows are more evenly spread: a `Low` observation is followed
+equally often by `Middle` or `High` (7 each) rather than by another `Low` (6),
+so persistence, although present, does not dominate the raw counts here. The
+frequency and probability networks describe the same transitions but answer
+different questions: the frequency network reports **how often** each transition
+occurred, whereas the probability network reports **how likely** it is given the
+current state.
 
-The frequency network and the probability network describe the same underlying
-transitions but answer different questions. The frequency network measures
-**how often** each transition occurred, whereas the probability network measures
-**how likely** each transition is conditional on the current state.
-
-```{r ts-ftna-plot, eval=has_nestimate && has_cograph, fig.width=9}
+```{r ts-ftna-plot, eval=has_nestimate && has_cograph, fig.width=9, fig.alt="Directed frequency transition network over the three states, with arrows labelled by observed transition counts."}
 plot(counts)
 ```
 
-## Co-occurrence Transition Network with `ts_cna()`
+## State co-occurrence with `ts_cna()`
 
-`ts_cna()` constructs a transition network based on the co-occurrence of states
-within the transition sequence. Unlike the directed transition representation
-produced by `ts_tna()` and `ts_ftna()`, the resulting network is undirected and
-symmetric. It therefore describes the strength of association between states
-without distinguishing the direction in which the states occur.
+`ts_cna()` builds an undirected, symmetric network whose edges measure how
+strongly two states occur together, without regard to the order in which they
+appear. It answers a different question from the directed transition networks.
 
 ```{r ts-cna, eval=has_nestimate}
 cooccurrence <- ts_cna(states)
@@ -242,33 +259,26 @@ cooccurrence <- ts_cna(states)
 cooccurrence
 ```
 
-For a single state sequence, these co-occurrence counts are determined by the
-marginal state frequencies. For example, the `Low`–`Middle` relationship is
-`20 × 23 = 460`, whereas the `Low`–`Low` diagonal is
-`20 × 19 / 2 = 190`. The resulting network consequently captures the
-association implied by state composition rather than the temporal direction of
-successive transitions.
+For a single sequence, these co-occurrence counts follow directly from the
+marginal state frequencies. An off-diagonal entry is the product of the two
+state counts, so the `Low`-`Middle` weight is `20 * 23 = 460`; a diagonal entry
+counts the unordered pairs within a state, so the `Low`-`Low` weight is
+`20 * 19 / 2 = 190`. The network therefore reflects the composition of the state
+alphabet rather than the temporal direction of transitions. A strong edge means
+the two states are both common, not that one tends to follow the other.
 
-This distinction is important when interpreting the network. A strong edge in
-the co-occurrence representation does not indicate that one state tends to
-follow another. It indicates that the two states occur together within the
-defined co-occurrence structure.
-
-```{r ts-cna-plot, eval=has_nestimate && has_cograph, fig.width=9}
+```{r ts-cna-plot, eval=has_nestimate && has_cograph, fig.width=9, fig.alt="Undirected co-occurrence network over the three states, with symmetric edges weighted by state co-occurrence."}
 plot(cooccurrence)
 ```
 
-The symmetric network representation makes this distinction visually explicit:
-unlike the directed transition networks, there is no source-to-target direction
-associated with an edge.
+The symmetric drawing makes the distinction explicit: an edge carries no
+source-to-target direction, in contrast to the transition networks above.
 
-## Attention-Weighted Transition Network (ATNA) with `ts_atna()`
+## Attention-weighted transitions with `ts_atna()`
 
-`ts_atna()` constructs a transition network in which transitions are assigned
-attention weights rather than being represented solely by their raw frequencies
-or normalized probabilities. The resulting edge weights are accumulated
-attention values and therefore should not be interpreted as either transition
-counts or probabilities.
+`ts_atna()` assigns each transition an attention weight rather than a count or a
+probability. The edge weights are accumulated attention values and are not on
+the scale of either the frequency or the probability network.
 
 ```{r ts-atna, eval=has_nestimate}
 attention <- ts_atna(states)
@@ -276,31 +286,25 @@ attention <- ts_atna(states)
 attention
 ```
 
-The resulting weights range from 2.875 to 5.015. As in the frequency and
-probability networks, the diagonal entries are the largest outgoing
-relationships for all three states, indicating that persistence remains
-prominent under the attention-weighted representation.
+The weights range from 2.875 to 5.015. Unlike the frequency and probability
+networks, the largest weights here are off-diagonal: the strongest
+attention-weighted transition is `Middle` to `Low` (5.015), and the persistence
+diagonals are not the dominant entries in their rows. The attention mechanism
+consequently redistributes emphasis away from the self-transitions that the raw
+counts favour, and the weights should be read on the model's own attention
+scale rather than compared directly with counts or probabilities.
 
-The important distinction is that the edge magnitude now reflects the attention
-assigned to a transition by the model rather than simply the number of times the
-transition was observed. Consequently, attention weights should be interpreted
-according to the weighting mechanism of the `ts_atna()` model rather than on the
-scale of the frequency or probability networks.
-
-```{r ts-atna-plot, eval=has_nestimate && has_cograph, fig.width=9}
+```{r ts-atna-plot, eval=has_nestimate && has_cograph, fig.width=9, fig.alt="Directed attention-weighted transition network over the three states, with edges weighted by accumulated attention values."}
 plot(attention)
 ```
 
-## Extracting the Network Model with `series_networks()`
+## Indexing the model with `series_networks()`
 
-`series_networks()` provides an indexed collection of the network models
-associated with the source series. It is intended for situations in which
-network representations are extracted systematically across multiple series.
-The index preserves the relationship between each source series and its
-corresponding network model.
-
-In this example, only one source series is supplied, so the resulting collection
-contains a single entry corresponding to `pleasure`.
+`series_networks()` returns an indexed collection of the network models attached
+to the source series. It is designed for analyses that extract networks across
+many series at once, where the index preserves the link between each series and
+its model. With a single input series it returns one entry, corresponding to
+`pleasure`.
 
 ```{r series-networks, eval=has_nestimate}
 individual <- series_networks(probabilities)
@@ -308,26 +312,26 @@ individual <- series_networks(probabilities)
 individual
 ```
 
-The resulting index records the source series, network type, number of
-observations, number of states, and number of edges. For the
-transition-probability network, the three states generate nine possible directed
-state-to-state relationships, including the three self-transitions.
+The index records the source series, the network type, and the number of
+observations, states, and edges. For the transition-probability network the
+three states generate nine directed relationships, the six between distinct
+states plus the three self-transitions.
 
-```{r series-networks-plot, eval=has_nestimate && has_cograph, fig.width=7}
+```{r series-networks-plot, eval=has_nestimate && has_cograph, fig.width=7, fig.alt="The single indexed transition-probability network for the pleasure series, drawn from the series_networks collection."}
 plot(individual)
 ```
 
-The resulting model collection therefore provides a higher-level representation
-of the extracted networks while retaining their provenance. With multiple
-source series, the same structure can be used to organize and compare the
-corresponding network models systematically.
+The collection thus provides a higher-level handle on the extracted networks
+while keeping their provenance. Given several source series, the same structure
+organizes and compares their models systematically.
 
 # Local direction with `trend()`
 
-`trend()` estimates a rolling local direction and labels each observation as
-Ascending, Descending, Flat, Turbulent, Missing Data, or Initial. Its adaptive
-window is 6 observations for this segment. The default Theil-Sen slope limits
-the influence of isolated extreme ratings.
+`trend()` estimates a rolling local slope and labels each observation as
+`Ascending`, `Descending`, `Flat`, `Turbulent`, `Missing Data`, or `Initial`.
+The window is adaptive and defaults to one tenth of the series length, which is
+6 observations here, and the default Theil-Sen slope limits the influence of
+isolated extreme ratings.
 
 ```{r trend}
 directions <- trend(
@@ -339,31 +343,34 @@ directions
 summary(directions)
 ```
 
-Ascending is the most frequent class, with 21 observations. Descending covers
-17 observations, Turbulent 13, Initial 5, and Flat 4. Ascending and descending
-positions are close in number, which is what a segment without pronounced drift
-should produce: local direction keeps reversing rather than accumulating.
-Initial marks positions without a complete centered rolling window.
+`Ascending` is the most common label with 21 observations, followed by
+`Descending` with 17, `Turbulent` with 13, `Initial` with 5, and `Flat` with 4.
+The near balance between ascending and descending positions is what a segment
+without drift should produce: local direction keeps reversing rather than
+accumulating in one direction. `Initial` marks the leading positions that lack a
+complete centered window, and `Missing Data` would mark absent values, of which
+this segment has none.
 
-```{r trend-plot}
+```{r trend-plot, fig.alt="The pleasure series with each observation coloured by its trend label: Ascending, Descending, Flat, Turbulent, or Initial."}
 plot(directions)
 ```
 
-The default plot colours each observation by its trend class.
+The default plot colours each observation by its trend label.
 
-```{r trend-panels}
+```{r trend-panels, fig.alt="Two stacked panels: the pleasure series on top and its rolling slope metric below, with a shaded flat band marking near-zero slope."}
 plot(directions, type = "panels")
 ```
 
-The panel view places the rolling metric below the measurements. Crossings of
-the flat band can therefore be checked against the assigned direction.
+The panel view places the rolling metric below the measurements, so the points
+at which the metric crosses the flat band can be checked against the assigned
+direction.
 
 # Visibility with `vg()`
 
-`vg()` makes each observation a node. Natural visibility connects two points
-when the line between their values passes above every intervening point.
-Horizontal visibility connects them when every intervening value is below both
-endpoints.
+`vg()` treats each observation as a node. Under natural visibility, two points
+are joined when the straight line between their values stays above every
+intervening point. Under horizontal visibility, they are joined only when every
+intervening value lies below both endpoints, a strictly stronger condition.
 
 ```{r vg-natural}
 natural <- vg(
@@ -374,7 +381,7 @@ natural <- vg(
 summary(natural)
 ```
 
-The natural visibility graph contains 60 nodes and 143 edges.
+The natural visibility graph has 60 nodes and 143 edges.
 
 ```{r vg-horizontal}
 horizontal <- vg(
@@ -386,33 +393,68 @@ horizontal <- vg(
 summary(horizontal)
 ```
 
-The stricter horizontal rule retains 107 edges. Both constructions have binary
-edge weights because visibility either holds or does not hold.
+The stricter horizontal rule retains 107 of those connections. In both graphs
+the edge weights are binary, since visibility either holds or it does not.
 
-At this length the graph is small enough for individual edges to stay
-distinguishable, so the horizontal construction can be drawn directly.
+At this length individual edges remain distinguishable, so the horizontal graph
+can be drawn directly.
 
-```{r vg-network, eval=has_cograph}
+```{r vg-network, eval=has_cograph, fig.alt="Horizontal visibility graph of sixty pleasure observations, drawn as a network with nodes sized by degree and the temporal chain visible alongside longer visibility edges."}
 plot(horizontal)
 ```
 
-The temporal chain remains visible together with longer edges that cross lower
-intervening observations. Node size represents degree. Peaks tend to have more
-connections because they remain visible across smaller values.
+The temporal chain is visible alongside the longer edges that reach across lower
+intervening observations. Node size encodes degree; peaks accumulate more
+connections because they stay visible over the smaller values around them.
 
-```{r vg-series}
+```{r vg-series, fig.alt="The sixty pleasure observations behind the visibility graph, plotted as a line over observation order."}
 plot(horizontal, type = "series")
 ```
 
-The source-series view retains the measurements behind the network object. It
-also makes the short-run fluctuation that the visibility rule reads visible.
+The source-series view recovers the measurements behind the network object and
+makes the short-run fluctuation that the visibility rule reads directly
+apparent.
+
+## From observations to states
+
+A visibility graph can also be summarized at the level of states rather than
+individual observations. With `unit = "state"`, `tsn()` discretizes the series,
+builds the visibility graph over its observations, and then aggregates the
+sightlines onto the state alphabet: the nodes become the states, and each edge
+weight is the total number of sightlines joining observations of that state
+pair. Supplying the state sequence from `discretize()` keeps the `Low`,
+`Middle`, and `High` labels used above.
+
+```{r vg-state}
+state_visibility <- tsn(
+  data = pleasure,
+  series = "pleasure",
+  unit = "state",
+  state = as.data.frame(states)$state
+)
+
+summary(state_visibility)
+as.matrix(state_visibility)
+```
+
+The six weights aggregate all 143 natural-visibility sightlines onto three
+states. The strongest connection joins `Middle` and `High` (44 sightlines),
+which reflects the upper ratings remaining mutually visible across the segment,
+while the `Low`-`Low` weight is the smallest (6). This state-level view compresses
+the 60-node visibility graph into the same three-state vocabulary used by the
+transition networks, offering a direct comparison between the geometric and the
+transition-based descriptions of the same series.
+
+```{r vg-state-network, eval=has_cograph, fig.alt="State-visibility network with Low, Middle, and High nodes, whose edges aggregate the natural-visibility sightlines between occurrences of each state pair."}
+plot(state_visibility)
+```
 
 # Window similarity with `tsn()`
 
-`tsn()` is the general constructor. With `method = "distance"`, one measured
-series defaults to sliding-window nodes. The window width defaults to one tenth
-of the series length and is therefore 6 here. A step of 2 produces 28
-overlapping windows.
+`tsn()` is the general distance-network constructor. With `method = "distance"`
+a single measured series defaults to sliding-window nodes. The window width
+defaults to one tenth of the series length, which is 6 here, and a step of 2
+yields 28 overlapping windows.
 
 ```{r tsn-distance}
 windows <- tsn(
@@ -425,8 +467,8 @@ windows <- tsn(
 summary(windows)
 ```
 
-The default full connection rule evaluates and retains all 378 window pairs.
-Edge weight is `1 / (1 + distance)`, so larger weights identify more similar
+The default full connection rule evaluates and keeps all 378 window pairs. Each
+edge weight is `1 / (1 + distance)`, so larger weights mark more similar
 windows.
 
 ```{r tsn-nearest}
@@ -442,14 +484,14 @@ sparse <- tsn(
 summary(sparse)
 ```
 
-Nearest-neighbour sparsification retains 40 edges and reduces density from 1 to
-0.106. This version exposes the strongest local similarity structure instead of
-drawing every possible pair.
+Nearest-neighbour sparsification keeps 40 edges and lowers the density from 1 to
+0.106, retaining the strongest local similarities instead of drawing every pair.
 
-```{r tsn-network, eval=has_cograph}
+```{r tsn-network, eval=has_cograph, fig.alt="Nearest-neighbour distance network over twenty-eight sliding windows of the pleasure series, with edges joining the most similar windows."}
 plot(sparse)
 ```
 
 No retained edge joins immediately adjacent windows. The closest retained pairs
-are two positions apart and the most distant are separated by 21 positions,
-showing that overlap in time does not by itself determine Euclidean similarity.
+are two windows apart and the most distant are twenty-one windows apart, which
+shows that overlap in time does not by itself determine similarity in value:
+windows far apart in the sequence can still be each other's nearest neighbours.

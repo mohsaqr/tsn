@@ -26,7 +26,7 @@ Useful links:
 Authors:
 \itemize{
   \item Sonsoles López-Pernas [copyright holder]
-  \item Manuel Jesus Gomez (University of Murcia)
+  \item Manuel J. Gomez (University of Murcia)
 }
 
 }

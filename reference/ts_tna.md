@@ -26,6 +26,7 @@ ts_tna(
   tau = NULL,
   segment = NULL,
   overlap = FALSE,
+  group = NULL,
   seed = NULL,
   ...
 )
@@ -45,6 +46,7 @@ ts_ftna(
   tau = NULL,
   segment = NULL,
   overlap = FALSE,
+  group = NULL,
   seed = NULL,
   ...
 )
@@ -64,6 +66,7 @@ ts_cna(
   tau = NULL,
   segment = NULL,
   overlap = FALSE,
+  group = NULL,
   seed = NULL,
   ...
 )
@@ -83,6 +86,7 @@ ts_atna(
   tau = NULL,
   segment = NULL,
   overlap = FALSE,
+  group = NULL,
   seed = NULL,
   ...
 )
@@ -159,6 +163,21 @@ ts_atna(
   them run narrow. Partition for conservative intervals that tolerate
   dependence beyond one lag; slide to preserve the estimate exactly.
 
+- group:
+
+  Optional name of a column of `data` holding each observation's group,
+  e.g. a condition, a cohort, or a context. Supplying it returns one
+  network per group instead of a single pooled network. States are
+  discretized from the pooled series first, so every group is cut on one
+  common scale and their networks share a node set and are directly
+  comparable. A sequence never spans a group boundary: where a series
+  stays in one group it contributes a single sequence (unless `segment`
+  splits it further), and where the group column alternates within a
+  series each contiguous run becomes its own sequence, so no transition
+  is ever counted between observations that were not adjacent in time.
+  The transition across a group change is dropped from both groups: it
+  belongs to neither.
+
 - seed:
 
   Optional seed used by stochastic discretizers.
@@ -174,7 +193,13 @@ ts_atna(
 A Nestimate `netobject` of class
 `c("ts_tna", "netobject", "cograph_network")` with the additional fields
 `$ts_source` (tidy `id`/`time`/`value`/`state` table) and `$meta$tsn`
-(discretization settings).
+(discretization settings). With `group`, a
+`c("ts_tna_group", "netobject_group")` collection holding one such
+network per group, which Nestimate's compatible grouped verbs
+(`net_prune()`, `state_distribution()`, `net_centrality()`,
+`compare_model()`, `permutation()`) accept directly and
+[as.data.frame()](https://pak.dynasite.org/tsn/reference/as.data.frame.ts_tna_group.md)
+renders as a tidy table.
 
 ## Details
 
@@ -194,6 +219,14 @@ test, because a bootstrap resamples sequences and one series is one
 sequence. The `segment` argument cuts a long series into blocks so that
 those tests have units to work with; see its documentation for the
 trade-off between partitioned and sliding blocks.
+
+The `group` argument splits the model instead of pooling it: one network
+per condition, cohort, or context, all cut from one shared state
+alphabet so they can be compared. The result is a Nestimate
+`netobject_group`, so the grouped Nestimate verbs that suit a transition
+model apply to it directly. Verbs needing a precision matrix or a
+clustering attribute do not, and there is no grouped
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method.
 
 Multiple series are supported through every tsn input form (named list,
 matrix, wide or long data frame). Scalar discretizers learn from pooled
@@ -271,4 +304,18 @@ ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
 #>   low           0.334  ████████████████████████████████████████
 #>   high          0.334  ████████████████████████████████████████
 #>   mid           0.331  ████████████████████████████████████████
+
+# One network per context, on a shared alphabet:
+data(motivation)
+by_context <- ts_tna(
+  motivation,
+  series = "pleasure", group = "task_context_type",
+  labels = c("low", "mid", "high")
+)
+as.data.frame(by_context, what = "groups")
+#>      group type sequences observations states edges
+#> 1     Home  tna       832         1324      3     9
+#> 2    Other  tna         2            3      3     1
+#> 3 Personal  tna       822         1309      3     9
+#> 4     Work  tna       976         2235      3     9
 ```

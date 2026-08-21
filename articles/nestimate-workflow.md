@@ -224,13 +224,15 @@ bootstrap_network(lag_one, iter = 500, seed = 2024)
 ```
 
 So which to use? The sliding blocks preserve the estimate exactly and
-give the most units, and their intervals come out narrower — narrow
-enough here to call a third edge significant where the partitioned
-blocks call two. That narrowness is the catch: overlapping blocks share
-observations, so they are not independent, and resampling lag-1 pairs
-assumes precisely the first-order Markov property the model itself
-assumes. The Markov-order test later in this vignette finds that
-assumption does not hold here — so those intervals are optimistic.
+give the most units, and their intervals tend to come out narrower —
+mean width 0.18 against 0.21 here, narrow enough to call a third edge
+significant where the partitioned blocks call two. It is a tendency, not
+a guarantee: two of the nine edges come out wider. That narrowness is
+the catch: overlapping blocks share observations, so they are not
+independent, and resampling lag-1 pairs assumes precisely the
+first-order Markov property the model itself assumes. The Markov-order
+test later in this vignette finds that assumption does not hold here —
+so those intervals are optimistic.
 
 Partitioned blocks are the more conservative choice. A block preserves
 whatever dependence exists inside it, so structure beyond one lag
@@ -249,10 +251,12 @@ them.
 The default `discretization = "quantile"` cuts at the tertiles, which
 forces the three states to hold a third of the observations each — so
 the state sizes carry no information, by construction. That is why every
-model here uses the fixed 5,000 and 10,000 step thresholds instead.
-Beyond making the states interpretable, fixed `breaks` give every model
-in this vignette one shared alphabet, which is what makes the group
-comparison at the end legitimate.
+model built from the `steps` data uses the fixed 5,000 and 10,000 step
+thresholds instead. Beyond making the states interpretable, fixed
+`breaks` give those models one shared alphabet, which is what makes the
+period comparison below legitimate. (The grouped pleasure model at the
+end keeps the quantile default; grouping pools the series before cutting
+it, so its groups share an alphabet without breaks being named.)
 
 ``` r
 
@@ -319,7 +323,8 @@ head(summary(per_person))
 #> 6     70  tna          257      3     9
 ```
 
-Each row is a full `ts_tna` model that prints and plots on its own.
+Each row indexes a full `ts_tna` model that prints and plots on its own
+— the models are the list elements, and this is the tidy index of them.
 Because the cut points here are fixed step counts rather than sample
 quantiles, a participant’s personal network describes their own
 activity, not their rank within the sample.
@@ -360,10 +365,12 @@ transition_entropy(walk_model)
 ```
 
 The entropy rate is normalised against `log2(n_states)`, so 0 is a
-perfectly deterministic process and 1 means the current state tells you
-nothing about the next. These same step counts cut at the tertiles score
-0.93; cut at 5,000 and 10,000 they score 0.85. Cut points are not a
-cosmetic choice — they decide how much structure there is left to find.
+perfectly deterministic process and 1 means every next state is equally
+likely from wherever you are — not merely that the current state is
+uninformative, since a lopsided but state-independent process scores
+well below 1. These same step counts cut at the tertiles score 0.93; cut
+at 5,000 and 10,000 they score 0.85. Cut points are not a cosmetic
+choice — they decide how much structure there is left to find.
 
 ## Pruning
 
@@ -472,8 +479,10 @@ centrality_stability(walk_model, iter = 100)
 #>     Betweenness      0.90
 ```
 
-The usual convention is that 0.5 is acceptable and 0.7 excellent, so
-these orderings are trustworthy.
+All three coefficients come out at 0.90, against a conventional bar of
+0.5 for acceptable and 0.7 for excellent. That speaks to how stable the
+ordering is under resampling — not to whether the ordering means
+anything substantively.
 
 ## Markov order: is a first-order model enough?
 
@@ -531,9 +540,10 @@ sequences, while HON asks a stricter per-node question. Report both.
 The tests so far describe one network.
 [`permutation()`](https://saqr.me/Nestimate/reference/permutation.html)
 compares two, shuffling the group labels to build a null distribution
-for every edge. The `steps` series runs from April 2019 to March 2020,
-so splitting at the start of November contrasts a summer half with a
-winter half.
+for every edge. The `steps` series runs from April 2019 to March 2020;
+splitting at the start of November contrasts the warmer months with the
+colder ones. The two spans are not equal in length — roughly six and a
+half months against four.
 
 Both models are built with the same fixed `breaks`, which matters more
 than it looks: had each period been discretized on its own quantiles,
@@ -598,9 +608,11 @@ summary(comparison)
 #> 9 FALSE
 ```
 
-Not one of the nine edges differs. That is a real finding, and a more
-interesting one than a scattering of small p-values would have been,
-because the two periods are *not* alike in how much people walked:
+None of the nine edge comparisons reaches significance — the smallest
+p-value is 0.07. The estimates are not identical, but no difference
+survives the permutation null. That is a more interesting result than a
+scattering of small p-values would have been, because the two periods
+are *not* alike in how much people walked:
 
 ``` r
 
@@ -617,17 +629,193 @@ state_distribution(late)
 #> 3   all sedentary  2301  0.1492508
 ```
 
-Active days fall from 46.9% of the summer half to 42.8% of the winter
-half, and sedentary days rise. The seasonal effect is real — it simply
-lives in the *composition* of the states, not in the *transitions*
-between them. Someone who has a sedentary day in January is no less
-likely to return to a moderate day than they were in July.
+Active days fall from 46.9% before November to 42.8% after it, and
+sedentary days rise. So the seasonal shift shows up plainly in the
+*composition* of the states while no comparison of the *transitions*
+between them reaches significance. The estimated sedentary-to-moderate
+probability, for instance, is 0.446 before November and 0.444 after,
+with a permutation p-value of 0.94.
 
-That distinction is the reason to build a transition network at all. A
-comparison of means or of state proportions finds the seasonal
-difference and stops there; the transition model shows that the
-underlying dynamics are unchanged, which is a different claim about the
-same people.
+Two cautions on how far that carries. Failing to reject nine tests is
+not the same as showing the dynamics are identical, and the two models
+do not rest on quite the same people — 140 participants contribute
+before November and 149 after, with 138 in both.
+
+That distinction is still the reason to build a transition network at
+all. A comparison of means or of state proportions finds the seasonal
+difference and stops there; the transition model asks a further question
+about the same population, and finds no evidence that the dynamics moved
+with it.
+
+## More than two groups: one model per context
+
+Building two models by hand is fine when there are two. When the thing
+that separates the groups is already a column in the data, `group`
+builds one network per level in a single call — and it scales past two,
+which the pairwise form does not.
+
+The `motivation` study records where each measurement was taken in
+`task_context_type`, so the pleasure ratings can be split by context.
+
+``` r
+
+by_context <- ts_tna(
+  motivation,
+  series = "pleasure",
+  group = "task_context_type",
+  labels = c("low", "mid", "high")
+)
+
+by_context
+#> Group Networks (4 groups, group_col: task_context_type)
+#> 
+#>   Group     Nodes  Edges  Weights
+#>   Home      3      9      [0.040, 0.762]
+#>   Other     3      1      [1.000, 1.000]
+#>   Personal  3      9      [0.065, 0.664]
+#>   Work      3      9      [0.156, 0.518]
+```
+
+Two things happen here that would be tedious to arrange by hand. The
+states are cut from the *pooled* series before the split, so all four
+networks sit on one set of thresholds and share a node set — the same
+discipline the fixed `breaks` enforced in the previous section, applied
+automatically. And the result is a Nestimate `netobject_group`, so the
+compatible grouped verbs take it directly:
+[`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html),
+[`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html),
+[`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html),
+[`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html),
+[`permutation()`](https://saqr.me/Nestimate/reference/permutation.html),
+[`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html)
+and friends. Not every verb applies — the ones that need a precision
+matrix or a clustering attribute reject a transition model, and there is
+no grouped [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+method, so plot one group at a time.
+
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) is the
+tidy view of how much data stands behind each network:
+
+``` r
+
+as.data.frame(by_context, what = "groups")
+#>      group type sequences observations states edges
+#> 1     Home  tna       832         1324      3     9
+#> 2    Other  tna         2            3      3     1
+#> 3 Personal  tna       822         1309      3     9
+#> 4     Work  tna       976         2235      3     9
+```
+
+The sequence counts deserve a second look: `Home` has 1,324 observations
+but 832 sequences. That is not padding. A run is cut at every change of
+series *and* at every change of group. The two cuts are not quite the
+same: a change of series separates measurements that were never
+consecutive anyway, while a change of context falls between two
+genuinely adjacent measurements, and the transition across it is
+deliberately excluded from both networks — it belongs to neither
+context. This study alternates context from one measurement to the next
+— 4,871 observations form 2,632 contiguous runs — so each unbroken
+stretch within a context becomes its own sequence. A pair of
+observations separated by an intervening visit to a different context is
+never counted as a transition, because it never was one.
+
+That rule costs nothing when a group is constant within a series, which
+is the usual case for a condition or a cohort: each series contributes
+one sequence and keeps its own ID.
+
+``` r
+
+state_distribution(by_context)
+#>       group state count proportion
+#> 1      Home   low   827 0.62462236
+#> 2      Home   mid   409 0.30891239
+#> 3      Home  high    88 0.06646526
+#> 4     Other  high     1 0.33333333
+#> 5     Other   low     1 0.33333333
+#> 6     Other   mid     1 0.33333333
+#> 7  Personal  high   597 0.45607334
+#> 8  Personal   mid   459 0.35064935
+#> 9  Personal   low   253 0.19327731
+#> 10     Work  high   938 0.41968680
+#> 11     Work   mid   749 0.33512304
+#> 12     Work   low   548 0.24519016
+```
+
+The contexts are not alike. Pleasure is low on 62.5% of measurements
+taken at home and high on only 6.6% of them; personal time reverses that
+ordering — high on 45.6%, low on 19.3%. Work sits between the two on all
+three states.
+
+Because every network shares an alphabet, two of them can be set side by
+side and picked out by name:
+
+``` r
+
+compare_model(by_context, i = "Home", j = "Work")
+#> Network comparison
+#> ==================
+#> Summary metrics:
+#>              category               metric   value
+#>     Weight Deviations      Mean Abs. Diff.  0.2318
+#>     Weight Deviations    Median Abs. Diff.  0.2503
+#>     Weight Deviations            RMS Diff.  0.2581
+#>     Weight Deviations       Max Abs. Diff.  0.3699
+#>     Weight Deviations Rel. Mean Abs. Diff.  0.6953
+#>     Weight Deviations             CV Ratio   2.268
+#>          Correlations              Pearson -0.2137
+#>          Correlations             Spearman -0.2167
+#>          Correlations              Kendall -0.1111
+#>          Correlations             Distance  0.2513
+#>       Dissimilarities            Euclidean  0.7743
+#>       Dissimilarities            Manhattan   2.086
+#>       Dissimilarities             Canberra   3.477
+#>       Dissimilarities          Bray-Curtis  0.3477
+#>       Dissimilarities            Frobenius  0.6322
+#>          Similarities               Cosine  0.7693
+#>          Similarities              Jaccard  0.4841
+#>          Similarities                 Dice  0.6523
+#>          Similarities              Overlap  0.6523
+#>          Similarities                   RV  0.6594
+#>  Pattern Similarities       Rank Agreement  0.8333
+#>  Pattern Similarities       Sign Agreement       1
+#> 
+#> Network metrics (x vs y):
+#>                       metric      x      y
+#>                   Node Count      3      3
+#>                   Edge Count      9      9
+#>              Network Density      1      1
+#>                Mean Distance 0.2697 0.2882
+#>            Mean Out-Strength      1      1
+#>              SD Out-Strength 0.7008 0.2058
+#>             Mean In-Strength      1      1
+#>               SD In-Strength      0      0
+#>              Mean Out-Degree      3      3
+#>                SD Out-Degree      0      0
+#>  Centralization (Out-Degree)      0      0
+#>   Centralization (In-Degree)      0      0
+#>                  Reciprocity      1      1
+```
+
+Pruning applies group-wise and returns a grouped model, so the
+collection can be carried through a workflow without being taken apart:
+
+``` r
+
+net_prune(by_context, method = "threshold", threshold = 0.3)
+#> Group Networks (4 groups)
+#> 
+#>   Group     Nodes  Edges  Weights
+#>   Home      3      6      [0.148, 0.762]
+#>   Other     3      1      [1.000, 1.000]
+#>   Personal  3      6      [0.286, 0.664]
+#>   Work      3      6      [0.315, 0.518]
+```
+
+One caution the table above states plainly rather than hides: `Other`
+holds three observations and two sequences. It is a level of the column,
+so it gets a network, but a network estimated from one transition is not
+a result. Read the `sequences` and `observations` columns before reading
+the edges.
 
 ## Plotting
 
@@ -644,11 +832,13 @@ probability.](nestimate-workflow_files/figure-html/plot-1.png)
 ## Where the line falls
 
 Everything descriptive in this vignette — centralities, state
-distributions, entropy, pruning, per-participant splits — runs on a
-model built from a single series. Everything inferential — bootstrap,
-stability, the Markov-order test and the permutation test — needs many
-sequences, because resampling and permutation both treat the sequence as
-the unit of analysis.
+distributions, entropy, pruning, per-participant splits, and the grouped
+models above — runs on a model built from a single series. Everything
+inferential — bootstrap, stability, the Markov-order test and the
+permutation test — needs many sequences, because resampling and
+permutation both treat the sequence as the unit of analysis.
 
-Build with `id` from the start if you intend to test anything, and fix
-your `breaks` before you compare groups.
+Build with `id` from the start if you intend to test anything. Fix your
+`breaks` before you compare anything, or pass `group` and let the pooled
+discretization fix them for you. And when a comparison rests on few
+sequences, say so: the `sequences` column exists to be read.

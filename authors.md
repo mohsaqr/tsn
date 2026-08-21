@@ -6,7 +6,7 @@
 
 - **Sonsoles López-Pernas**. Author, copyright holder.
 
-- **Manuel Jesus Gomez**. Author.  
+- **Manuel J. Gomez**. Author.  
   University of Murcia
 
 ## Citation
@@ -20,7 +20,7 @@ Construction*. R package version 1.2.0,
 
     @Manual{,
       title = {tsn: Time-Series Network Construction},
-      author = {Mohammed Saqr and Sonsoles López-Pernas and Manuel Jesus Gomez},
+      author = {Mohammed Saqr and Sonsoles López-Pernas and Manuel J. Gomez},
       year = {2026},
       note = {R package version 1.2.0},
       url = {https://github.com/mohsaqr/tsn/},

@@ -42,7 +42,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/nestimate-workflow.html">Building a Model from a Time Series and Testing It with Nestimate</a></li>
-    <li><a class="dropdown-item" href="articles/pleasure-all-functions.html">Time Series Networks</a></li>
+    <li><a class="dropdown-item" href="articles/pleasure-all-functions.html">From Time Series to Networks</a></li>
     <li><a class="dropdown-item" href="articles/plotting-time-series-networks.html">Plotting Time Series Networks</a></li>
   </ul>
 </li>
@@ -65,18 +65,20 @@
 <img src="logo.png" class="logo" alt=""><h1 id="tsn-">tsn <a class="anchor" aria-label="anchor" href="#tsn-"></a>
 </h1>
 </div>
-<p><code>tsn</code> turns one or many time series into a network. What differs between analyses is only <strong>what the nodes are</strong>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>                    ┌─► states ──────────────────► transition network</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>one or many  ───────┤</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>time series         └─► series, windows, or ─────► geometry network</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>                        observations</span></code></pre></div>
+<p><code>tsn</code> constructs networks from time-series data. Representing a time series as a network exposes its temporal structure to the tools of graph theory, and several established methods do this in different ways. What distinguishes them is <strong>what each node represents</strong>; <code>tsn</code> collects them under a single interface and a single result object.</p>
+<p>Whatever the input, a single time series or a collection of them, the analysis follows one of two paths that differ only in what becomes a node:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>                        ┌─►  states ───────────────────────►  transition network</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  a univariate series ──┤</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  (one or several)      └─►  series, windows, or points  ──►  distance or</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>                             (individual observations)        visibility network</span></code></pre></div>
+<p>Two broad strategies are supported:</p>
 <ul>
 <li>
-<strong>Nodes are states.</strong> <code><a href="reference/discretize.html">discretize()</a></code> maps the numeric values onto a small state alphabet, and the network records how the series moves between those states over time. This is a transition network.</li>
+<strong>Nodes are states.</strong> A numeric series is discretized into a small alphabet of states, and the network encodes how the series moves between those states over time. The result is a <em>state-transition network</em>.</li>
 <li>
-<strong>Nodes are the measurements themselves</strong> — whole series, sliding windows, or individual observations. Distance or visibility between them supplies the edges directly, with no discretization involved.</li>
+<strong>Nodes are the measurements themselves</strong>, whether a whole series, a sliding window, or an individual observation. Edges are then defined directly by the distance or the visibility relation between nodes, with no discretization step.</li>
 </ul>
-<p>Nine exported verbs cover both:</p>
+<p>The exported functions cover both strategies:</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -84,9 +86,9 @@
 <col width="33%">
 </colgroup>
 <thead><tr>
-<th>What you want</th>
-<th>Verb</th>
-<th>Choices</th>
+<th>Task</th>
+<th>Function(s)</th>
+<th>Options</th>
 </tr></thead>
 <tbody>
 <tr>
@@ -94,36 +96,36 @@
 <td>
 <code><a href="reference/ts_tna.html">ts_tna()</a></code>, <code><a href="reference/ts_tna.html">ts_ftna()</a></code>, <code><a href="reference/ts_tna.html">ts_cna()</a></code>, <code><a href="reference/ts_tna.html">ts_atna()</a></code>
 </td>
-<td>probability, frequency, co-occurrence, or attention networks via Nestimate</td>
+<td>transition probabilities, frequencies, co-occurrences, or attention-weighted transitions (via Nestimate)</td>
 </tr>
 <tr>
-<td>Split a pooled model</td>
+<td>Split a pooled model by series</td>
 <td><code><a href="reference/series_networks.html">series_networks()</a></code></td>
 <td>one network per series</td>
 </tr>
 <tr>
-<td>Discretize into states</td>
+<td>Discretize values into states</td>
 <td>
 <code><a href="reference/discretize.html">discretize()</a></code> (or <code>tsn(unit = "state")</code>)</td>
-<td>15 discretizers, group-safe across series</td>
+<td>15 discretizers, applied consistently across series</td>
 </tr>
 <tr>
-<td>Classify rolling direction</td>
+<td>Classify local trend direction</td>
 <td><code><a href="reference/trend.html">trend()</a></code></td>
 <td>Theil–Sen (default), OLS, Spearman, or Kendall slope; growth factor</td>
 </tr>
 <tr>
-<td>Build a geometry network</td>
+<td>Build a distance or visibility network</td>
 <td>
 <code><a href="reference/tsn.html">tsn()</a></code>, <code><a href="reference/vg.html">vg()</a></code>
 </td>
-<td>15 distances; natural or horizontal visibility; full, nearest, threshold, percentile, or Gaussian connection</td>
+<td>15 distance measures; natural or horizontal visibility; full, nearest-neighbour, threshold, percentile, or Gaussian connectivity</td>
 </tr>
 </tbody>
 </table>
-<p>Core construction uses base R only. <code>Nestimate</code> is an optional dependency for the <code><a href="reference/ts_tna.html">ts_tna()</a></code> transition-network family; network plots delegate to <code>cograph</code> (with <code>igraph</code>), while the source-series view needs neither.</p>
+<p>Core network construction uses base R only. Transition-network estimation is delegated to the optional <code>Nestimate</code> package, and network rendering to <code>cograph</code> (with <code>igraph</code>); the source-series plots require neither.</p>
 <blockquote>
-<p>Not to be confused with <code>tsnet</code> (Bayesian graphical VAR), <code>tsna</code> (temporal social networks), or <code>ts2net</code> (a related but distinct time-series-to-network toolkit). <code>tsn</code> emphasizes a compact, dependency-light R interface with irregular-time visibility support, fifteen discretizers, and optional transition-network integration.</p>
+<p><strong>Related packages.</strong> <code>tsn</code> is distinct from <code>tsnet</code> (Bayesian graphical vector autoregression), <code>tsna</code> (temporal social-network analysis), and <code>ts2net</code> (a related time-series-to-network toolkit). Its emphasis is a compact, dependency-light interface that supports irregularly spaced visibility graphs, fifteen discretizers, and an optional bridge to transition-network models.</p>
 </blockquote>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -134,10 +136,10 @@
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mohsaqr/tsn"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="transition-networks-between-states">Transition networks between states<a class="anchor" aria-label="anchor" href="#transition-networks-between-states"></a>
+<h2 id="state-transition-networks">State-transition networks<a class="anchor" aria-label="anchor" href="#state-transition-networks"></a>
 </h2>
-<p>The <code><a href="reference/ts_tna.html">ts_tna()</a></code> family goes from raw measurements to a transition network in one call: it discretizes each series, keeps one shared state alphabet across them, and delegates the estimation to <code>Nestimate</code> (a Suggests dependency). <code><a href="reference/ts_tna.html">ts_tna()</a></code> fits transition probabilities, <code><a href="reference/ts_tna.html">ts_ftna()</a></code> raw frequencies, <code><a href="reference/ts_tna.html">ts_cna()</a></code> co-occurrences, and <code><a href="reference/ts_tna.html">ts_atna()</a></code> attention-weighted transitions.</p>
-<p>The packaged <code>steps</code> data records daily step counts. Participant 35 has missing days, so we model the complete observations for two participants:</p>
+<p>The <code><a href="reference/ts_tna.html">ts_tna()</a></code> family constructs a transition network directly from raw measurements: each series is discretized, a single state alphabet is shared across all series, and the estimation is delegated to <code>Nestimate</code> (a Suggests dependency). The four functions differ only in the quantity placed on the edges. <code><a href="reference/ts_tna.html">ts_tna()</a></code> estimates transition probabilities, <code><a href="reference/ts_tna.html">ts_ftna()</a></code> raw transition frequencies, <code><a href="reference/ts_tna.html">ts_cna()</a></code> co-occurrences, and <code><a href="reference/ts_tna.html">ts_atna()</a></code> attention-weighted transitions.</p>
+<p>The packaged <code>steps</code> dataset records daily step counts. Because participant 35 has missing days, we model the complete observations for two participants:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span></span>
 <span></span>
@@ -167,26 +169,26 @@
 <span><span class="co">#&gt;   high          1.000  ████████████████████████████████████████</span></span>
 <span><span class="co">#&gt;   low           0.000  </span></span>
 <span><span class="co">#&gt;   moderate      0.000</span></span></code></pre></div>
-<p>Days are sticky: in the pooled model a <code>low</code> day is followed by another <code>low</code> day with probability 0.578, and a <code>high</code> day by another <code>high</code> day with probability 0.605. The pooled state alphabet is learned from both series together, so the two participants are placed on one common scale; <code><a href="reference/series_networks.html">series_networks()</a></code> then splits the model into per-series networks:</p>
+<p>The transition matrix is strongly diagonal: in the pooled model a <code>low</code> day is followed by another <code>low</code> day with probability 0.578, and a <code>high</code> day by another <code>high</code> day with probability 0.605, so days tend to persist in their state. Because the state alphabet is learned from both series jointly, the two participants are placed on a common scale. <code><a href="reference/series_networks.html">series_networks()</a></code> then splits the pooled model into one network per series:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  series type observations states edges</span></span>
 <span><span class="co">#&gt;      88  tna          292      3     9</span></span>
 <span><span class="co">#&gt;     536  tna          265      3     9</span></span></code></pre></div>
-<p>The returned collection supports <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> directly (<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> takes <code>series = "&lt;name&gt;"</code> when the collection holds more than one model). The combined plot stacks each participant’s shaded series next to their own transition network:</p>
+<p>The resulting collection supports <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> directly (<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> takes <code>series = "&lt;name&gt;"</code> when the collection holds more than one model). The combined plot places each participant’s shaded series alongside their own transition network:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, ribbon <span class="op">=</span> <span class="cn">TRUE</span>, overlay <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Registered S3 method overwritten by 'cograph':</span></span>
 <span><span class="co">#&gt;   method     from     </span></span>
 <span><span class="co">#&gt;   print.mcml Nestimate</span></span></code></pre></div>
 <p><img src="reference/figures/README-transition-plot-1.png" alt="Two rows, one per participant: each shows the daily step series with a state ribbon strip underneath and that participant's three-state transition network beside it, with edge weights printed on the arrows." width="100%" style="display: block; margin: auto;"></p>
-<p>Because the result is a Nestimate model, its downstream tools apply unchanged (for example <code>Nestimate::net_centrality(model)</code>). Inferential methods retain their usual sampling requirements; in particular, sequence bootstrap is not informative for a model built from a single sequence.</p>
+<p>Because the result is a genuine <code>Nestimate</code> model, the full range of downstream <code>Nestimate</code> tools applies unchanged (for example <code>Nestimate::net_centrality(model)</code>). Inferential procedures retain their usual sampling requirements; sequence bootstrap, in particular, is not informative for a model estimated from a single sequence.</p>
 </div>
 <div class="section level2">
 <h2 id="from-values-to-states-discretize-and-trend">From values to states: <code>discretize()</code> and <code>trend()</code>
 <a class="anchor" aria-label="anchor" href="#from-values-to-states-discretize-and-trend"></a>
 </h2>
-<p><code><a href="reference/discretize.html">discretize()</a></code> is the bridge from numeric series to state sequences. The packaged <code>steps</code> data records daily step counts; participant 536 contributes 265 complete days.</p>
+<p><code><a href="reference/discretize.html">discretize()</a></code> is the bridge from a numeric series to a state sequence. Using the same <code>steps</code> data, participant 536 contributes 265 complete days:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">states</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/discretize.html">discretize</a></span><span class="op">(</span></span>
 <span>  <span class="va">steps</span>,</span>
@@ -204,8 +206,8 @@
 <span><span class="co">#&gt; 1      low    88  0.3320755   8838.966</span></span>
 <span><span class="co">#&gt; 2 moderate    89  0.3358491  13599.753</span></span>
 <span><span class="co">#&gt; 3     high    88  0.3320755  18165.034</span></span></code></pre></div>
-<p>Fifteen discretizers are available (<code>threshold</code>, <code>width</code>, <code>quantile</code>, <code>kde</code>, <code>kmeans</code>, <code>gaussian</code>, <code>hclust</code>, <code>ordinal</code>, <code>symbolic</code>, <code>change_points</code>, <code>entropy</code>, <code>magnitude</code>, <code>adaptive_magnitude</code>, <code>percentile_magnitude</code>, <code>dtw</code>), and the temporal ones are group-safe: ordinal patterns, adaptive-magnitude features, and DTW windows are computed separately within each series, then mapped to one shared state vocabulary.</p>
-<p><code><a href="reference/trend.html">trend()</a></code> is a companion discretizer for direction: it classifies each observation by its rolling slope.</p>
+<p>Fifteen discretizers are available (<code>threshold</code>, <code>width</code>, <code>quantile</code>, <code>kde</code>, <code>kmeans</code>, <code>gaussian</code>, <code>hclust</code>, <code>ordinal</code>, <code>symbolic</code>, <code>change_points</code>, <code>entropy</code>, <code>magnitude</code>, <code>adaptive_magnitude</code>, <code>percentile_magnitude</code>, <code>dtw</code>). The temporal discretizers are group-aware: ordinal patterns, adaptive-magnitude features, and DTW windows are computed separately within each series and then mapped onto one shared state vocabulary, so that states remain comparable across series.</p>
+<p><code><a href="reference/trend.html">trend()</a></code> is a companion discretizer for <em>direction</em> rather than <em>level</em>: it classifies each observation by the slope of a rolling regression.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">movement</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/trend.html">trend</a></span><span class="op">(</span></span>
 <span>  <span class="va">steps</span>,</span>
@@ -226,7 +228,7 @@
 <div class="section level2">
 <h2 id="visibility-networks-observations-as-nodes">Visibility networks: observations as nodes<a class="anchor" aria-label="anchor" href="#visibility-networks-observations-as-nodes"></a>
 </h2>
-<p>A visibility graph maps a single series onto a network of its observations: two time points are connected when a straight sightline over the intervening values joins them. The packaged <code>motivation</code> data holds 4,871 experience samples; the first 60 pleasure ratings are enough to see the idea.</p>
+<p>A visibility graph (Lacasa et al., 2008) maps a single series onto a network of its observations: two time points are connected when an unobstructed straight sightline over the intervening values joins them. The packaged <code>motivation</code> dataset holds 4,871 experience-sampling measurements; the first 60 pleasure ratings suffice to illustrate the construction.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">motivation</span><span class="op">)</span></span>
 <span></span>
@@ -238,19 +240,19 @@
 <span><span class="co">#&gt; 1 visibility time    60   143   143 0.08079096              1              1</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The 60 observations become 60 nodes joined by 143 sightlines. Every network has two plot views: <code>plot(x)</code> renders the network itself through <code>cograph</code>, and <code>plot(x, "series")</code> shows the source series it was built from.</p>
+<p>The 60 observations become 60 nodes joined by 143 sightlines. Every network offers two complementary views: <code>plot(x)</code> draws the network itself through <code>cograph</code>, and <code>plot(x, "series")</code> shows the source series from which it was built.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-visibility-network-1.png" alt="Natural visibility graph of sixty pleasure ratings, drawn as a spring-layout network with nodes sized by degree; a few high-degree hubs correspond to peak observations that see far along the series." width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span>, <span class="st">"series"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-visibility-series-1.png" alt="The sixty pleasure ratings the visibility graph was built from, plotted as a line over observation order." width="100%" style="display: block; margin: auto;"></p>
-<p><code>vg(x)</code> builds a natural visibility graph and <code>vg(x, "horizontal")</code> a horizontal one; the <code><a href="reference/tsn.html">tsn()</a></code> method strings <code>"nvg"</code> and <code>"hvg"</code> are sugar for the same calls. Visibility options include <code>directed</code>, <code>penetrable</code> (sightlines may cross a few points), <code>limit</code> (a maximum elapsed time), and <code>decay</code>; when a <code>time</code> column is supplied, sightlines and elapsed-time rules use the observed — possibly irregular — spacing rather than row positions.</p>
+<p><code>vg(x)</code> builds a natural visibility graph and <code>vg(x, "horizontal")</code> a horizontal one (Luque et al., 2009); the <code><a href="reference/tsn.html">tsn()</a></code> shortcuts <code>"nvg"</code> and <code>"hvg"</code> are equivalent. Visibility options include <code>directed</code>, <code>penetrable</code> (sightlines may cross a bounded number of points), <code>limit</code> (a maximum elapsed time), and <code>decay</code>. When a <code>time</code> column is supplied, both the sightlines and the elapsed-time rules respect the observed spacing between points, which may be irregular, rather than mere row positions.</p>
 </div>
 <div class="section level2">
 <h2 id="state-networks-from-visibility">State networks from visibility<a class="anchor" aria-label="anchor" href="#state-networks-from-visibility"></a>
 </h2>
-<p><code>tsn(unit = "state")</code> runs the same discretization engine and then collapses the visibility graph onto the states: nodes are states, and each edge aggregates (by default, sums) the sightlines between occurrences of a state pair.</p>
+<p><code>tsn(unit = "state")</code> applies the same discretization engine and then projects the visibility graph onto the states: nodes become states, and each edge aggregates (by default, sums) the sightlines between occurrences of a state pair.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">state_network</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tsn.html">tsn</a></span><span class="op">(</span></span>
 <span>  <span class="va">steps</span>,</span>
@@ -276,7 +278,7 @@
 <div class="section level2">
 <h2 id="distance-networks-series-and-windows-as-nodes">Distance networks: series and windows as nodes<a class="anchor" aria-label="anchor" href="#distance-networks-series-and-windows-as-nodes"></a>
 </h2>
-<p>With <code>method = "distance"</code>, the nodes are whole series (or sliding windows) and edge weights are similarities: larger means closer. Comparing five motivation variables as complete series takes one call:</p>
+<p>Under <code>method = "distance"</code>, nodes are whole series (or sliding windows) and edge weights are similarities, so that larger weights indicate closer series. Comparing five motivation variables as complete series is a single call:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">affect</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tsn.html">tsn</a></span><span class="op">(</span></span>
 <span>  <span class="va">motivation</span>,</span>
@@ -293,8 +295,8 @@
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">affect</span>, labels <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-distance-network-1.png" alt="Correlation-distance network of five motivation variables, drawn with labeled nodes; all ten pairs are connected and autonomy and competence form the strongest tie." width="100%" style="display: block; margin: auto;"></p>
-<p>All ten pairs are connected because <code>connect = "full"</code> is the default; autonomy–competence is the closest pair. Fifteen distances are available (<code>euclidean</code>, <code>manhattan</code>, <code>maximum</code>, <code>canberra</code>, <code>minkowski</code>, <code>binary</code>, <code>cosine</code>, <code>correlation</code>, <code>spearman</code>, <code>dtw</code>, <code>ccf</code>, <code>nmi</code>, <code>voi</code>, <code>event_sync</code>, <code>van_rossum</code>), and <code>connect</code> sparsifies the result by nearest neighbors, a threshold, a percentile, or a Gaussian kernel.</p>
-<p>The same verb compares sliding windows of one series, which turns a single trajectory into a network of its own epochs:</p>
+<p>All ten pairs are connected because the default connectivity rule is <code>connect = "full"</code>; autonomy and competence form the closest pair. Fifteen distance measures are available (<code>euclidean</code>, <code>manhattan</code>, <code>maximum</code>, <code>canberra</code>, <code>minkowski</code>, <code>binary</code>, <code>cosine</code>, <code>correlation</code>, <code>spearman</code>, <code>dtw</code>, <code>ccf</code>, <code>nmi</code>, <code>voi</code>, <code>event_sync</code>, <code>van_rossum</code>), and <code>connect</code> sparsifies the network by nearest neighbours, a distance threshold, a percentile, or a Gaussian kernel.</p>
+<p>The same function compares sliding windows of a single series, turning one trajectory into a network of its own epochs:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">windows</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tsn.html">tsn</a></span><span class="op">(</span></span>
 <span>  <span class="va">pleasure</span>,</span>
@@ -312,12 +314,12 @@
 <span><span class="co">#&gt; 1 distance window    13    78    17 0.2179487     0.00990099     0.02564103</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The 60 ratings yield 13 overlapping windows, and keeping each window’s two nearest neighbors retains 17 of the 78 possible dyads. The default <code>window</code> is 10% of the series length, so choose <code>step</code> relative to how long the series is. Further options include <code>chain = TRUE</code> (connect only consecutive windows or series), <code>directed = TRUE</code>, and <code>normalize = TRUE</code>.</p>
+<p>The 60 ratings yield 13 overlapping windows; retaining each window’s two nearest neighbours keeps 17 of the 78 possible dyads. The default <code>window</code> is 10% of the series length, so <code>step</code> should be chosen relative to the series length. Further options include <code>chain = TRUE</code> (connect only consecutive windows or series), <code>directed = TRUE</code>, and <code>normalize = TRUE</code>.</p>
 </div>
 <div class="section level2">
-<h2 id="one-object-one-grammar">One object, one grammar<a class="anchor" aria-label="anchor" href="#one-object-one-grammar"></a>
+<h2 id="a-single-object-a-consistent-grammar">A single object, a consistent grammar<a class="anchor" aria-label="anchor" href="#a-single-object-a-consistent-grammar"></a>
 </h2>
-<p>However it was built, a <code>tsn</code> network is the same kind of object: a list-backed result carrying the <code>netobject</code>/<code>cograph_network</code> classes, with a tidy dyad table inside. The standard verbs work everywhere:</p>
+<p>However it was constructed, a <code>tsn</code> network is the same kind of object: a list-backed result carrying the <code>netobject</code> and <code>cograph_network</code> classes, with a tidy dyad table inside. The standard methods apply throughout:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span>                         <span class="co"># one tidy row describing the network</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span>                   <span class="co"># the dyad table</span></span>
@@ -326,22 +328,58 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span>                            <span class="co"># network view, rendered by cograph</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span>, <span class="st">"series"</span><span class="op">)</span>                  <span class="co"># source-series view, base graphics</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a network applies readable defaults (spring layout, degree-scaled nodes); any <code>cograph</code> argument passes straight through and overrides them, for example <code>plot(network, layout = "circle", labels = TRUE)</code>.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a network applies readable defaults (a spring layout with degree-scaled nodes); any <code>cograph</code> argument passes straight through and overrides them, for example <code>plot(network, layout = "circle", labels = TRUE)</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
 </h2>
 <ul>
 <li>
-<code><a href="articles/pleasure-all-functions.html">vignette("pleasure-all-functions")</a></code> applies every exported tsn function to the packaged <code>motivation</code> pleasure series, end to end.</li>
+<code><a href="articles/pleasure-all-functions.html">vignette("pleasure-all-functions")</a></code> applies every exported <code>tsn</code> function to the packaged <code>motivation</code> pleasure series, end to end.</li>
 <li>
-<code><a href="articles/plotting-time-series-networks.html">vignette("plotting-time-series-networks")</a></code> covers the plotting surface: the network and source-series views, state overlays, and transition-model plots.</li>
+<code><a href="articles/plotting-time-series-networks.html">vignette("plotting-time-series-networks")</a></code> documents the plotting surface: the network and source-series views, state overlays, and transition-model plots.</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="package-boundaries">Package boundaries<a class="anchor" aria-label="anchor" href="#package-boundaries"></a>
+<h2 id="relationships-with-other-packages">Relationships with other packages<a class="anchor" aria-label="anchor" href="#relationships-with-other-packages"></a>
 </h2>
-<p><code>tsn</code> owns time-series-to-network construction and the bridge from numeric series to state sequences. <code>Nestimate</code> owns transition-network estimation and inference; tsn calls its builders rather than reimplementing them. <code>cograph</code> owns generic graph conversion, analytics, layouts, and network rendering: a <code>tsn</code> result is already a <code>cograph_network</code>, and <code>plot(network)</code> delegates to <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code>.</p>
+<p><code>tsn</code> focuses on turning time series into networks and relies on base R alone for that core. Two related tasks are handled by companion packages:</p>
+<ul>
+<li>
+<strong><code>Nestimate</code></strong> (Saqr, López-Pernas, &amp; Misiejuk, 2026) estimates and analyses transition networks, following the transition-network-analysis framework of Saqr et al. (2025). The <code><a href="reference/ts_tna.html">ts_tna()</a></code> family discretizes the raw series and then calls its builders, so a <code>tsn</code> transition network is itself a <code>Nestimate</code> model that every <code>Nestimate</code> method applies to.</li>
+<li>
+<strong><code>cograph</code></strong> (Saqr, López-Pernas, &amp; Tikka, 2026) provides graph conversion, analytics, layout, and rendering. Because every <code>tsn</code> result already carries the <code>cograph_network</code> class, <code>plot(network)</code> delegates to <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code>.</li>
+</ul>
+<p>Both are <code>Suggests</code>: <code>Nestimate</code> is needed only for transition networks and <code>cograph</code> (with <code>igraph</code>) only for network plots. Everything else runs on a base-R installation.</p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Lacasa, L., Luque, B., Ballesteros, F., Luque, J., &amp; Nuño, J. C. (2008). From time series to complex networks: The visibility graph. <em>Proceedings of the National Academy of Sciences</em>, 105(13), 4972–4975. <a href="https://doi.org/10.1073/pnas.0709247105" class="external-link uri">https://doi.org/10.1073/pnas.0709247105</a></p>
+<p>Luque, B., Lacasa, L., Ballesteros, F., &amp; Luque, J. (2009). Horizontal visibility graphs: Exact results for random time series. <em>Physical Review E</em>, 80, 046103. <a href="https://doi.org/10.1103/PhysRevE.80.046103" class="external-link uri">https://doi.org/10.1103/PhysRevE.80.046103</a></p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &amp; Tikka, S. (2025). Transition network analysis: A novel framework for modeling, visualizing, and identifying the temporal patterns of learners and learning. <em>Proceedings of the 15th Learning Analytics and Knowledge Conference</em>. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Nestimate: Network estimation, bootstrap, and higher-order analysis</em>. R package version 0.8.4. <a href="https://github.com/mohsaqr/nestimate" class="external-link uri">https://github.com/mohsaqr/nestimate</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2026). <em>cograph: Analysis and visualization of complex networks</em>. R package version 2.4.5. <a href="https://github.com/sonsoleslp/cograph" class="external-link uri">https://github.com/sonsoleslp/cograph</a></p>
+</div>
+<div class="section level2">
+<h2 id="authors">Authors<a class="anchor" aria-label="anchor" href="#authors"></a>
+</h2>
+<ul>
+<li>
+<strong>Mohammed Saqr</strong>, University of Eastern Finland · <a href="https://saqr.me" class="external-link">saqr.me</a>
+</li>
+<li>
+<strong>Sonsoles López-Pernas</strong>, University of Eastern Finland · <a href="https://sonsoles.me" class="external-link">sonsoles.me</a>
+</li>
+<li>
+<strong>Manuel J. Gómez</strong>, University of Murcia · <a href="https://manueljgomez.es" class="external-link">manueljgomez.es</a>
+</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
+</h2>
+<p>MIT</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -373,7 +411,7 @@
 <ul class="list-unstyled">
 <li>Mohammed Saqr <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
 <li>Sonsoles López-Pernas <br><small class="roles"> Author, copyright holder </small>   </li>
-<li>Manuel Jesus Gomez <br><small class="roles"> Author </small>   </li>
+<li>Manuel J. Gomez <br><small class="roles"> Author </small>   </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
@@ -385,7 +423,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Mohammed Saqr, Sonsoles López-Pernas, Manuel Jesus Gomez.</p>
+  <p>Developed by Mohammed Saqr, Sonsoles López-Pernas, Manuel J. Gomez.</p>
 </div>
 
 <div class="pkgdown-footer-right">

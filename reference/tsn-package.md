@@ -30,4 +30,4 @@ Authors:
 
 - Sonsoles López-Pernas \[copyright holder\]
 
-- Manuel Jesus Gomez (University of Murcia)
+- Manuel J. Gomez (University of Murcia)

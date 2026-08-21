@@ -1,45 +1,54 @@
 # tsn
 
-`tsn` turns one or many time series into a network. What differs between
-analyses is only **what the nodes are**:
+`tsn` constructs networks from time-series data. Representing a time
+series as a network exposes its temporal structure to the tools of graph
+theory, and several established methods do this in different ways. What
+distinguishes them is **what each node represents**; `tsn` collects them
+under a single interface and a single result object.
+
+Whatever the input, a single time series or a collection of them, the
+analysis follows one of two paths that differ only in what becomes a
+node:
 
 ``` R
-                    ┌─► states ──────────────────► transition network
-one or many  ───────┤
-time series         └─► series, windows, or ─────► geometry network
-                        observations
+                        ┌─►  states ───────────────────────►  transition network
+  a univariate series ──┤
+  (one or several)      └─►  series, windows, or points  ──►  distance or
+                             (individual observations)        visibility network
 ```
 
-- **Nodes are states.**
-  [`discretize()`](https://pak.dynasite.org/tsn/reference/discretize.md)
-  maps the numeric values onto a small state alphabet, and the network
-  records how the series moves between those states over time. This is a
-  transition network.
-- **Nodes are the measurements themselves** — whole series, sliding
-  windows, or individual observations. Distance or visibility between
-  them supplies the edges directly, with no discretization involved.
+Two broad strategies are supported:
 
-Nine exported verbs cover both:
+- **Nodes are states.** A numeric series is discretized into a small
+  alphabet of states, and the network encodes how the series moves
+  between those states over time. The result is a *state-transition
+  network*.
+- **Nodes are the measurements themselves**, whether a whole series, a
+  sliding window, or an individual observation. Edges are then defined
+  directly by the distance or the visibility relation between nodes,
+  with no discretization step.
 
-| What you want | Verb | Choices |
+The exported functions cover both strategies:
+
+| Task | Function(s) | Options |
 |----|----|----|
-| Model state transitions | [`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md), [`ts_ftna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md), [`ts_cna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md), [`ts_atna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md) | probability, frequency, co-occurrence, or attention networks via Nestimate |
-| Split a pooled model | [`series_networks()`](https://pak.dynasite.org/tsn/reference/series_networks.md) | one network per series |
-| Discretize into states | [`discretize()`](https://pak.dynasite.org/tsn/reference/discretize.md) (or `tsn(unit = "state")`) | 15 discretizers, group-safe across series |
-| Classify rolling direction | [`trend()`](https://pak.dynasite.org/tsn/reference/trend.md) | Theil–Sen (default), OLS, Spearman, or Kendall slope; growth factor |
-| Build a geometry network | [`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md), [`vg()`](https://pak.dynasite.org/tsn/reference/vg.md) | 15 distances; natural or horizontal visibility; full, nearest, threshold, percentile, or Gaussian connection |
+| Model state transitions | [`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md), [`ts_ftna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md), [`ts_cna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md), [`ts_atna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md) | transition probabilities, frequencies, co-occurrences, or attention-weighted transitions (via Nestimate) |
+| Split a pooled model by series | [`series_networks()`](https://pak.dynasite.org/tsn/reference/series_networks.md) | one network per series |
+| Discretize values into states | [`discretize()`](https://pak.dynasite.org/tsn/reference/discretize.md) (or `tsn(unit = "state")`) | 15 discretizers, applied consistently across series |
+| Classify local trend direction | [`trend()`](https://pak.dynasite.org/tsn/reference/trend.md) | Theil–Sen (default), OLS, Spearman, or Kendall slope; growth factor |
+| Build a distance or visibility network | [`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md), [`vg()`](https://pak.dynasite.org/tsn/reference/vg.md) | 15 distance measures; natural or horizontal visibility; full, nearest-neighbour, threshold, percentile, or Gaussian connectivity |
 
-Core construction uses base R only. `Nestimate` is an optional
-dependency for the
-[`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md)
-transition-network family; network plots delegate to `cograph` (with
-`igraph`), while the source-series view needs neither.
+Core network construction uses base R only. Transition-network
+estimation is delegated to the optional `Nestimate` package, and network
+rendering to `cograph` (with `igraph`); the source-series plots require
+neither.
 
-> Not to be confused with `tsnet` (Bayesian graphical VAR), `tsna`
-> (temporal social networks), or `ts2net` (a related but distinct
-> time-series-to-network toolkit). `tsn` emphasizes a compact,
-> dependency-light R interface with irregular-time visibility support,
-> fifteen discretizers, and optional transition-network integration.
+> **Related packages.** `tsn` is distinct from `tsnet` (Bayesian
+> graphical vector autoregression), `tsna` (temporal social-network
+> analysis), and `ts2net` (a related time-series-to-network toolkit).
+> Its emphasis is a compact, dependency-light interface that supports
+> irregularly spaced visibility graphs, fifteen discretizers, and an
+> optional bridge to transition-network models.
 
 ## Installation
 
@@ -52,24 +61,26 @@ install.packages("remotes")
 remotes::install_github("mohsaqr/tsn")
 ```
 
-## Transition networks between states
+## State-transition networks
 
 The [`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md)
-family goes from raw measurements to a transition network in one call:
-it discretizes each series, keeps one shared state alphabet across them,
-and delegates the estimation to `Nestimate` (a Suggests dependency).
-[`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md) fits
+family constructs a transition network directly from raw measurements:
+each series is discretized, a single state alphabet is shared across all
+series, and the estimation is delegated to `Nestimate` (a Suggests
+dependency). The four functions differ only in the quantity placed on
+the edges.
+[`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md) estimates
 transition probabilities,
 [`ts_ftna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md) raw
-frequencies,
+transition frequencies,
 [`ts_cna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md)
 co-occurrences, and
 [`ts_atna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md)
 attention-weighted transitions.
 
-The packaged `steps` data records daily step counts. Participant 35 has
-missing days, so we model the complete observations for two
-participants:
+The packaged `steps` dataset records daily step counts. Because
+participant 35 has missing days, we model the complete observations for
+two participants:
 
 ``` r
 
@@ -103,12 +114,13 @@ model
 #>   moderate      0.000
 ```
 
-Days are sticky: in the pooled model a `low` day is followed by another
-`low` day with probability 0.578, and a `high` day by another `high` day
-with probability 0.605. The pooled state alphabet is learned from both
-series together, so the two participants are placed on one common scale;
+The transition matrix is strongly diagonal: in the pooled model a `low`
+day is followed by another `low` day with probability 0.578, and a
+`high` day by another `high` day with probability 0.605, so days tend to
+persist in their state. Because the state alphabet is learned from both
+series jointly, the two participants are placed on a common scale.
 [`series_networks()`](https://pak.dynasite.org/tsn/reference/series_networks.md)
-then splits the model into per-series networks:
+then splits the pooled model into one network per series:
 
 ``` r
 
@@ -118,15 +130,15 @@ series_networks(model)
 #>     536  tna          265      3     9
 ```
 
-The returned collection supports
+The resulting collection supports
 [`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html),
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html), and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) directly
 ([`plot()`](https://rdrr.io/r/graphics/plot.default.html) takes
 `series = "<name>"` when the collection holds more than one model). The
-combined plot stacks each participant’s shaded series next to their own
-transition network:
+combined plot places each participant’s shaded series alongside their
+own transition network:
 
 ``` r
 
@@ -141,18 +153,17 @@ state ribbon strip underneath and that participant's three-state
 transition network beside it, with edge weights printed on the
 arrows.](reference/figures/README-transition-plot-1.png)
 
-Because the result is a Nestimate model, its downstream tools apply
-unchanged (for example `Nestimate::net_centrality(model)`). Inferential
-methods retain their usual sampling requirements; in particular,
-sequence bootstrap is not informative for a model built from a single
-sequence.
+Because the result is a genuine `Nestimate` model, the full range of
+downstream `Nestimate` tools applies unchanged (for example
+`Nestimate::net_centrality(model)`). Inferential procedures retain their
+usual sampling requirements; sequence bootstrap, in particular, is not
+informative for a model estimated from a single sequence.
 
 ## From values to states: `discretize()` and `trend()`
 
 [`discretize()`](https://pak.dynasite.org/tsn/reference/discretize.md)
-is the bridge from numeric series to state sequences. The packaged
-`steps` data records daily step counts; participant 536 contributes 265
-complete days.
+is the bridge from a numeric series to a state sequence. Using the same
+`steps` data, participant 536 contributes 265 complete days:
 
 ``` r
 
@@ -177,14 +188,15 @@ summary(states)
 Fifteen discretizers are available (`threshold`, `width`, `quantile`,
 `kde`, `kmeans`, `gaussian`, `hclust`, `ordinal`, `symbolic`,
 `change_points`, `entropy`, `magnitude`, `adaptive_magnitude`,
-`percentile_magnitude`, `dtw`), and the temporal ones are group-safe:
-ordinal patterns, adaptive-magnitude features, and DTW windows are
-computed separately within each series, then mapped to one shared state
-vocabulary.
+`percentile_magnitude`, `dtw`). The temporal discretizers are
+group-aware: ordinal patterns, adaptive-magnitude features, and DTW
+windows are computed separately within each series and then mapped onto
+one shared state vocabulary, so that states remain comparable across
+series.
 
 [`trend()`](https://pak.dynasite.org/tsn/reference/trend.md) is a
-companion discretizer for direction: it classifies each observation by
-its rolling slope.
+companion discretizer for *direction* rather than *level*: it classifies
+each observation by the slope of a rolling regression.
 
 ``` r
 
@@ -207,11 +219,12 @@ summary(movement)
 
 ## Visibility networks: observations as nodes
 
-A visibility graph maps a single series onto a network of its
-observations: two time points are connected when a straight sightline
-over the intervening values joins them. The packaged `motivation` data
-holds 4,871 experience samples; the first 60 pleasure ratings are enough
-to see the idea.
+A visibility graph (Lacasa et al., 2008) maps a single series onto a
+network of its observations: two time points are connected when an
+unobstructed straight sightline over the intervening values joins them.
+The packaged `motivation` dataset holds 4,871 experience-sampling
+measurements; the first 60 pleasure ratings suffice to illustrate the
+construction.
 
 ``` r
 
@@ -228,9 +241,9 @@ summary(network)
 ```
 
 The 60 observations become 60 nodes joined by 143 sightlines. Every
-network has two plot views: `plot(x)` renders the network itself through
-`cograph`, and `plot(x, "series")` shows the source series it was built
-from.
+network offers two complementary views: `plot(x)` draws the network
+itself through `cograph`, and `plot(x, "series")` shows the source
+series from which it was built.
 
 ``` r
 
@@ -252,18 +265,19 @@ plotted as a line over observation
 order.](reference/figures/README-visibility-series-1.png)
 
 `vg(x)` builds a natural visibility graph and `vg(x, "horizontal")` a
-horizontal one; the
-[`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md) method strings
-`"nvg"` and `"hvg"` are sugar for the same calls. Visibility options
-include `directed`, `penetrable` (sightlines may cross a few points),
-`limit` (a maximum elapsed time), and `decay`; when a `time` column is
-supplied, sightlines and elapsed-time rules use the observed — possibly
-irregular — spacing rather than row positions.
+horizontal one (Luque et al., 2009); the
+[`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md) shortcuts
+`"nvg"` and `"hvg"` are equivalent. Visibility options include
+`directed`, `penetrable` (sightlines may cross a bounded number of
+points), `limit` (a maximum elapsed time), and `decay`. When a `time`
+column is supplied, both the sightlines and the elapsed-time rules
+respect the observed spacing between points, which may be irregular,
+rather than mere row positions.
 
 ## State networks from visibility
 
-`tsn(unit = "state")` runs the same discretization engine and then
-collapses the visibility graph onto the states: nodes are states, and
+`tsn(unit = "state")` applies the same discretization engine and then
+projects the visibility graph onto the states: nodes become states, and
 each edge aggregates (by default, sums) the sightlines between
 occurrences of a state pair.
 
@@ -302,9 +316,10 @@ y-axis.](reference/figures/README-state-overlay-1.png)
 
 ## Distance networks: series and windows as nodes
 
-With `method = "distance"`, the nodes are whole series (or sliding
-windows) and edge weights are similarities: larger means closer.
-Comparing five motivation variables as complete series takes one call:
+Under `method = "distance"`, nodes are whole series (or sliding windows)
+and edge weights are similarities, so that larger weights indicate
+closer series. Comparing five motivation variables as complete series is
+a single call:
 
 ``` r
 
@@ -332,15 +347,16 @@ labeled nodes; all ten pairs are connected and autonomy and competence
 form the strongest
 tie.](reference/figures/README-distance-network-1.png)
 
-All ten pairs are connected because `connect = "full"` is the default;
-autonomy–competence is the closest pair. Fifteen distances are available
-(`euclidean`, `manhattan`, `maximum`, `canberra`, `minkowski`, `binary`,
-`cosine`, `correlation`, `spearman`, `dtw`, `ccf`, `nmi`, `voi`,
-`event_sync`, `van_rossum`), and `connect` sparsifies the result by
-nearest neighbors, a threshold, a percentile, or a Gaussian kernel.
+All ten pairs are connected because the default connectivity rule is
+`connect = "full"`; autonomy and competence form the closest pair.
+Fifteen distance measures are available (`euclidean`, `manhattan`,
+`maximum`, `canberra`, `minkowski`, `binary`, `cosine`, `correlation`,
+`spearman`, `dtw`, `ccf`, `nmi`, `voi`, `event_sync`, `van_rossum`), and
+`connect` sparsifies the network by nearest neighbours, a distance
+threshold, a percentile, or a Gaussian kernel.
 
-The same verb compares sliding windows of one series, which turns a
-single trajectory into a network of its own epochs:
+The same function compares sliding windows of a single series, turning
+one trajectory into a network of its own epochs:
 
 ``` r
 
@@ -362,18 +378,19 @@ summary(windows)
 #> 1    FALSE
 ```
 
-The 60 ratings yield 13 overlapping windows, and keeping each window’s
-two nearest neighbors retains 17 of the 78 possible dyads. The default
-`window` is 10% of the series length, so choose `step` relative to how
-long the series is. Further options include `chain = TRUE` (connect only
-consecutive windows or series), `directed = TRUE`, and
+The 60 ratings yield 13 overlapping windows; retaining each window’s two
+nearest neighbours keeps 17 of the 78 possible dyads. The default
+`window` is 10% of the series length, so `step` should be chosen
+relative to the series length. Further options include `chain = TRUE`
+(connect only consecutive windows or series), `directed = TRUE`, and
 `normalize = TRUE`.
 
-## One object, one grammar
+## A single object, a consistent grammar
 
-However it was built, a `tsn` network is the same kind of object: a
-list-backed result carrying the `netobject`/`cograph_network` classes,
-with a tidy dyad table inside. The standard verbs work everywhere:
+However it was constructed, a `tsn` network is the same kind of object:
+a list-backed result carrying the `netobject` and `cograph_network`
+classes, with a tidy dyad table inside. The standard methods apply
+throughout:
 
 ``` r
 
@@ -387,25 +404,76 @@ plot(network, "series")                  # source-series view, base graphics
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a network
-applies readable defaults (spring layout, degree-scaled nodes); any
-`cograph` argument passes straight through and overrides them, for
+applies readable defaults (a spring layout with degree-scaled nodes);
+any `cograph` argument passes straight through and overrides them, for
 example `plot(network, layout = "circle", labels = TRUE)`.
 
 ## Vignettes
 
 - [`vignette("pleasure-all-functions")`](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md)
-  applies every exported tsn function to the packaged `motivation`
+  applies every exported `tsn` function to the packaged `motivation`
   pleasure series, end to end.
 - [`vignette("plotting-time-series-networks")`](https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.md)
-  covers the plotting surface: the network and source-series views,
+  documents the plotting surface: the network and source-series views,
   state overlays, and transition-model plots.
 
-## Package boundaries
+## Relationships with other packages
 
-`tsn` owns time-series-to-network construction and the bridge from
-numeric series to state sequences. `Nestimate` owns transition-network
-estimation and inference; tsn calls its builders rather than
-reimplementing them. `cograph` owns generic graph conversion, analytics,
-layouts, and network rendering: a `tsn` result is already a
-`cograph_network`, and `plot(network)` delegates to
-[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+`tsn` focuses on turning time series into networks and relies on base R
+alone for that core. Two related tasks are handled by companion
+packages:
+
+- **`Nestimate`** (Saqr, López-Pernas, & Misiejuk, 2026) estimates and
+  analyses transition networks, following the
+  transition-network-analysis framework of Saqr et al. (2025). The
+  [`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md) family
+  discretizes the raw series and then calls its builders, so a `tsn`
+  transition network is itself a `Nestimate` model that every
+  `Nestimate` method applies to.
+- **`cograph`** (Saqr, López-Pernas, & Tikka, 2026) provides graph
+  conversion, analytics, layout, and rendering. Because every `tsn`
+  result already carries the `cograph_network` class, `plot(network)`
+  delegates to
+  [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+
+Both are `Suggests`: `Nestimate` is needed only for transition networks
+and `cograph` (with `igraph`) only for network plots. Everything else
+runs on a base-R installation.
+
+## References
+
+Lacasa, L., Luque, B., Ballesteros, F., Luque, J., & Nuño, J. C. (2008).
+From time series to complex networks: The visibility graph. *Proceedings
+of the National Academy of Sciences*, 105(13), 4972–4975.
+<https://doi.org/10.1073/pnas.0709247105>
+
+Luque, B., Lacasa, L., Ballesteros, F., & Luque, J. (2009). Horizontal
+visibility graphs: Exact results for random time series. *Physical
+Review E*, 80, 046103. <https://doi.org/10.1103/PhysRevE.80.046103>
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+Tikka, S. (2025). Transition network analysis: A novel framework for
+modeling, visualizing, and identifying the temporal patterns of learners
+and learning. *Proceedings of the 15th Learning Analytics and Knowledge
+Conference*. <https://doi.org/10.1145/3706468.3706513>
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nestimate: Network
+estimation, bootstrap, and higher-order analysis*. R package version
+0.8.4. <https://github.com/mohsaqr/nestimate>
+
+Saqr, M., López-Pernas, S., & Tikka, S. (2026). *cograph: Analysis and
+visualization of complex networks*. R package version 2.4.5.
+<https://github.com/sonsoleslp/cograph>
+
+## Authors
+
+- **Mohammed Saqr**, University of Eastern Finland ·
+  [saqr.me](https://saqr.me)
+- **Sonsoles López-Pernas**, University of Eastern Finland ·
+  [sonsoles.me](https://sonsoles.me)
+- **Manuel J. Gómez**, University of Murcia ·
+  [manueljgomez.es](https://manueljgomez.es)
+
+## License
+
+MIT

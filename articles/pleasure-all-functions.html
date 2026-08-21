@@ -598,8 +598,15 @@ endpoints, a strictly stronger condition.</p>
 <span><span class="co">#&gt; 1 visibility time    60   143   143 0.08079096              1              1</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The natural visibility graph has 60 nodes and 143 edges.</p>
+<p>The natural visibility graph has 60 nodes and 143 edges. At this
+length the edges remain distinguishable, so it can be drawn directly.
+Node size encodes degree, and the peaks accumulate the most connections
+because they stay visible over the smaller values around them.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">natural</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pleasure-all-functions_files/figure-html/vg-network-1.png" class="r-plt" alt="Natural visibility graph of sixty pleasure observations, drawn as a network with nodes sized by degree; the high-degree hubs correspond to peaks that see far along the series." width="100%" style="display: block; margin: auto;"></p>
+<p>The horizontal rule keeps the same 60 nodes but fewer edges.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">horizontal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vg.html">vg</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"horizontal"</span>,</span>
@@ -611,23 +618,20 @@ endpoints, a strictly stronger condition.</p>
 <span><span class="co">#&gt; 1 visibility time    60   107   107 0.06045198              1              1</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The stricter horizontal rule retains 107 of those connections. In
-both graphs the edge weights are binary, since visibility either holds
-or it does not.</p>
-<p>At this length individual edges remain distinguishable, so the
-horizontal graph can be drawn directly.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">horizontal</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/vg-network-1.png" class="r-plt" alt="Horizontal visibility graph of sixty pleasure observations, drawn as a network with nodes sized by degree and the temporal chain visible alongside longer visibility edges." width="100%" style="display: block; margin: auto;"></p>
-<p>The temporal chain is visible alongside the longer edges that reach
-across lower intervening observations. Node size encodes degree; peaks
-accumulate more connections because they stay visible over the smaller
-values around them.</p>
+<p>It retains 107 of the 143 connections, removing the 36 that a natural
+line of sight can clear but a horizontal one cannot. The result keeps
+the temporal chain of consecutive observations while dropping the longer
+sightlines that only the natural view permits. In both graphs the edge
+weights are binary, since visibility either holds or it does not.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">horizontal</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pleasure-all-functions_files/figure-html/vg-network-horizontal-1.png" class="r-plt" alt="Horizontal visibility graph of the same sixty observations, sparser than the natural graph, with the temporal chain visible alongside a smaller number of longer edges." width="100%" style="display: block; margin: auto;"></p>
+<p>Every network also retains the series it was built from, which the
+source-series view recovers.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">horizontal</span>, type <span class="op">=</span> <span class="st">"series"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pleasure-all-functions_files/figure-html/vg-series-1.png" class="r-plt" alt="The sixty pleasure observations behind the visibility graph, plotted as a line over observation order." width="100%" style="display: block; margin: auto;"></p>
-<p>The source-series view recovers the measurements behind the network
-object and makes the short-run fluctuation that the visibility rule
+<p>This view makes the short-run fluctuation that the visibility rule
 reads directly apparent.</p>
 </div>
 <div class="section level2">
@@ -638,7 +642,7 @@ reads directly apparent.</p>
 sliding-window nodes. The window width defaults to one tenth of the
 series length, which is 6 here, and a step of 2 yields 28 overlapping
 windows.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">windows</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
@@ -654,7 +658,7 @@ windows.</p>
 <p>The default full connection rule evaluates and keeps all 378 window
 pairs. Each edge weight is <code>1 / (1 + distance)</code>, so larger
 weights mark more similar windows.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
@@ -672,7 +676,7 @@ weights mark more similar windows.</p>
 <p>Nearest-neighbour sparsification keeps 40 edges and lowers the
 density from 1 to 0.106, retaining the strongest local similarities
 instead of drawing every pair.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
 <p><img src="pleasure-all-functions_files/figure-html/tsn-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over twenty-eight sliding windows of the pleasure series, with edges joining the most similar windows." width="100%" style="display: block; margin: auto;"></p>
 <p>No retained edge joins immediately adjacent windows. The closest
@@ -680,6 +684,34 @@ retained pairs are two windows apart and the most distant are twenty-one
 windows apart, which shows that overlap in time does not by itself
 determine similarity in value: windows far apart in the sequence can
 still be each other’s nearest neighbours.</p>
+<p>The distance measure is itself a modelling choice. Dynamic time
+warping aligns two windows by their shape, tolerating the shift or
+stretch in time that Euclidean distance penalizes. Repeating the
+sparsification under <code>distance = "dtw"</code> redraws the neighbour
+graph on the same 28 windows.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">warped</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  step <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  distance <span class="op">=</span> <span class="st">"dtw"</span>,</span>
+<span>  connect <span class="op">=</span> <span class="st">"nearest"</span>,</span>
+<span>  neighbors <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">warped</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     method   unit nodes dyads edges   density minimum_weight maximum_weight</span></span>
+<span><span class="co">#&gt; 1 distance window    28   378    39 0.1031746     0.01851852     0.05555556</span></span>
+<span><span class="co">#&gt;   directed</span></span>
+<span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
+<p>The warped network keeps 39 edges, almost as many as the Euclidean
+version’s 40, yet it connects largely different pairs of windows.
+Whether two windows count as similar therefore depends as much on the
+chosen distance as on the series itself.</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">warped</span><span class="op">)</span></span></code></pre></div>
+<p><img src="pleasure-all-functions_files/figure-html/tsn-dtw-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over the same twenty-eight windows using dynamic time warping, connecting a different set of window pairs than the Euclidean network." width="100%" style="display: block; margin: auto;"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

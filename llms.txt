@@ -412,7 +412,11 @@ example `plot(network, layout = "circle", labels = TRUE)`.
 
 - [`vignette("pleasure-all-functions")`](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md)
   applies every exported `tsn` function to the packaged `motivation`
-  pleasure series, end to end.
+  pleasure series, building each network representation in turn.
+- [`vignette("nestimate-workflow")`](https://pak.dynasite.org/tsn/articles/nestimate-workflow.md)
+  builds a transition-network model from a series and tests it with
+  `Nestimate`: bootstrap confidence intervals, centrality stability, a
+  Markov-order test, and a permutation test comparing two periods.
 - [`vignette("plotting-time-series-networks")`](https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.md)
   documents the plotting surface: the network and source-series views,
   state overlays, and transition-model plots.

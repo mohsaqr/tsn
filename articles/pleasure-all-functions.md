@@ -531,7 +531,22 @@ summary(natural)
 #> 1    FALSE
 ```
 
-The natural visibility graph has 60 nodes and 143 edges.
+The natural visibility graph has 60 nodes and 143 edges. At this length
+the edges remain distinguishable, so it can be drawn directly. Node size
+encodes degree, and the peaks accumulate the most connections because
+they stay visible over the smaller values around them.
+
+``` r
+
+plot(natural)
+```
+
+![Natural visibility graph of sixty pleasure observations, drawn as a
+network with nodes sized by degree; the high-degree hubs correspond to
+peaks that see far along the
+series.](pleasure-all-functions_files/figure-html/vg-network-1.png)
+
+The horizontal rule keeps the same 60 nodes but fewer edges.
 
 ``` r
 
@@ -548,27 +563,24 @@ summary(horizontal)
 #> 1    FALSE
 ```
 
-The stricter horizontal rule retains 107 of those connections. In both
-graphs the edge weights are binary, since visibility either holds or it
-does not.
-
-At this length individual edges remain distinguishable, so the
-horizontal graph can be drawn directly.
+It retains 107 of the 143 connections, removing the 36 that a natural
+line of sight can clear but a horizontal one cannot. The result keeps
+the temporal chain of consecutive observations while dropping the longer
+sightlines that only the natural view permits. In both graphs the edge
+weights are binary, since visibility either holds or it does not.
 
 ``` r
 
 plot(horizontal)
 ```
 
-![Horizontal visibility graph of sixty pleasure observations, drawn as a
-network with nodes sized by degree and the temporal chain visible
-alongside longer visibility
-edges.](pleasure-all-functions_files/figure-html/vg-network-1.png)
+![Horizontal visibility graph of the same sixty observations, sparser
+than the natural graph, with the temporal chain visible alongside a
+smaller number of longer
+edges.](pleasure-all-functions_files/figure-html/vg-network-horizontal-1.png)
 
-The temporal chain is visible alongside the longer edges that reach
-across lower intervening observations. Node size encodes degree; peaks
-accumulate more connections because they stay visible over the smaller
-values around them.
+Every network also retains the series it was built from, which the
+source-series view recovers.
 
 ``` r
 
@@ -579,9 +591,8 @@ plot(horizontal, type = "series")
 as a line over observation
 order.](pleasure-all-functions_files/figure-html/vg-series-1.png)
 
-The source-series view recovers the measurements behind the network
-object and makes the short-run fluctuation that the visibility rule
-reads directly apparent.
+This view makes the short-run fluctuation that the visibility rule reads
+directly apparent.
 
 ## Window similarity with `tsn()`
 
@@ -647,3 +658,43 @@ retained pairs are two windows apart and the most distant are twenty-one
 windows apart, which shows that overlap in time does not by itself
 determine similarity in value: windows far apart in the sequence can
 still be each other’s nearest neighbours.
+
+The distance measure is itself a modelling choice. Dynamic time warping
+aligns two windows by their shape, tolerating the shift or stretch in
+time that Euclidean distance penalizes. Repeating the sparsification
+under `distance = "dtw"` redraws the neighbour graph on the same 28
+windows.
+
+``` r
+
+warped <- tsn(
+  data = pleasure,
+  method = "distance",
+  series = "pleasure",
+  step = 2,
+  distance = "dtw",
+  connect = "nearest",
+  neighbors = 2
+)
+
+summary(warped)
+#>     method   unit nodes dyads edges   density minimum_weight maximum_weight
+#> 1 distance window    28   378    39 0.1031746     0.01851852     0.05555556
+#>   directed
+#> 1    FALSE
+```
+
+The warped network keeps 39 edges, almost as many as the Euclidean
+version’s 40, yet it connects largely different pairs of windows.
+Whether two windows count as similar therefore depends as much on the
+chosen distance as on the series itself.
+
+``` r
+
+plot(warped)
+```
+
+![Nearest-neighbour distance network over the same twenty-eight windows
+using dynamic time warping, connecting a different set of window pairs
+than the Euclidean
+network.](pleasure-all-functions_files/figure-html/tsn-dtw-network-1.png)

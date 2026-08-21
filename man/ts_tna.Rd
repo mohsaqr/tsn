@@ -20,6 +20,8 @@ ts_tna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -37,6 +39,8 @@ ts_ftna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -54,6 +58,8 @@ ts_cna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -71,6 +77,8 @@ ts_atna(
   transform = "none",
   m = NULL,
   tau = NULL,
+  segment = NULL,
+  overlap = FALSE,
   seed = NULL,
   ...
 )
@@ -103,6 +111,22 @@ names (e.g. \code{c("low", "mid", "high")}).}
 
 \item{m, tau}{Embedding arguments for \code{discretization = "ordinal"}.}
 
+\item{segment}{Optional block width, in observations, used to cut each series
+into several shorter sequences. Sequence-based inference resamples whole
+sequences, so a single long series offers nothing to resample; segmenting
+supplies the units. Blocks never span an ID boundary, and segmentation is
+applied \emph{after} discretization, so the state alphabet is still learned from
+the whole series. At least \code{2}.}
+
+\item{overlap}{When segmenting, slide the block one observation at a time
+instead of partitioning (default \code{FALSE}). Partitioning loses the
+transition at every cut, roughly one per block. Sliding keeps every
+transition — at \code{segment = 2} the blocks are the consecutive lag-1 pairs
+and the network is identical to the unsegmented one — but the blocks share
+observations, so they are not independent and intervals computed from them
+run narrow. Partition for conservative intervals that tolerate dependence
+beyond one lag; slide to preserve the estimate exactly.}
+
 \item{seed}{Optional seed used by stochastic discretizers.}
 
 \item{...}{Passed on to the corresponding Nestimate builder
@@ -134,6 +158,12 @@ sequences Nestimate built from, \verb{$ts_source} the tidy per-observation table
 (\code{id}, \code{time}, \code{value}, \code{state}), and \verb{$meta$tsn} the discretization and
 builder settings, so the network remains traceable back to the raw series.
 
+A single series supports every descriptive verb but no sequence-based test,
+because a bootstrap resamples sequences and one series is one sequence. The
+\code{segment} argument cuts a long series into blocks so that those tests have
+units to work with; see its documentation for the trade-off between
+partitioned and sliding blocks.
+
 Multiple series are supported through every tsn input form (named list,
 matrix, wide or long data frame). Scalar discretizers learn from pooled
 values. Temporal discretizers compute patterns or windows separately within
@@ -158,5 +188,12 @@ counts <- ts_ftna(series, n_states = 3)
 # Reuse an existing discretization:
 states <- discretize(series, method = "kmeans", n_states = 3)
 ts_tna(states)
+
+# Cut one long series into blocks so sequence-based tests have units:
+long <- cumsum(rnorm(300))
+ts_tna(long, segment = 10, labels = c("low", "mid", "high"))
+
+# Sliding lag-1 pairs keep every transition and the exact estimate:
+ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
 \dontshow{\}) # examplesIf}
 }

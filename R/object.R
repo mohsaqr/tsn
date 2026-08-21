@@ -194,3 +194,65 @@ as.data.frame.tsn <- function(x, row.names = NULL, optional = FALSE,
 as.matrix.tsn <- function(x, rownames.force = NA, ...) {
   x$weights
 }
+
+#' Coerce a transition network to a weighted adjacency matrix
+#'
+#' The state-to-state weight matrix behind a [ts_tna()]-family model: transition
+#' probabilities for `ts_tna()`, counts for `ts_ftna()`, and so on. Without this
+#' method `as.matrix()` falls through to the default, which coerces the object's
+#' component list rather than its network.
+#'
+#' @param x A `ts_tna` result.
+#' @param rownames.force Ignored.
+#' @param ... Ignored.
+#' @return A named numeric matrix, states in row and column order.
+#' @examplesIf requireNamespace("Nestimate", quietly = TRUE)
+#' set.seed(1)
+#' network <- ts_tna(cumsum(rnorm(60)), labels = c("low", "mid", "high"))
+#' as.matrix(network)
+#' @export
+as.matrix.ts_tna <- function(x, rownames.force = NA, ...) {
+  stopifnot(inherits(x, "ts_tna"))
+  x$weights
+}
+
+#' Coerce a transition network to a tidy edge table
+#'
+#' Returns one row per state pair, so a transition network can be read, sorted,
+#' or joined as data rather than reached into. `as.data.frame()` on the
+#' underlying Nestimate object errors, so this method supplies the tidy view.
+#'
+#' @param x A `ts_tna` result.
+#' @param row.names Optional row names.
+#' @param optional Ignored.
+#' @param what Which table to return: `"edges"` (one row per state pair, the
+#'   default) or `"series"` (the tidy per-observation source table with `id`,
+#'   `time`, `value`, and `state`).
+#' @param ... Ignored.
+#' @return A base data frame.
+#' @examplesIf requireNamespace("Nestimate", quietly = TRUE)
+#' set.seed(1)
+#' network <- ts_tna(cumsum(rnorm(60)), labels = c("low", "mid", "high"))
+#' as.data.frame(network)
+#' head(as.data.frame(network, what = "series"))
+#' @export
+as.data.frame.ts_tna <- function(x, row.names = NULL, optional = FALSE,
+                                 what = c("edges", "series"), ...) {
+  stopifnot(inherits(x, "ts_tna"))
+  what <- match.arg(what)
+  if (what == "series") {
+    series <- x$ts_source
+    rownames(series) <- NULL
+    return(series)
+  }
+  weights <- x$weights
+  states <- rownames(weights)
+  out <- data.frame(
+    from = factor(rep(states, times = ncol(weights)), levels = states),
+    to = factor(rep(colnames(weights), each = nrow(weights)), levels = states),
+    weight = as.vector(weights),
+    stringsAsFactors = FALSE
+  )
+  rownames(out) <- NULL
+  out
+}

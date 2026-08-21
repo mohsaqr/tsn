@@ -42,7 +42,9 @@ reference:
   desc: Standard interface shared by every result object.
   contents:
   - as.data.frame.tsn
+  - as.data.frame.ts_tna
   - as.matrix.tsn
+  - as.matrix.ts_tna
   - plot.tsn
   - plot.tsn_series_networks
   - plot.tsn_states

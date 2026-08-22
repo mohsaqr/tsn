@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Building a Model from a Time Series and Testing It with Nestimate • tsn</title>
+<title>Transition Networks from Time Series: Estimation and Inference with Nestimate • tsn</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Building a Model from a Time Series and Testing It with Nestimate">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Transition Networks from Time Series: Estimation and Inference with Nestimate">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -38,8 +38,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/nestimate-workflow.html">Building a Model from a Time Series and Testing It with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">From Time Series to Networks</a></li>
+<li><a class="dropdown-item" href="../articles/nestimate-workflow.html">Transition Networks from Time Series: Estimation and Inference with Nestimate</a></li>
+    <li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">Constructing Time Series Networks</a></li>
     <li><a class="dropdown-item" href="../articles/plotting-time-series-networks.html">Plotting Time Series Networks</a></li>
   </ul>
 </li>
@@ -62,27 +62,59 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Building a Model from a Time Series and Testing It with Nestimate</h1>
-                        <h4 data-toc-skip class="author">tsn package
-authors</h4>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/nestimate-workflow.Rmd" class="external-link"><code>vignettes/nestimate-workflow.Rmd</code></a></small>
+      <img src="../logo.png" class="logo" alt=""><h1>Transition Networks from Time Series: Estimation and Inference with Nestimate</h1>
+                        <h4 data-toc-skip class="author">Mohammed
+Saqr</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Sonsoles
+López-Pernas</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Manuel
+J. Gómez</h4>
+            <address class="author_afil">
+      University of Murcia<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/nestimate-workflow.Rmd" class="external-link"><code>vignettes/nestimate-workflow.Rmd</code></a></small>
       <div class="d-none name"><code>nestimate-workflow.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
     
 <div class="section level2">
-<h2 id="what-this-vignette-does">What this vignette does<a class="anchor" aria-label="anchor" href="#what-this-vignette-does"></a>
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>A time series is a sequence of numbers. A transition network is a
-model of how a system moves between <em>states</em>. This vignette
-covers the whole distance between them: it turns a series into states,
-estimates a transition-network model, and then submits that model to the
-inferential machinery in <strong>Nestimate</strong> — bootstrap
-confidence intervals, centrality stability, a Markov-order test, and a
-permutation test comparing two periods.</p>
+<p>A numeric time series records the level of a quantity over time. A
+transition network records something different: how a system moves
+between a small number of qualitative <em>states</em>, with nodes for
+the states and directed edges for the probability of passing from one to
+the next. The two descriptions answer different questions. The series
+says how high a measurement was; the network says what a measurement is
+likely to be followed by. Recovering the second from the first takes two
+steps, reducing the continuous series to a sequence of states and
+estimating the state-to-state transitions, and then a third that is easy
+to skip: deciding what such a model may legitimately claim.</p>
+<p>The <strong>tsn</strong> package performs the first two steps in a
+single call and hands the result to <strong>Nestimate</strong>, which
+supplies the third. <code><a href="../reference/ts_tna.html">ts_tna()</a></code> discretizes a series,
+estimates the transition network, and returns a native Nestimate model,
+so Nestimate’s descriptive and inferential verbs apply to it with no
+conversion step in between. This vignette follows one analysis through
+the whole path: building the model, reading its structure, and, where
+the data support it, testing that structure with bootstrap confidence
+intervals, centrality stability, a Markov-order test, and a permutation
+comparison of two periods.</p>
+<p>The distinction between description and inference organizes
+everything below. Descriptive summaries such as centralities, state
+distributions, entropy, and pruning ask what a fitted network looks
+like, and a network fitted to a single series answers them. Inference
+asks how far the estimate would move under a different sample, and a
+single series is a single sample: there is nothing to resample. The
+dividing line is the unit of analysis, and knowing where it falls is
+what keeps a transition model from being read for more than it can
+support.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/tsn/" class="external-link">tsn</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
@@ -95,9 +127,9 @@ permutation test comparing two periods.</p>
 </h2>
 <p><code><a href="../reference/ts_tna.html">ts_tna()</a></code> takes a data frame and the name of one numeric
 column, cuts that column into states, and estimates the transition
-network in a single call. Here it runs on the first 200 observations of
-the <code>pleasure</code> rating from the <code>motivation</code>
-study.</p>
+network in one call. Here it runs on the first 200 observations of the
+<code>pleasure</code> rating from the <code>motivation</code> study, an
+intensive-longitudinal record of momentary experience.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pleasure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">motivation</span>, <span class="fl">200</span><span class="op">)</span></span>
 <span></span>
@@ -121,34 +153,39 @@ study.</p>
 <span><span class="co">#&gt;   high          1.000  ████████████████████████████████████████</span></span>
 <span><span class="co">#&gt;   low           0.000  </span></span>
 <span><span class="co">#&gt;   mid           0.000</span></span></code></pre></div>
-<p>The printed object is the whole model: a row-stochastic weight matrix
-in which entry <em>(i, j)</em> is the probability of moving to state
+<p>The printed object is the complete model: a row-stochastic weight
+matrix whose entry <em>(i, j)</em> is the probability of moving to state
 <em>j</em> given that the system is currently in state <em>i</em>,
-together with the initial-state distribution.</p>
+together with the initial-state distribution. Each row sums to one
+because from any state the process must go somewhere.</p>
 <div class="section level3">
 <h3 id="the-bridge-this-object-is-a-nestimate-model">The bridge: this object <em>is</em> a Nestimate model<a class="anchor" aria-label="anchor" href="#the-bridge-this-object-is-a-nestimate-model"></a>
 </h3>
-<p>Everything that follows rests on one fact.</p>
+<p>Everything that follows rests on one property of the returned
+object.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "ts_tna"          "netobject"       "cograph_network"</span></span></code></pre></div>
-<p><code><a href="../reference/ts_tna.html">ts_tna()</a></code> does not return a private structure that has to
-be converted. It returns an object inheriting from
-<strong><code>netobject</code></strong>, which is Nestimate’s core
-network class, and Nestimate’s verbs dispatch on that class. There is no
-export step and no adapter call in between.</p>
+<p><code><a href="../reference/ts_tna.html">ts_tna()</a></code> does not return a private structure that must
+be converted before Nestimate can read it. It returns an object that
+inherits from <strong><code>netobject</code></strong>, Nestimate’s core
+network class, and Nestimate’s verbs dispatch on that class directly.
+There is no export step and no adapter call between the model and the
+tests applied to it, which is what lets a single analysis move from
+construction to inference without leaving the object behind.</p>
 </div>
 <div class="section level3">
 <h3 id="four-constructors-one-interface">Four constructors, one interface<a class="anchor" aria-label="anchor" href="#four-constructors-one-interface"></a>
 </h3>
 <p>The same discretized sequence supports four definitions of an edge,
-and all four constructors take identical arguments and return the same
+and the four constructors take identical arguments and return the same
 class. <code><a href="../reference/ts_tna.html">ts_tna()</a></code> gives relative frequencies, so an edge is
-the probability of the next state. <code><a href="../reference/ts_tna.html">ts_ftna()</a></code> gives the raw
-transition counts behind those probabilities. <code><a href="../reference/ts_tna.html">ts_atna()</a></code>
-applies attention weighting, and <code><a href="../reference/ts_tna.html">ts_cna()</a></code> counts undirected
-co-occurrence rather than directed movement.</p>
-<p>Swapping the constructor is the only change required.</p>
+the conditional probability of the next state. <code><a href="../reference/ts_tna.html">ts_ftna()</a></code>
+gives the raw transition counts behind those probabilities.
+<code><a href="../reference/ts_tna.html">ts_atna()</a></code> applies attention weighting, and
+<code><a href="../reference/ts_tna.html">ts_cna()</a></code> counts undirected co-occurrence rather than
+directed movement. Changing the edge definition means changing only the
+constructor.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_tna.html">ts_ftna</a></span><span class="op">(</span><span class="va">pleasure</span>, series <span class="op">=</span> <span class="st">"pleasure"</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (frequency counts) [directed]</span></span>
@@ -164,37 +201,38 @@ co-occurrence rather than directed movement.</p>
 <span><span class="co">#&gt;   high          1.000  ████████████████████████████████████████</span></span>
 <span><span class="co">#&gt;   low           0.000  </span></span>
 <span><span class="co">#&gt;   mid           0.000</span></span></code></pre></div>
-<p>The rest of this vignette uses <code><a href="../reference/ts_tna.html">ts_tna()</a></code>, because
-probabilities are what the inferential tests are written for.</p>
+<p>The remainder of the vignette uses <code><a href="../reference/ts_tna.html">ts_tna()</a></code>, because the
+inferential tests are written for probabilities.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="one-series-and-what-it-can-support">One series, and what it can support<a class="anchor" aria-label="anchor" href="#one-series-and-what-it-can-support"></a>
 </h2>
-<p>Ask a single-series model for a bootstrap and Nestimate objects:</p>
+<p>Asking a single-series model for a bootstrap returns a warning rather
+than a result:</p>
 <blockquote>
 <p>A network with one long sequence is not recommended and can’t be
 validated using bootstrap and other confirmatory testings.</p>
 </blockquote>
-<p>The warning is correct as stated. A bootstrap resamples
-<em>sequences</em> to ask how far the estimate would move under a
-different sample of them, and one series is one sequence: nothing to
-resample, no sampling distribution. The permutation and stability tests
-rest on the same logic.</p>
-<p>That is a statement about the <em>unit of analysis</em>, though, not
-a dead end. A long series contains many transitions; what it lacks is a
-way to group them into units that can be resampled. <code>segment</code>
-supplies that by cutting the series into shorter blocks, each treated as
-its own sequence. This is the block bootstrap, and <code>tsn</code>
-offers both of its standard forms.</p>
+<p>The warning is correct. A bootstrap resamples <em>sequences</em> to
+estimate how far a quantity would move under a different sample of them;
+one series is one sequence, so there is nothing to resample and no
+sampling distribution to form. The permutation and stability tests rest
+on the same logic.</p>
+<p>This is a statement about the unit of analysis, not a dead end. A
+long series contains many transitions; what it lacks is a way to group
+them into units that can be resampled. The <code>segment</code> argument
+supplies that unit by cutting the series into shorter blocks, each
+treated as its own sequence. This is the block bootstrap, and tsn
+provides its two standard forms.</p>
 <p>The series below is one participant’s 299 daily step counts. Two
-things about the call are worth noting before the segmenting itself.
-States are cut at 5,000 and 10,000 steps with
-<code>discretization = "threshold"</code> rather than at the default
-tertiles, so that they mean something outside this sample — the next
-section returns to why that matters. And segmentation is applied
-<em>after</em> discretization, so every block inherits the same cut
-points; blocks are never discretized against themselves.</p>
+features of the call matter before the segmenting itself. States are cut
+at 5,000 and 10,000 steps with <code>discretization = "threshold"</code>
+rather than at the default tertiles, so the states mean the same thing
+outside this sample; the next section returns to why that matters. And
+segmentation is applied <em>after</em> discretization, so every block
+inherits the same cut points and no block is ever discretized against
+itself.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">walkers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">steps</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">one_walker</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">walkers</span>, <span class="va">id</span> <span class="op">==</span> <span class="fl">193</span><span class="op">)</span></span>
@@ -207,8 +245,9 @@ points; blocks are never discretized against themselves.</p>
 <span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><code>segment = 10</code> partitions the 299 observations into
-consecutive blocks of ten.</p>
+<p>Partitioning cuts the 299 observations into consecutive,
+non-overlapping blocks. At <code>segment = 10</code> there are thirty of
+them.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
 <span>  <span class="va">one_walker</span>,</span>
@@ -230,13 +269,13 @@ consecutive blocks of ten.</p>
 <span><span class="co">#&gt;   Iterations : 500  |  Nodes : 3</span></span>
 <span><span class="co">#&gt;   Edges      : 2 significant / 9 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
-<p>Thirty sequences, and the bootstrap runs without complaint.
-Partitioning is not free: every cut destroys the transition that
-straddles it, so thirty blocks cost roughly thirty of the 298
-transitions and the estimate shifts slightly.</p>
-<p>Sliding the window instead keeps all of them. At
+<p>Thirty sequences, and the bootstrap now runs. Partitioning is not
+free: every cut destroys the transition that straddles it, so thirty
+blocks cost roughly thirty of the 298 transitions and the estimate
+shifts slightly.</p>
+<p>Sliding the window instead of partitioning keeps all of them. At
 <code>segment = 2, overlap = TRUE</code> the blocks are the consecutive
-lag-1 pairs — every transition appears exactly once, so the network is
+lag-1 pairs, so every transition appears exactly once and the network is
 <em>identical</em> to the unsegmented one.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lag_one</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
@@ -264,40 +303,40 @@ lag-1 pairs — every transition appears exactly once, so the network is
 <span><span class="co">#&gt;   Iterations : 500  |  Nodes : 3</span></span>
 <span><span class="co">#&gt;   Edges      : 3 significant / 9 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
-<p>So which to use? The sliding blocks preserve the estimate exactly and
-give the most units, and their intervals tend to come out narrower —
-mean width 0.18 against 0.21 here, narrow enough to call a third edge
-significant where the partitioned blocks call two. It is a tendency, not
-a guarantee: two of the nine edges come out wider. That narrowness is
-the catch: overlapping blocks share observations, so they are not
-independent, and resampling lag-1 pairs assumes precisely the
-first-order Markov property the model itself assumes. The Markov-order
-test later in this vignette finds that assumption does not hold here —
-so those intervals are optimistic.</p>
+<p>The two schemes trade precision against independence. Sliding blocks
+preserve the point estimate exactly, yield the most units, and tend to
+give narrower intervals: a mean width of 0.18 here against 0.21 for the
+partitioned blocks, narrow enough to call a third edge significant where
+partitioning calls two. The tendency is not a guarantee, since two of
+the nine edges come out wider. And the narrowness carries a cost.
+Overlapping blocks share observations, so they are not independent, and
+resampling lag-1 pairs assumes exactly the first-order Markov property
+the model itself assumes. That is the assumption the Markov-order test
+below rejects for these data, which makes those intervals
+optimistic.</p>
 <p>Partitioned blocks are the more conservative choice. A block
 preserves whatever dependence exists inside it, so structure beyond one
-lag survives resampling, and you pay for that in lost boundary
-transitions. Blocks of 10 to 30 keep 90% to 97% of the transitions,
-which is usually the right trade; blocks of 2 keep only half and should
-be avoided.</p>
+lag survives resampling, at the price of the boundary transitions lost
+to the cuts. Blocks of 10 to 30 retain 90% to 97% of the transitions,
+which is usually the right trade; blocks of 2 retain only half and are
+better avoided.</p>
 <p>None of this manufactures information. Segmenting a single series
-lets you ask how stable that person’s own dynamics are, and nothing more
-— it says nothing about anyone else. For a claim about people in general
-you need people in general, so the rest of this vignette uses all 151 of
-them.</p>
+asks how stable one person’s own dynamics are, and says nothing about
+anyone else. A claim about people in general needs people in general, so
+the rest of the vignette uses all 151 of them.</p>
 <div class="section level3">
 <h3 id="choosing-states-that-mean-something">Choosing states that mean something<a class="anchor" aria-label="anchor" href="#choosing-states-that-mean-something"></a>
 </h3>
 <p>The default <code>discretization = "quantile"</code> cuts at the
-tertiles, which forces the three states to hold a third of the
-observations each — so the state sizes carry no information, by
-construction. That is why every model built from the <code>steps</code>
-data uses the fixed 5,000 and 10,000 step thresholds instead. Beyond
-making the states interpretable, fixed <code>breaks</code> give those
-models one shared alphabet, which is what makes the period comparison
-below legitimate. (The grouped pleasure model at the end keeps the
-quantile default; grouping pools the series before cutting it, so its
-groups share an alphabet without breaks being named.)</p>
+tertiles, forcing each of the three states to hold a third of the
+observations, so the state sizes carry no information, by construction.
+That is why every model built from the <code>steps</code> data uses
+fixed thresholds of 5,000 and 10,000 steps instead. Fixed breaks make
+the states interpretable outside the sample, and they give every model
+one shared alphabet, which is what makes the period comparison below
+legitimate. (The grouped <code>pleasure</code> model at the end keeps
+the quantile default; grouping pools the series before cutting it, so
+its groups share an alphabet without breaks being named.)</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">walk_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
 <span>  <span class="va">walkers</span>,</span>
@@ -323,9 +362,9 @@ groups share an alphabet without breaks being named.)</p>
 <span><span class="co">#&gt;   active        0.576  ████████████████████████████████████████</span></span>
 <span><span class="co">#&gt;   moderate      0.311  ██████████████████████</span></span>
 <span><span class="co">#&gt;   sedentary     0.113  ████████</span></span></code></pre></div>
-<p>Now the states mean something outside the data, the same cut points
-apply to every comparison made later, and the distribution is worth
-reading.</p>
+<p>The states now mean something outside the data, the same cut points
+apply to every comparison made later, and the state distribution is
+worth reading.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   group     state count proportion</span></span>
@@ -333,15 +372,16 @@ reading.</p>
 <span><span class="co">#&gt; 2   all  moderate 12776  0.4115582</span></span>
 <span><span class="co">#&gt; 3   all sedentary  4346  0.1399994</span></span></code></pre></div>
 <p>Every state is strongly self-preferring, and an active day is the
-most persistent of all at 0.62. Step counts are sticky.</p>
+most persistent of all at 0.62: activity, once reached, tends to
+continue. Step counts show marked day-to-day inertia.</p>
 </div>
 <div class="section level3">
 <h3 id="one-network-per-person">One network per person<a class="anchor" aria-label="anchor" href="#one-network-per-person"></a>
 </h3>
 <p>The pooled model estimates a single network across everyone.
-<code><a href="../reference/series_networks.html">series_networks()</a></code> splits it back into one complete model
-per participant, each rebuilt on the same alphabet so node sets stay
-aligned and comparable.</p>
+<code><a href="../reference/series_networks.html">series_networks()</a></code> splits it into one complete model per
+participant, each rebuilt on the same alphabet so node sets stay aligned
+and comparable.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">per_person</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
 <span></span>
@@ -354,10 +394,10 @@ aligned and comparable.</p>
 <span><span class="co">#&gt; 5     58  tna          176      3     9</span></span>
 <span><span class="co">#&gt; 6     70  tna          257      3     9</span></span></code></pre></div>
 <p>Each row indexes a full <code>ts_tna</code> model that prints and
-plots on its own — the models are the list elements, and this is the
-tidy index of them. Because the cut points here are fixed step counts
-rather than sample quantiles, a participant’s personal network describes
-their own activity, not their rank within the sample.</p>
+plots on its own: the models are the list elements, and this is the tidy
+index over them. Because the cut points are fixed step counts rather
+than sample quantiles, a participant’s personal network describes their
+own activity, not their rank within the sample.</p>
 </div>
 </div>
 <div class="section level2">
@@ -373,11 +413,12 @@ their own activity, not their rank within the sample.</p>
 <span><span class="co">#&gt; sedentary sedentary  0.2152510           0 1.0000000</span></span>
 <span><span class="co">#&gt; moderate   moderate  0.7650336           1 0.4116171</span></span>
 <span><span class="co">#&gt; active       active  0.5470912           0 0.0000000</span></span></code></pre></div>
-<p>Note the message: centralities exclude self-transitions by default.
-That matters for a transition network, where the diagonal is usually the
-largest entry — a state can be highly persistent while receiving little
-traffic from elsewhere. Pass <code>loops = TRUE</code> to include the
-diagonal.</p>
+<p>The message notes that centralities exclude self-transitions by
+default, which matters for a transition network: the diagonal is usually
+the largest entry, so a state can be highly persistent while receiving
+little traffic from elsewhere. Excluding the diagonal measures how
+central a state is to <em>movement</em> between states rather than to
+staying put. Passing <code>loops = TRUE</code> includes it.</p>
 </div>
 <div class="section level3">
 <h3 id="how-much-of-the-sequence-is-structure-and-how-much-is-noise">How much of the sequence is structure, and how much is noise<a class="anchor" aria-label="anchor" href="#how-much-of-the-sequence-is-structure-and-how-much-is-noise"></a>
@@ -393,22 +434,23 @@ diagonal.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Normalised: h(P) and H(pi) are raw / log_2(n_states) (0 = deterministic, 1 = uniform);</span></span>
 <span><span class="co">#&gt;   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi), not raw / log_2(n_states).</span></span></code></pre></div>
-<p>The entropy rate is normalised against <code>log2(n_states)</code>,
+<p>The entropy rate is normalized against <code>log2(n_states)</code>,
 so 0 is a perfectly deterministic process and 1 means every next state
-is equally likely from wherever you are — not merely that the current
-state is uninformative, since a lopsided but state-independent process
-scores well below 1. These same step counts cut at the tertiles score
-0.93; cut at 5,000 and 10,000 they score 0.85. Cut points are not a
-cosmetic choice — they decide how much structure there is left to
-find.</p>
+is equally likely from wherever the process currently sits. A value of 1
+requires more than an uninformative current state: a lopsided but
+state-independent process still scores well below it. Cut at the
+tertiles, these same step counts score 0.93; cut at 5,000 and 10,000
+they score 0.85. The cut points are not cosmetic: they decide how much
+structure is left to find.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="pruning">Pruning<a class="anchor" aria-label="anchor" href="#pruning"></a>
 </h2>
-<p>Not every edge deserves to be in the picture.
+<p>Not every edge deserves a place in the picture.
 <code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code> returns a model of the same class with weak
-edges removed, so it flows straight back into any verb above.</p>
+edges removed, so its result flows straight back into any verb
+above.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">walk_model</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
@@ -425,16 +467,22 @@ edges removed, so it flows straight back into any verb above.</p>
 <span><span class="co">#&gt;   moderate      0.311  ██████████████████████</span></span>
 <span><span class="co">#&gt;   sedentary     0.113  ████████</span></span></code></pre></div>
 <p>Three edges fall below the threshold: every route <em>into</em>
-sedentary from a higher state, plus the direct leap from sedentary to
-active. What survives says that a sedentary day is harder to fall into
-than to climb out of — <code>sedentary -&gt; moderate</code> is a strong
-0.445, while nothing descends into sedentary above 0.3.</p>
-<p>Prune after testing rather than before, though: a threshold sorts
-edges by size, and size is not the same thing as interest.</p>
+sedentary from a higher state, together with the direct leap from
+sedentary to active. What survives says that a sedentary day is harder
+to fall into than to climb out of. The
+<code>sedentary -&gt; moderate</code> edge is a strong 0.445, while
+nothing descends into sedentary above 0.3.</p>
+<p>Prune after testing rather than before, however. A threshold ranks
+edges by size, and size is not the same as interest: a small but
+reliably estimated edge can matter more than a large but uncertain
+one.</p>
 </div>
 <div class="section level2">
 <h2 id="bootstrap-which-edges-survive-resampling">Bootstrap: which edges survive resampling?<a class="anchor" aria-label="anchor" href="#bootstrap-which-edges-survive-resampling"></a>
 </h2>
+<p><code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code> resamples the sequences with
+replacement, re-estimates the network on each resample, and reports a
+confidence interval for every edge.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2024</span><span class="op">)</span></span>
 <span></span>
@@ -475,9 +523,11 @@ edges by size, and size is not the same thing as interest.</p>
 <span><span class="co">#&gt; 7 0.05314263 0.0738917 0.04619879 0.07699798</span></span>
 <span><span class="co">#&gt; 8 0.29783560 0.3433023 0.23991994 0.39986656</span></span>
 <span><span class="co">#&gt; 9 0.58489465 0.6482990 0.46388128 0.77313546</span></span></code></pre></div>
-<p>With 151 sequences behind it every edge is estimated precisely and
-all nine survive. Confidence intervals a few hundredths wide are what a
-large sample buys.</p>
+<p>With 151 sequences behind it, every edge is estimated precisely and
+all nine survive resampling. Confidence intervals a few hundredths wide
+are what a large sample buys, and they are the ground on which the
+descriptive reading above can be reported rather than merely
+observed.</p>
 </div>
 <div class="section level2">
 <h2 id="stability-would-the-same-states-rank-first-in-a-smaller-study">Stability: would the same states rank first in a smaller study?<a class="anchor" aria-label="anchor" href="#stability-would-the-same-states-rank-first-in-a-smaller-study"></a>
@@ -485,7 +535,7 @@ large sample buys.</p>
 <p><code><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code> repeatedly drops a proportion of
 the sequences, re-computes the centralities, and reports the largest
 proportion that can be dropped while the ordering still tracks the
-original.</p>
+original, a correlation-stability coefficient.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Centrality Stability (100 iterations, threshold = 0.7)</span></span>
@@ -495,17 +545,19 @@ original.</p>
 <span><span class="co">#&gt;     InStrength       0.90</span></span>
 <span><span class="co">#&gt;     OutStrength      0.90</span></span>
 <span><span class="co">#&gt;     Betweenness      0.90</span></span></code></pre></div>
-<p>All three coefficients come out at 0.90, against a conventional bar
-of 0.5 for acceptable and 0.7 for excellent. That speaks to how stable
-the ordering is under resampling — not to whether the ordering means
-anything substantively.</p>
+<p>All three coefficients reach 0.90, against conventional bars of 0.5
+for acceptable and 0.7 for excellent. That measures how stable the
+<em>ordering</em> is under resampling; it does not speak to whether the
+ordering is substantively meaningful, only to whether a smaller study
+would have recovered it.</p>
 </div>
 <div class="section level2">
 <h2 id="markov-order-is-a-first-order-model-enough">Markov order: is a first-order model enough?<a class="anchor" aria-label="anchor" href="#markov-order-is-a-first-order-model-enough"></a>
 </h2>
-<p>Every transition network here assumes the Markov property — that the
+<p>Every transition network here assumes the Markov property, that the
 next state depends on the current one and nothing earlier. That
-assumption is testable.</p>
+assumption is testable, by comparing the fit of models of increasing
+order.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]</span></span>
@@ -523,11 +575,12 @@ assumption is testable.</p>
 <span><span class="co">#&gt;         TRUE</span></span>
 <span><span class="co">#&gt;         TRUE</span></span>
 <span><span class="co">#&gt;         TRUE</span></span></code></pre></div>
-<p>The test disagrees with the model. AIC, BIC and the permutation LRT
-all prefer a higher order, meaning yesterday carries information about
-tomorrow beyond today. This does not invalidate the first-order network,
-but it bounds what it may claim: a summary of one-step behaviour, not a
-full description of the process.</p>
+<p>The test disagrees with the first-order model. AIC, BIC, and the
+permutation likelihood-ratio test all prefer a higher order, meaning
+yesterday carries information about tomorrow beyond what today already
+conveys. This does not invalidate the first-order network, but it bounds
+the claim: the network is a summary of one-step behaviour, not a full
+description of the process.</p>
 <p>The natural follow-up is a higher-order network.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon</a></span><span class="op">(</span><span class="va">walk_model</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
@@ -537,11 +590,14 @@ full description of the process.</p>
 <span><span class="co">#&gt;   Max order:    1 (requested 2)</span></span>
 <span><span class="co">#&gt;   Min freq:     1</span></span>
 <span><span class="co">#&gt;   Trajectories: 151</span></span></code></pre></div>
-<p>HON’s own promotion rule keeps every node at order 1 — it finds no
-individual context that shifts the next-step distribution enough to
-justify splitting. Two criteria disagreeing is a real result rather than
-a bug: the likelihood test sees aggregate improvement across all
-sequences, while HON asks a stricter per-node question. Report both.</p>
+<p>The higher-order construction keeps every node at order 1: it finds
+no individual context that shifts the next-step distribution enough to
+justify splitting the node. The two criteria disagree because they ask
+different questions. The likelihood test detects aggregate improvement
+pooled across all sequences, while the higher-order rule applies a
+stricter, per-node test. Both results are real, and both are worth
+reporting: there is higher-order structure in aggregate, but not
+localized in any single state.</p>
 </div>
 <div class="section level2">
 <h2 id="comparing-two-periods">Comparing two periods<a class="anchor" aria-label="anchor" href="#comparing-two-periods"></a>
@@ -550,13 +606,13 @@ sequences, while HON asks a stricter per-node question. Report both.</p>
 compares two, shuffling the group labels to build a null distribution
 for every edge. The <code>steps</code> series runs from April 2019 to
 March 2020; splitting at the start of November contrasts the warmer
-months with the colder ones. The two spans are not equal in length —
+months with the colder ones. The two spans are unequal in length,
 roughly six and a half months against four.</p>
 <p>Both models are built with the same fixed <code>breaks</code>, which
-matters more than it looks: had each period been discretized on its own
-quantiles, the two networks would sit on different cut points and any
-difference between them could be an artefact of the thresholds rather
-than of behaviour.</p>
+matters more than it appears: had each period been discretized on its
+own quantiles, the two networks would rest on different cut points, and
+any difference between them could reflect the thresholds rather than
+behaviour.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cutoff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-11-01"</span><span class="op">)</span></span>
 <span></span>
@@ -608,11 +664,11 @@ than of behaviour.</p>
 <span><span class="co">#&gt; 7 FALSE</span></span>
 <span><span class="co">#&gt; 8 FALSE</span></span>
 <span><span class="co">#&gt; 9 FALSE</span></span></code></pre></div>
-<p>None of the nine edge comparisons reaches significance — the smallest
+<p>None of the nine edge comparisons reaches significance; the smallest
 p-value is 0.07. The estimates are not identical, but no difference
-survives the permutation null. That is a more interesting result than a
+survives the permutation null. That is a more informative result than a
 scattering of small p-values would have been, because the two periods
-are <em>not</em> alike in how much people walked:</p>
+differ in how much people walked in the first place:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">early</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   group     state count proportion</span></span>
@@ -626,28 +682,28 @@ are <em>not</em> alike in how much people walked:</p>
 <span><span class="co">#&gt; 2   all  moderate  6523  0.4231044</span></span>
 <span><span class="co">#&gt; 3   all sedentary  2301  0.1492508</span></span></code></pre></div>
 <p>Active days fall from 46.9% before November to 42.8% after it, and
-sedentary days rise. So the seasonal shift shows up plainly in the
+sedentary days rise. The seasonal shift is therefore plain in the
 <em>composition</em> of the states while no comparison of the
 <em>transitions</em> between them reaches significance. The estimated
 sedentary-to-moderate probability, for instance, is 0.446 before
 November and 0.444 after, with a permutation p-value of 0.94.</p>
-<p>Two cautions on how far that carries. Failing to reject nine tests is
-not the same as showing the dynamics are identical, and the two models
-do not rest on quite the same people — 140 participants contribute
+<p>Two cautions bound how far that carries. Failing to reject nine tests
+is not the same as showing the dynamics are identical, and the two
+models do not rest on quite the same people: 140 participants contribute
 before November and 149 after, with 138 in both.</p>
-<p>That distinction is still the reason to build a transition network at
-all. A comparison of means or of state proportions finds the seasonal
+<p>That distinction is the reason to build a transition network at all.
+A comparison of means or of state proportions finds the seasonal
 difference and stops there; the transition model asks a further question
-about the same population, and finds no evidence that the dynamics moved
-with it.</p>
+of the same population, whether the <em>dynamics</em> moved with the
+season, and finds no evidence that they did.</p>
 </div>
 <div class="section level2">
 <h2 id="more-than-two-groups-one-model-per-context">More than two groups: one model per context<a class="anchor" aria-label="anchor" href="#more-than-two-groups-one-model-per-context"></a>
 </h2>
-<p>Building two models by hand is fine when there are two. When the
-thing that separates the groups is already a column in the data,
-<code>group</code> builds one network per level in a single call — and
-it scales past two, which the pairwise form does not.</p>
+<p>Building two models by hand is manageable when there are two. When
+the variable that separates the groups is already a column in the data,
+the <code>group</code> argument builds one network per level in a single
+call, and it scales past two, which the pairwise form does not.</p>
 <p>The <code>motivation</code> study records where each measurement was
 taken in <code>task_context_type</code>, so the pleasure ratings can be
 split by context.</p>
@@ -669,18 +725,19 @@ split by context.</p>
 <span><span class="co">#&gt;   Work      3      9      [0.156, 0.518]</span></span></code></pre></div>
 <p>Two things happen here that would be tedious to arrange by hand. The
 states are cut from the <em>pooled</em> series before the split, so all
-four networks sit on one set of thresholds and share a node set — the
-same discipline the fixed <code>breaks</code> enforced in the previous
-section, applied automatically. And the result is a Nestimate
+four networks rest on one set of thresholds and share a node set, the
+same discipline the fixed <code>breaks</code> enforced earlier, applied
+automatically. And the result is a Nestimate
 <code>netobject_group</code>, so the compatible grouped verbs take it
 directly: <code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code>,
 <code><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code> and friends. Not
-every verb applies — the ones that need a precision matrix or a
-clustering attribute reject a transition model, and there is no grouped
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, so plot one group at a time.</p>
-<p><code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> is the tidy view of how much data stands
-behind each network:</p>
+<code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>, and their
+neighbours. Not every verb applies: those needing a precision matrix or
+a clustering attribute reject a transition model, and there is no
+grouped <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, so networks are plotted one at a
+time.</p>
+<p><code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> gives the tidy view of how much data
+stands behind each network:</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_context</span>, what <span class="op">=</span> <span class="st">"groups"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      group type sequences observations states edges</span></span>
@@ -688,20 +745,20 @@ behind each network:</p>
 <span><span class="co">#&gt; 2    Other  tna         2            3      3     1</span></span>
 <span><span class="co">#&gt; 3 Personal  tna       822         1309      3     9</span></span>
 <span><span class="co">#&gt; 4     Work  tna       976         2235      3     9</span></span></code></pre></div>
-<p>The sequence counts deserve a second look: <code>Home</code> has
-1,324 observations but 832 sequences. That is not padding. A run is cut
-at every change of series <em>and</em> at every change of group. The two
-cuts are not quite the same: a change of series separates measurements
-that were never consecutive anyway, while a change of context falls
-between two genuinely adjacent measurements, and the transition across
-it is deliberately excluded from both networks — it belongs to neither
-context. This study alternates context from one measurement to the next
-— 4,871 observations form 2,632 contiguous runs — so each unbroken
-stretch within a context becomes its own sequence. A pair of
-observations separated by an intervening visit to a different context is
-never counted as a transition, because it never was one.</p>
+<p>The sequence counts repay a second look: <code>Home</code> has 1,324
+observations but 832 sequences. That is not padding. A run is cut at
+every change of series <em>and</em> at every change of group, and the
+two cuts are not the same. A change of series separates measurements
+that were never consecutive; a change of context falls between two
+genuinely adjacent measurements, and the transition across it is
+excluded from both networks because it belongs to neither context. This
+study alternates context from one measurement to the next (4,871
+observations form 2,632 contiguous runs), so each unbroken stretch
+within a context becomes its own sequence, and a pair of measurements
+separated by an intervening visit to a different context is never
+counted as a transition, because it never was one.</p>
 <p>That rule costs nothing when a group is constant within a series,
-which is the usual case for a condition or a cohort: each series
+which is the usual case for a condition or a cohort: each series then
 contributes one sequence and keeps its own ID.</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
@@ -720,11 +777,21 @@ contributes one sequence and keeps its own ID.</p>
 <span><span class="co">#&gt; 12     Work   low   548 0.24519016</span></span></code></pre></div>
 <p>The contexts are not alike. Pleasure is low on 62.5% of measurements
 taken at home and high on only 6.6% of them; personal time reverses that
-ordering — high on 45.6%, low on 19.3%. Work sits between the two on all
-three states.</p>
-<p>Because every network shares an alphabet, two of them can be set side
-by side and picked out by name:</p>
+ordering: high on 45.6%, low on 19.3%. Work sits between the two on all
+three states. A mosaic plot shows the same contrast in the transition
+structure at a glance, one panel per context:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-workflow_files/figure-html/grouped-mosaic-1.png" class="r-plt" alt="Mosaic panels of the four context-specific transition networks, in which tile area encodes transition probability from each current state to each next state, showing the home context concentrated in the low-to-low cell and personal time in the high-to-high cell." width="100%" style="display: block; margin: auto;"></p>
+<p>Tile area encodes the transition probability from a current state
+(rows) to a next state (columns). The home panel is dominated by its
+low-to-low cell and the personal panel by its high-to-high cell, so the
+difference in <em>level</em> between the contexts reappears as a
+difference in <em>persistence</em>: wherever pleasure tends to be, it
+tends to stay.</p>
+<p>Because every network shares an alphabet, two of them can be set side
+by side and selected by name:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">by_context</span>, i <span class="op">=</span> <span class="st">"Home"</span>, j <span class="op">=</span> <span class="st">"Work"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network comparison</span></span>
 <span><span class="co">#&gt; ==================</span></span>
@@ -771,7 +838,7 @@ by side and picked out by name:</p>
 <p>Pruning applies group-wise and returns a grouped model, so the
 collection can be carried through a workflow without being taken
 apart:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">by_context</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Group Networks (4 groups)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -780,32 +847,42 @@ apart:</p>
 <span><span class="co">#&gt;   Other     3      1      [1.000, 1.000]</span></span>
 <span><span class="co">#&gt;   Personal  3      6      [0.286, 0.664]</span></span>
 <span><span class="co">#&gt;   Work      3      6      [0.315, 0.518]</span></span></code></pre></div>
-<p>One caution the table above states plainly rather than hides:
+<p>The index table states one caution plainly rather than hiding it:
 <code>Other</code> holds three observations and two sequences. It is a
 level of the column, so it gets a network, but a network estimated from
-one transition is not a result. Read the <code>sequences</code> and
+a single transition is not a result. Read the <code>sequences</code> and
 <code>observations</code> columns before reading the edges.</p>
 </div>
 <div class="section level2">
-<h2 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a>
+<h2 id="plotting-a-single-model">Plotting a single model<a class="anchor" aria-label="anchor" href="#plotting-a-single-model"></a>
 </h2>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<p>A grouped model has no <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, but any single
+network does, including the pooled step model. The plot draws the three
+states as nodes and the transition probabilities as directed edges, with
+self-loops for persistence.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-workflow_files/figure-html/plot-1.png" class="r-plt" alt="Transition network of daily step-count states, with sedentary, moderate, and active nodes joined by directed edges whose thickness reflects transition probability." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="nestimate-workflow_files/figure-html/plot-1.png" class="r-plt" alt="Transition network of daily step-count states, with sedentary, moderate, and active nodes joined by directed edges whose thickness reflects transition probability and self-loops that mark each state's persistence." width="100%" style="display: block; margin: auto;"></p>
+<p>The heavy self-loops confirm what the state distribution reported
+numerically: each state mostly returns to itself, and movement between
+states is the smaller part of the process. The plotting vignette covers
+the plot types and their arguments in full.</p>
 </div>
 <div class="section level2">
 <h2 id="where-the-line-falls">Where the line falls<a class="anchor" aria-label="anchor" href="#where-the-line-falls"></a>
 </h2>
-<p>Everything descriptive in this vignette — centralities, state
-distributions, entropy, pruning, per-participant splits, and the grouped
-models above — runs on a model built from a single series. Everything
-inferential — bootstrap, stability, the Markov-order test and the
-permutation test — needs many sequences, because resampling and
-permutation both treat the sequence as the unit of analysis.</p>
-<p>Build with <code>id</code> from the start if you intend to test
-anything. Fix your <code>breaks</code> before you compare anything, or
-pass <code>group</code> and let the pooled discretization fix them for
-you. And when a comparison rests on few sequences, say so: the
+<p>Everything descriptive in this vignette, from centralities, state
+distributions, entropy, and pruning to per-participant splits and the
+grouped models, runs on a model built from a single series. Everything
+inferential, meaning the bootstrap, stability, the Markov-order test,
+and the permutation test, requires many sequences, because resampling
+and permutation both treat the sequence as the unit of analysis.</p>
+<p>Three practices follow. Build with <code>id</code> from the start if
+you intend to test anything, so the sequences exist when a test asks for
+them. Fix your <code>breaks</code> before you compare anything, or pass
+<code>group</code> and let the pooled discretization fix them for you,
+so a difference between networks is a difference in behaviour and not in
+thresholds. And when a comparison rests on few sequences, say so: the
 <code>sequences</code> column exists to be read.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

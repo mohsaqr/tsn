@@ -1,4 +1,4 @@
-# From Time Series to Networks
+# Constructing Time Series Networks
 
 ## Introduction
 

@@ -538,13 +538,14 @@ they stay visible over the smaller values around them.
 
 ``` r
 
-plot(natural)
+plot(natural, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
-![Natural visibility graph of sixty pleasure observations, drawn as a
-network with nodes sized by degree; the high-degree hubs correspond to
-peaks that see far along the
-series.](pleasure-all-functions_files/figure-html/vg-network-1.png)
+![Natural visibility graph of sixty pleasure observations, drawn with a
+Fruchterman-Reingold layout and nodes sized by degree; the high-degree
+hubs correspond to peaks that see far along the series, spread apart so
+individual nodes stay
+distinguishable.](pleasure-all-functions_files/figure-html/vg-network-1.png)
 
 The horizontal rule keeps the same 60 nodes but fewer edges.
 
@@ -571,12 +572,13 @@ weights are binary, since visibility either holds or it does not.
 
 ``` r
 
-plot(horizontal)
+plot(horizontal, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
-![Horizontal visibility graph of the same sixty observations, sparser
-than the natural graph, with the temporal chain visible alongside a
-smaller number of longer
+![Horizontal visibility graph of the same sixty observations, drawn with
+the same Fruchterman-Reingold layout and degree-scaled nodes; it is
+sparser than the natural graph, with the temporal chain visible
+alongside a smaller number of longer
 edges.](pleasure-all-functions_files/figure-html/vg-network-horizontal-1.png)
 
 Every network also retains the series it was built from, which the

@@ -1,5 +1,5 @@
 ---
-title: "From Time Series to Networks"
+title: "Constructing Time Series Networks"
 author:
   - name: "Mohammed Saqr"
     affiliation: "University of Eastern Finland"
@@ -12,7 +12,7 @@ output:
     toc: true
     number_sections: true
 vignette: >
-  %\VignetteIndexEntry{From Time Series to Networks}
+  %\VignetteIndexEntry{Constructing Time Series Networks}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -73,47 +73,49 @@ co-occurrences, and
 [`ts_atna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md)
 attention-weighted transitions.
 
-The packaged `steps` dataset records daily step counts. Because
-participant 35 has missing days, we model the complete observations for
-two participants:
+The packaged `srl` dataset records nine self-regulated-learning
+indicators for 36 students over 156 daily occasions, on 0-100 scales.
+Because a few reports are missing, we model the complete `effort`
+observations for two students:
 
 ``` r
 
-data(steps)
+data(srl)
 
-complete <- subset(steps, !is.na(steps))
+complete <- subset(srl, !is.na(effort))
 
 model <- ts_tna(
   complete,
-  value = "steps",
-  id = "id",
+  value = "effort",
+  id = "name",
   time = "day",
-  series = c(536, 88),
+  series = c("Erik", "Eve"),
   n_states = 3,
   labels = c("low", "moderate", "high")
 )
 
 model
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.108, 0.605]  |  mean: 0.333
+#>   Weights: [0.276, 0.398]  |  mean: 0.333
 #> 
 #>   Weight matrix:
 #>              low moderate  high
-#>   low      0.578    0.303 0.119
-#>   moderate 0.319    0.411 0.270
-#>   high     0.108    0.286 0.605 
+#>   low      0.381    0.343 0.276
+#>   moderate 0.304    0.373 0.324
+#>   high     0.320    0.282 0.398 
 #> 
 #>   Initial probabilities:
-#>   high          1.000  ████████████████████████████████████████
-#>   low           0.000  
-#>   moderate      0.000
+#>   low           1.000  ████████████████████████████████████████
+#>   moderate      0.000  
+#>   high          0.000
 ```
 
-The transition matrix is strongly diagonal: in the pooled model a `low`
-day is followed by another `low` day with probability 0.578, and a
-`high` day by another `high` day with probability 0.605, so days tend to
-persist in their state. Because the state alphabet is learned from both
-series jointly, the two participants are placed on a common scale.
+The diagonal of the transition matrix is only mildly elevated: a `low`
+day is followed by another `low` day with probability 0.381 and a `high`
+day by another `high` day with probability 0.398, against roughly 0.3
+for every alternative, so these students’ daily effort persists, but
+weakly. Because the state alphabet is learned from both series jointly,
+the two students are placed on a common scale.
 [`series_networks()`](https://pak.dynasite.org/tsn/reference/series_networks.md)
 then splits the pooled model into one network per series:
 
@@ -121,8 +123,8 @@ then splits the pooled model into one network per series:
 
 series_networks(model)
 #>  series type observations states edges
-#>      88  tna          292      3     9
-#>     536  tna          265      3     9
+#>    Erik  tna          156      3     9
+#>     Eve  tna          156      3     9
 ```
 
 The resulting collection supports
@@ -132,8 +134,8 @@ The resulting collection supports
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) directly
 ([`plot()`](https://rdrr.io/r/graphics/plot.default.html) takes
 `series = "<name>"` when the collection holds more than one model). The
-combined plot places each participant’s shaded series alongside their
-own transition network:
+combined plot places each student’s shaded series alongside their own
+transition network:
 
 ``` r
 
@@ -143,9 +145,9 @@ plot(model, ribbon = TRUE, overlay = "none")
 #>   print.mcml Nestimate
 ```
 
-![Two rows, one per participant: each shows the daily step series with a
-state ribbon strip underneath and that participant's three-state
-transition network beside it, with edge weights printed on the
+![Two rows, one per student: each shows the daily effort series with a
+state ribbon strip underneath and that student's three-state transition
+network beside it, with edge weights printed on the
 arrows.](reference/figures/README-transition-plot-1.png)
 
 Because the result is a genuine `Nestimate` model, the full range of
@@ -158,16 +160,16 @@ informative for a model estimated from a single sequence.
 
 [`discretize()`](https://pak.dynasite.org/tsn/reference/discretize.md)
 is the bridge from a numeric series to a state sequence. Using the same
-`steps` data, participant 536 contributes 265 complete days:
+`srl` data, the student recorded as Erik contributes 156 daily reports:
 
 ``` r
 
 states <- discretize(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   method = "quantile",
   n_states = 3,
   labels = c("low", "moderate", "high")
@@ -175,9 +177,9 @@ states <- discretize(
 
 summary(states)
 #>      state count proportion mean_value
-#> 1      low    88  0.3320755   8838.966
-#> 2 moderate    89  0.3358491  13599.753
-#> 3     high    88  0.3320755  18165.034
+#> 1      low    54  0.3461538   1.786875
+#> 2 moderate    50  0.3205128  43.228070
+#> 3     high    52  0.3333333  83.569501
 ```
 
 Fifteen discretizers are available (`threshold`, `width`, `quantile`,
@@ -196,20 +198,21 @@ each observation by the slope of a rolling regression.
 ``` r
 
 movement <- trend(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   window = 14
 )
 
 summary(movement)
 #>        state count proportion
-#> 1  Ascending    91  0.3433962
-#> 2 Descending    80  0.3018868
-#> 3  Turbulent    81  0.3056604
-#> 4    Initial    13  0.0490566
+#> 1  Ascending    43 0.27564103
+#> 2 Descending    26 0.16666667
+#> 3       Flat    40 0.25641026
+#> 4  Turbulent    34 0.21794872
+#> 5    Initial    13 0.08333333
 ```
 
 ## Visibility networks: observations as nodes
@@ -217,25 +220,25 @@ summary(movement)
 A visibility graph (Lacasa et al., 2008) maps a single series onto a
 network of its observations: two time points are connected when an
 unobstructed straight sightline over the intervening values joins them.
-The packaged `motivation` dataset holds 4,871 experience-sampling
-measurements; the first 60 pleasure ratings suffice to illustrate the
-construction.
+The packaged `esm_srl` dataset holds 2,820 momentary experience-sampling
+reports from 41 students; the first 60 anxiety ratings of one student
+suffice to illustrate the construction.
 
 ``` r
 
-data(motivation)
+data(esm_srl)
 
-pleasure <- head(motivation, 60)
-network <- vg(pleasure, series = "pleasure")
+anxiety <- head(subset(esm_srl, name == "Jamal"), 60)
+network <- vg(anxiety, series = "anxiety")
 
 summary(network)
 #>       method unit nodes dyads edges    density minimum_weight maximum_weight
-#> 1 visibility time    60   143   143 0.08079096              1              1
+#> 1 visibility time    60   144   144 0.08135593              1              1
 #>   directed
 #> 1    FALSE
 ```
 
-The 60 observations become 60 nodes joined by 143 sightlines. Every
+The 60 observations become 60 nodes joined by 144 sightlines. Every
 network offers two complementary views: `plot(x)` draws the network
 itself through `cograph`, and `plot(x, "series")` shows the source
 series from which it was built.
@@ -245,7 +248,7 @@ series from which it was built.
 plot(network, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
-![Natural visibility graph of sixty pleasure ratings, drawn with a
+![Natural visibility graph of sixty anxiety ratings, drawn with a
 Fruchterman-Reingold layout and nodes sized by degree; the graph traces
 a near-linear backbone with side branches, and a few high-degree hubs
 correspond to peak observations that see far along the
@@ -256,8 +259,8 @@ series.](reference/figures/README-visibility-network-1.png)
 plot(network, "series")
 ```
 
-![The sixty pleasure ratings the visibility graph was built from,
-plotted as a line over observation
+![The sixty anxiety ratings the visibility graph was built from, plotted
+as a line over observation
 order.](reference/figures/README-visibility-series-1.png)
 
 `vg(x)` builds a natural visibility graph and `vg(x, "horizontal")` a
@@ -280,11 +283,11 @@ occurrences of a state pair.
 ``` r
 
 state_network <- tsn(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   unit = "state",
   discretization = "quantile",
   n_states = 3
@@ -292,7 +295,7 @@ state_network <- tsn(
 
 summary(state_network)
 #>       method  unit nodes dyads edges density minimum_weight maximum_weight
-#> 1 visibility state     3     6     6       1             56            258
+#> 1 visibility state     3     6     6       1             21            135
 #>   directed
 #> 1    FALSE
 ```
@@ -306,50 +309,52 @@ along time:
 plot(state_network, "series", overlay = "horizontal")
 ```
 
-![Daily step counts for participant 536 with horizontal shading marking
-the three quantile state bands across the
+![Daily effort reports for the student Erik with horizontal shading
+marking the three quantile state bands across the
 y-axis.](reference/figures/README-state-overlay-1.png)
 
 ## Distance networks: series and windows as nodes
 
 Under `method = "distance"`, nodes are whole series (or sliding windows)
 and edge weights are similarities, so that larger weights indicate
-closer series. Comparing five motivation variables as complete series is
-a single call:
+closer series. Comparing five of one student’s momentary indicators as
+complete series is a single call:
 
 ``` r
 
-affect <- tsn(
-  motivation,
-  series = c("pleasure", "autonomy", "competence", "relatedness", "mood"),
+hana <- subset(esm_srl, name == "Hana")
+
+regulation <- tsn(
+  hana,
+  series = c("planning", "monitoring", "effort", "motivated", "anxiety"),
   method = "distance",
   distance = "correlation"
 )
 
-summary(affect)
+summary(regulation)
 #>     method   unit nodes dyads edges density minimum_weight maximum_weight
-#> 1 distance series     5    10    10       1      0.5088532      0.6586452
+#> 1 distance series     5    10    10       1      0.3875223      0.7225132
 #>   directed
 #> 1    FALSE
 ```
 
 ``` r
 
-plot(affect, labels = TRUE)
+plot(regulation, labels = TRUE)
 ```
 
-![Correlation-distance network of five motivation variables, drawn with
-labeled nodes; all ten pairs are connected and autonomy and competence
-form the strongest
+![Correlation-distance network of five momentary self-regulation
+indicators, drawn with labeled nodes; all ten pairs are connected and
+planning and effort form the strongest
 tie.](reference/figures/README-distance-network-1.png)
 
 All ten pairs are connected because the default connectivity rule is
-`connect = "full"`; autonomy and competence form the closest pair.
-Fifteen distance measures are available (`euclidean`, `manhattan`,
-`maximum`, `canberra`, `minkowski`, `binary`, `cosine`, `correlation`,
-`spearman`, `dtw`, `ccf`, `nmi`, `voi`, `event_sync`, `van_rossum`), and
-`connect` sparsifies the network by nearest neighbours, a distance
-threshold, a percentile, or a Gaussian kernel.
+`connect = "full"`; planning and effort form the closest pair. Fifteen
+distance measures are available (`euclidean`, `manhattan`, `maximum`,
+`canberra`, `minkowski`, `binary`, `cosine`, `correlation`, `spearman`,
+`dtw`, `ccf`, `nmi`, `voi`, `event_sync`, `van_rossum`), and `connect`
+sparsifies the network by nearest neighbours, a distance threshold, a
+percentile, or a Gaussian kernel.
 
 The same function compares sliding windows of a single series, turning
 one trajectory into a network of its own epochs:
@@ -357,8 +362,8 @@ one trajectory into a network of its own epochs:
 ``` r
 
 windows <- tsn(
-  pleasure,
-  series = "pleasure",
+  anxiety,
+  series = "anxiety",
   method = "distance",
   distance = "dtw",
   window = 12,
@@ -369,13 +374,13 @@ windows <- tsn(
 
 summary(windows)
 #>     method   unit nodes dyads edges   density minimum_weight maximum_weight
-#> 1 distance window    13    78    17 0.2179487     0.00990099     0.02564103
+#> 1 distance window    13    78    16 0.2051282    0.004247933    0.006841757
 #>   directed
 #> 1    FALSE
 ```
 
 The 60 ratings yield 13 overlapping windows; retaining each window’s two
-nearest neighbours keeps 17 of the 78 possible dyads. The default
+nearest neighbours keeps 16 of the 78 possible dyads. The default
 `window` is 10% of the series length, so `step` should be chosen
 relative to the series length. Further options include `chain = TRUE`
 (connect only consecutive windows or series), `directed = TRUE`, and
@@ -410,9 +415,15 @@ example `plot(network, layout = "circle", labels = TRUE)`.
   builds a transition-network model from a series and tests it with
   `Nestimate`: bootstrap confidence intervals, centrality stability, a
   Markov-order test, and a permutation test comparing two periods.
-- [`vignette("pleasure-all-functions")`](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md)
-  applies every exported `tsn` function to the packaged `motivation`
-  pleasure series, building each network representation in turn.
+- [`vignette("constructing-time-series-networks")`](https://pak.dynasite.org/tsn/articles/constructing-time-series-networks.md)
+  applies every exported `tsn` function to one packaged momentary
+  anxiety series, building each network representation in turn.
+- [`vignette("group-models")`](https://pak.dynasite.org/tsn/articles/group-models.md)
+  builds one transition network per condition on a shared state alphabet
+  and compares them.
+- [`vignette("nestimate-compatibility")`](https://pak.dynasite.org/tsn/articles/nestimate-compatibility.md)
+  maps, verb by verb, which Nestimate analyses accept a `tsn` model
+  directly.
 - [`vignette("plotting-time-series-networks")`](https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.md)
   documents the plotting surface: the network and source-series views,
   state overlays, and transition-model plots.

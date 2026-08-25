@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,182 +56,177 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Grouped Transition Models: One Network per Condition</h1>
-                        <h4 data-toc-skip class="author">tsn package
-authors</h4>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/group-models.Rmd" class="external-link"><code>vignettes/group-models.Rmd</code></a></small>
+                        <h4 data-toc-skip class="author">Mohammed
+Saqr</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Sonsoles
+López-Pernas</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Manuel
+J. Gómez</h4>
+            <address class="author_afil">
+      University of Murcia<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/group-models.Rmd" class="external-link"><code>vignettes/group-models.Rmd</code></a></small>
       <div class="d-none name"><code>group-models.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
     
 <div class="section level2">
 <h2 id="the-question">The question<a class="anchor" aria-label="anchor" href="#the-question"></a>
 </h2>
-<p>Does the same person move between states differently under different
-conditions? The <code>motivation</code> study measured momentary
-pleasure up to seven times a day for almost three years, and each
-measurement records where it was taken: at home, at work, in personal
-time, or elsewhere. A single transition network estimated from all of it
-would answer how pleasure moves between <code>low</code>,
-<code>mid</code>, and <code>high</code> <em>on average</em> — and would
-erase exactly the distinction the context column exists to draw.</p>
+<p>Does the same person regulate their effort differently on different
+kinds of day? The <code>esm_srl</code> study prompted 41 students up to
+a few times a day for momentary reports of self-regulation, motivation,
+and anxiety on 0-100 scales, and each report carries a
+<code>day_type</code> label: weekday or weekend. A single transition
+network estimated from all of it would answer how momentary
+<code>effort</code> moves between <code>low</code>, <code>mid</code>,
+and <code>high</code> <em>on average</em> — and would erase exactly the
+distinction the day-type column exists to draw.</p>
 <p>The <code>group</code> argument of <code><a href="../reference/ts_tna.html">ts_tna()</a></code> and its
-siblings answers the conditional question instead: one network per
-context, all cut from one shared state alphabet, packaged so that
+siblings answers the conditional question instead: one network per day
+type, both cut from one shared state alphabet, packaged so that
 Nestimate’s grouped verbs compare them directly.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/tsn/" class="external-link">tsn</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">motivation</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">esm_srl</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="one-call-one-network-per-context">One call, one network per context<a class="anchor" aria-label="anchor" href="#one-call-one-network-per-context"></a>
+<h2 id="one-call-one-network-per-condition">One call, one network per condition<a class="anchor" aria-label="anchor" href="#one-call-one-network-per-condition"></a>
 </h2>
 <p><code>group</code> names a column of the data. Every level of that
-column becomes its own fully estimated <code>ts_tna</code> model.</p>
+column becomes its own fully estimated <code>ts_tna</code> model. Effort
+has four missing values, so the incomplete rows are set aside first.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">by_context</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">motivation</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"task_context_type"</span>,</span>
+<code class="sourceCode R"><span><span class="va">effort_rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">esm_srl</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">effort</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">by_day</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="va">effort_rows</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
+<span>  time <span class="op">=</span> <span class="st">"occasion"</span>,</span>
+<span>  group <span class="op">=</span> <span class="st">"day_type"</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">by_context</span></span>
-<span><span class="co">#&gt; Group Networks (4 groups, group_col: task_context_type)</span></span>
+<span><span class="va">by_day</span></span>
+<span><span class="co">#&gt; Group Networks (2 groups, group_col: day_type)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Group     Nodes  Edges  Weights</span></span>
-<span><span class="co">#&gt;   Home      3      9      [0.040, 0.762]</span></span>
-<span><span class="co">#&gt;   Other     3      1      [1.000, 1.000]</span></span>
-<span><span class="co">#&gt;   Personal  3      9      [0.065, 0.664]</span></span>
-<span><span class="co">#&gt;   Work      3      9      [0.156, 0.518]</span></span></code></pre></div>
-<p>Four contexts, four networks, and one of them is already suspicious:
-<code>Other</code> carries a single edge with weight 1.000.
-<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> with <code>what = "groups"</code> is the
-tidy index of how much data stands behind each network, and it explains
-that edge.</p>
+<span><span class="co">#&gt;   Group    Nodes  Edges  Weights</span></span>
+<span><span class="co">#&gt;   weekday  3      9      [0.098, 0.631]</span></span>
+<span><span class="co">#&gt;   weekend  3      9      [0.085, 0.633]</span></span></code></pre></div>
+<p>Two day types, two networks. <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> with
+<code>what = "groups"</code> is the tidy index of how much data stands
+behind each one, and it is where every grouped analysis should
+start.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_context</span>, what <span class="op">=</span> <span class="st">"groups"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      group type sequences observations states edges</span></span>
-<span><span class="co">#&gt; 1     Home  tna       832         1324      3     9</span></span>
-<span><span class="co">#&gt; 2    Other  tna         2            3      3     1</span></span>
-<span><span class="co">#&gt; 3 Personal  tna       822         1309      3     9</span></span>
-<span><span class="co">#&gt; 4     Work  tna       976         2235      3     9</span></span></code></pre></div>
-<p><code>Other</code> holds three observations in two sequences — one
-transition in total. A transition probability estimated from one
-transition is not a result; it is a level of the column that happens to
-exist. Every grouped analysis should start by reading this table. Here
-the fix is to leave <code>Other</code> out and rebuild.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">contexts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">motivation</span>, <span class="va">task_context_type</span> <span class="op">!=</span> <span class="st">"Other"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">by_context</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">contexts</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"task_context_type"</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_context</span>, what <span class="op">=</span> <span class="st">"groups"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      group type sequences observations states edges</span></span>
-<span><span class="co">#&gt; 1     Home  tna       832         1324      3     9</span></span>
-<span><span class="co">#&gt; 2 Personal  tna       822         1309      3     9</span></span>
-<span><span class="co">#&gt; 3     Work  tna       976         2235      3     9</span></span></code></pre></div>
-<p>Three contexts remain, each backed by 1,309 to 2,235 observations.
-The <code>sequences</code> column deserves attention before anything
-else is read, and the next two sections explain the two design rules
-that produce it.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_day</span>, what <span class="op">=</span> <span class="st">"groups"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     group type sequences observations states edges</span></span>
+<span><span class="co">#&gt; 1 weekday  tna       238         2033      3     9</span></span>
+<span><span class="co">#&gt; 2 weekend  tna       233          783      3     9</span></span></code></pre></div>
+<p>The weekday network rests on 2,033 observations in 238 sequences, the
+weekend network on 783 in 233. The <code>sequences</code> column repays
+attention: a sequence is cut at every change of student <em>and</em> at
+every change of day type, so a working week of roughly two reports a day
+forms one sequence of eight to ten observations, while a weekend forms
+one of three to four. The two cut rules are not the same. A change of
+student separates measurements that were never consecutive; a change of
+day type falls between two genuinely adjacent measurements, and the
+transition across it — Friday evening to Saturday morning — is excluded
+from both networks, because it belongs to neither day type. The next
+section shows what goes wrong without that rule.</p>
 </div>
 <div class="section level2">
 <h2 id="why-not-subset-the-data-and-build-each-model-by-hand">Why not subset the data and build each model by hand?<a class="anchor" aria-label="anchor" href="#why-not-subset-the-data-and-build-each-model-by-hand"></a>
 </h2>
-<p>Subsetting looks equivalent: keep the <code>Home</code> rows, call
-<code><a href="../reference/ts_tna.html">ts_tna()</a></code> on them, repeat per context. It is not equivalent,
-and it fails in two distinct ways.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">home_alone</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">motivation</span>, <span class="va">task_context_type</span> <span class="op">==</span> <span class="st">"Home"</span><span class="op">)</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<p>Subsetting looks equivalent: keep the weekend rows, call
+<code><a href="../reference/ts_tna.html">ts_tna()</a></code> on them, repeat for weekdays. It is not
+equivalent, and it fails in two distinct ways.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">weekend_alone</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">effort_rows</span>, <span class="va">day_type</span> <span class="op">==</span> <span class="st">"weekend"</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
+<span>  time <span class="op">=</span> <span class="st">"occasion"</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="../reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">home_alone</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     series type observations states edges</span></span>
-<span><span class="co">#&gt; 1 pleasure  tna         1324      3     9</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="../reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">weekend_alone</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   series type observations states edges</span></span>
+<span><span class="co">#&gt; 1  Amara  tna           15      3     7</span></span>
+<span><span class="co">#&gt; 2    Bao  tna           22      3     8</span></span>
+<span><span class="co">#&gt; 3   Cira  tna           22      3     8</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="first-failure-the-subset-welds-broken-time-back-together">First failure: the subset welds broken time back together<a class="anchor" aria-label="anchor" href="#first-failure-the-subset-welds-broken-time-back-together"></a>
 </h3>
-<p>The hand-built model holds all 1,324 home measurements as
-<strong>one</strong> sequence — the single row above. But the study
-alternates contexts from one beep to the next, so the home measurements
-are not consecutive: the grouped index showed them forming
-<strong>832</strong> separate runs. One unbroken sequence of 1,324
-observations contains 1,323 transitions; 832 runs of 1,324 observations
-contain only 1,324 − 832 = 492. The hand-built model therefore counts
-831 transitions — sixty-three percent of its total — between
-measurements that were never adjacent in time. Each one joins the end of
-one home visit to the start of the next, across an intervening trip to
-work or elsewhere, and each one is dynamics that never happened.</p>
+<p>The hand-built model holds each student’s weekend reports as
+<strong>one</strong> sequence — the first student’s 15 weekend reports
+above span many separate weekends, yet they form a single unbroken
+series. Across all 41 students the 783 weekend observations become 41
+sequences carrying 742 transitions. The grouped index showed the truth:
+those observations form <strong>233</strong> separate weekend runs,
+which contain only 783 − 233 = 550 genuine transitions. The hand-built
+model therefore counts 192 transitions — about a quarter of its total —
+between measurements that were never adjacent in time. Each one joins
+the end of one weekend to the start of the next, across an entire
+intervening week, and each one is dynamics that never happened.</p>
 <p>The grouped model never counts them. A sequence is cut at every
 change of group, so a transition is only ever counted between genuinely
-consecutive measurements within one context. The transition
-<em>across</em> a context change is dropped from both groups, because it
-belongs to neither.</p>
+consecutive measurements within one day type.</p>
 </div>
 <div class="section level3">
 <h3 id="second-failure-each-subset-learns-its-own-thresholds">Second failure: each subset learns its own thresholds<a class="anchor" aria-label="anchor" href="#second-failure-each-subset-learns-its-own-thresholds"></a>
 </h3>
 <p>The second failure is quieter. The default
 <code>discretization = "quantile"</code> cuts at the tertiles of
-whatever data it is given, so the hand-built home model learns cut
-points from home measurements alone:</p>
+whatever data it is given, so the hand-built weekend model learns cut
+points from weekend reports alone:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/discretize.html">discretize</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">effort_rows</span>, <span class="va">day_type</span> <span class="op">==</span> <span class="st">"weekend"</span><span class="op">)</span>,</span>
+<span>    value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>    id <span class="op">=</span> <span class="st">"name"</span>,</span>
+<span>    time <span class="op">=</span> <span class="st">"occasion"</span>,</span>
+<span>    labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;   state count proportion mean_value</span></span>
+<span><span class="co">#&gt; 1   low   261  0.3333333   28.04603</span></span>
+<span><span class="co">#&gt; 2   mid   261  0.3333333   63.07903</span></span>
+<span><span class="co">#&gt; 3  high   261  0.3333333   86.32532</span></span></code></pre></div>
+<p>By construction, exactly a third of weekend reports land in each
+state — 261 apiece — so the weekend composition can carry no information
+at all. The grouped model cuts the states from the
+<strong>pooled</strong> series before splitting, and its weekend column
+reports the real composition on the shared scale:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">home_alone</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   group state count proportion</span></span>
-<span><span class="co">#&gt; 1   all   low   494  0.3731118</span></span>
-<span><span class="co">#&gt; 2   all  high   441  0.3330816</span></span>
-<span><span class="co">#&gt; 3   all   mid   389  0.2938066</span></span></code></pre></div>
-<p>By construction, roughly a third of home measurements land in each
-state — 37.3% <code>low</code>, 33.3% <code>high</code>. Now the same
-measurements inside the grouped model, which cut the states from the
-<strong>pooled</strong> series before splitting:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      group state count proportion</span></span>
-<span><span class="co">#&gt; 1     Home   low   827 0.62462236</span></span>
-<span><span class="co">#&gt; 2     Home   mid   409 0.30891239</span></span>
-<span><span class="co">#&gt; 3     Home  high    88 0.06646526</span></span>
-<span><span class="co">#&gt; 4 Personal  high   597 0.45607334</span></span>
-<span><span class="co">#&gt; 5 Personal   mid   459 0.35064935</span></span>
-<span><span class="co">#&gt; 6 Personal   low   253 0.19327731</span></span>
-<span><span class="co">#&gt; 7     Work  high   938 0.41968680</span></span>
-<span><span class="co">#&gt; 8     Work   mid   749 0.33512304</span></span>
-<span><span class="co">#&gt; 9     Work   low   548 0.24519016</span></span></code></pre></div>
-<p>On the shared scale, home is not one-third <code>low</code>: it is
-<strong>62.5%</strong> <code>low</code> and only <strong>6.6%</strong>
-<code>high</code>. The hand-built model erased that fact by defining
-<code>low</code> as “low for a home measurement”. The grouped model
-keeps one definition of <code>low</code> for everyone, which is the only
-definition under which “Home has more low pleasure than Personal” is
-even a well-formed claim.</p>
-<p>The comparison across the three contexts is now worth reading on its
-own: pleasure at home is <code>low</code> on 62.5% of measurements and
-<code>high</code> on 6.6%; personal time reverses the ordering
-(<code>high</code> 45.6%, <code>low</code> 19.3%); work sits between the
-two on all three states. The mosaic view draws that table:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span></code></pre></div>
-<p><img src="group-models_files/figure-html/mosaic-1.png" class="r-plt" alt="Mosaic plot of state proportions by context: the low-pleasure band dominates the Home column, the high-pleasure band dominates the Personal column, and Work sits between them." width="100%" style="display: block; margin: auto;"></p>
-<p>The same discipline is available without <code>group</code> by
-passing explicit <code>breaks</code>, and that is the right tool when
-thresholds carry outside meaning (the companion vignette
-<code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow", package = "tsn")</a></code> cuts step
-counts at 5,000 and 10,000 steps for exactly that reason).
-<code>group</code> automates the discipline when the comparison, not the
-threshold, is the point.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     group state count proportion</span></span>
+<span><span class="co">#&gt; 1 weekday   low   694  0.3413674</span></span>
+<span><span class="co">#&gt; 2 weekday  high   676  0.3325135</span></span>
+<span><span class="co">#&gt; 3 weekday   mid   663  0.3261190</span></span>
+<span><span class="co">#&gt; 4 weekend   mid   268  0.3422733</span></span>
+<span><span class="co">#&gt; 5 weekend  high   262  0.3346105</span></span>
+<span><span class="co">#&gt; 6 weekend   low   253  0.3231162</span></span></code></pre></div>
+<p>On this panel the distortion happens to be mild, because weekday and
+weekend effort sit at nearly the same level (means of 58.5 and 59.2):
+the shared scale puts each weekend state within a percentage point or
+two of a third. That mildness is a property of these data, not of the
+method. For groups that differ in level — a clinical and a control
+cohort, a high- and a low-workload term — per-subset tertiles redefine
+the states inside each group, and the artifact grows with the very
+difference under study. The grouped model makes the safe construction
+the default; explicit <code>breaks</code> (as in
+<code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow", package = "tsn")</a></code>) achieve
+the same discipline by hand.</p>
 </div>
 </div>
 <div class="section level2">
@@ -239,65 +234,159 @@ threshold, is the point.</p>
 </h2>
 <p>Every view of the grouped model is a data frame with a leading
 <code>group</code> column. The default view is the edge list:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span>, <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     group from  to    weight</span></span>
+<span><span class="co">#&gt; 1 weekday  low low 0.6199021</span></span>
+<span><span class="co">#&gt; 2 weekday  mid low 0.2944162</span></span>
+<span><span class="co">#&gt; 3 weekday high low 0.1150592</span></span>
+<span><span class="co">#&gt; 4 weekday  low mid 0.2822186</span></span>
+<span><span class="co">#&gt; 5 weekday  mid mid 0.4297800</span></span>
+<span><span class="co">#&gt; 6 weekday high mid 0.2538071</span></span></code></pre></div>
+<p>Because both groups share one alphabet, a single edge can be read
+across them:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span>, <span class="va">from</span> <span class="op">==</span> <span class="st">"high"</span> <span class="op">&amp;</span> <span class="va">to</span> <span class="op">==</span> <span class="st">"mid"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      group from  to    weight</span></span>
+<span><span class="co">#&gt; 6  weekday high mid 0.2538071</span></span>
+<span><span class="co">#&gt; 15 weekend high mid 0.3419689</span></span></code></pre></div>
+<p>The probability that a high-effort report softens to <code>mid</code>
+is 0.254 on weekdays and 0.342 on weekends — the edge the inference
+section below puts to the test. <code>what = "series"</code> returns the
+per-observation table behind the networks, with the run-level sequence
+IDs, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds Nestimate’s network-metric panel,
+one column per group:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span>, <span class="fl">9</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   group from   to     weight</span></span>
-<span><span class="co">#&gt; 1  Home  low  low 0.76160991</span></span>
-<span><span class="co">#&gt; 2  Home  mid  low 0.43661972</span></span>
-<span><span class="co">#&gt; 3  Home high  low 0.48148148</span></span>
-<span><span class="co">#&gt; 4  Home  low  mid 0.19814241</span></span>
-<span><span class="co">#&gt; 5  Home  mid  mid 0.47183099</span></span>
-<span><span class="co">#&gt; 6  Home high  mid 0.37037037</span></span>
-<span><span class="co">#&gt; 7  Home  low high 0.04024768</span></span>
-<span><span class="co">#&gt; 8  Home  mid high 0.09154930</span></span>
-<span><span class="co">#&gt; 9  Home high high 0.14814815</span></span></code></pre></div>
-<p>Because all groups share one alphabet, a single edge can be read
-across contexts:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span>, <span class="va">from</span> <span class="op">==</span> <span class="st">"low"</span> <span class="op">&amp;</span> <span class="va">to</span> <span class="op">==</span> <span class="st">"high"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       group from   to     weight</span></span>
-<span><span class="co">#&gt; 7      Home  low high 0.04024768</span></span>
-<span><span class="co">#&gt; 16 Personal  low high 0.35064935</span></span>
-<span><span class="co">#&gt; 25     Work  low high 0.29051988</span></span></code></pre></div>
-<p>The probability of jumping from <code>low</code> directly to
-<code>high</code> is 0.040 at home, 0.351 in personal time, and 0.291 at
-work: at home, low pleasure almost never resolves upward in one step.
-<code>what = "series"</code> returns the per-observation table behind
-the networks, with the run-level sequence IDs.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_context</span>, what <span class="op">=</span> <span class="st">"series"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   group          id time value state</span></span>
-<span><span class="co">#&gt; 1  Home pleasure.14  184     5   low</span></span>
-<span><span class="co">#&gt; 2  Home pleasure.28  221    24  high</span></span>
-<span><span class="co">#&gt; 3  Home pleasure.31  224     8   low</span></span>
-<span><span class="co">#&gt; 4  Home pleasure.34  233     4   low</span></span>
-<span><span class="co">#&gt; 5  Home pleasure.36  237    15   mid</span></span>
-<span><span class="co">#&gt; 6  Home pleasure.38  245    16   mid</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds Nestimate’s network-metric panel, one
-column per group:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network metrics by group:</span></span>
-<span><span class="co">#&gt;                       metric   Home Personal   Work</span></span>
-<span><span class="co">#&gt;                   Node Count      3        3      3</span></span>
-<span><span class="co">#&gt;                   Edge Count      9        9      9</span></span>
-<span><span class="co">#&gt;              Network Density      1        1      1</span></span>
-<span><span class="co">#&gt;                Mean Distance 0.2697   0.2809 0.2882</span></span>
-<span><span class="co">#&gt;            Mean Out-Strength      1        1      1</span></span>
-<span><span class="co">#&gt;              SD Out-Strength 0.7008   0.4528 0.2058</span></span>
-<span><span class="co">#&gt;             Mean In-Strength      1        1      1</span></span>
-<span><span class="co">#&gt;               SD In-Strength      0        0      0</span></span>
-<span><span class="co">#&gt;              Mean Out-Degree      3        3      3</span></span>
-<span><span class="co">#&gt;                SD Out-Degree      0        0      0</span></span>
-<span><span class="co">#&gt;  Centralization (Out-Degree)      0        0      0</span></span>
-<span><span class="co">#&gt;   Centralization (In-Degree)      0        0      0</span></span>
-<span><span class="co">#&gt;                  Reciprocity      1        1      1</span></span></code></pre></div>
-<p>Most rows are structural constants for a full 3-state network, but
-one is not: the standard deviation of out-strength falls from 0.70 at
-home through 0.45 in personal time to 0.21 at work. Home’s outgoing
-probabilities are the most polarized — from any state, one destination
-dominates — while work’s are the most evenly spread. That single row
-anticipates the entropy analysis below.</p>
+<span><span class="co">#&gt;                       metric weekday weekend</span></span>
+<span><span class="co">#&gt;                   Node Count       3       3</span></span>
+<span><span class="co">#&gt;                   Edge Count       9       9</span></span>
+<span><span class="co">#&gt;              Network Density       1       1</span></span>
+<span><span class="co">#&gt;                Mean Distance  0.2199  0.2278</span></span>
+<span><span class="co">#&gt;            Mean Out-Strength       1       1</span></span>
+<span><span class="co">#&gt;              SD Out-Strength 0.03206  0.1015</span></span>
+<span><span class="co">#&gt;             Mean In-Strength       1       1</span></span>
+<span><span class="co">#&gt;               SD In-Strength       0       0</span></span>
+<span><span class="co">#&gt;              Mean Out-Degree       3       3</span></span>
+<span><span class="co">#&gt;                SD Out-Degree       0       0</span></span>
+<span><span class="co">#&gt;  Centralization (Out-Degree)       0       0</span></span>
+<span><span class="co">#&gt;   Centralization (In-Degree)       0       0</span></span>
+<span><span class="co">#&gt;                  Reciprocity       1       1</span></span></code></pre></div>
+<p>Most rows are structural constants for a full three-state network,
+but the standard deviation of out-strength is not: 0.032 on weekdays
+against 0.102 on weekends. Weekday rows spread their probability almost
+evenly; weekend rows are the more polarized ones.</p>
+</div>
+<div class="section level2">
+<h2 id="composition-and-dynamics">Composition and dynamics<a class="anchor" aria-label="anchor" href="#composition-and-dynamics"></a>
+</h2>
+<div class="section level3">
+<h3 id="composition">Composition<a class="anchor" aria-label="anchor" href="#composition"></a>
+</h3>
+<p>The state distributions above showed both day types holding close to
+a third of reports in each state. The mosaic view draws the transition
+structure itself, one panel per group:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span></code></pre></div>
+<p><img src="group-models_files/figure-html/mosaic-1.png" class="r-plt" alt="Mosaic panels of the weekday and weekend effort transition networks, in which tile area encodes transition probability; the weekend high-to-mid tile is visibly larger than its weekday counterpart." width="100%" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="mean-first-passage-times">Mean first passage times<a class="anchor" aria-label="anchor" href="#mean-first-passage-times"></a>
+</h3>
+<p><code><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code> reports, per group, the expected number
+of steps to reach each state from each other state (Kemeny &amp; Snell,
+1976).</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Mean First Passage Times -- 2 groups: weekday, weekend</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; --- weekday ---</span></span>
+<span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;      low mid high</span></span>
+<span><span class="co">#&gt; low  2.9 3.6  6.4</span></span>
+<span><span class="co">#&gt; mid  4.6 3.1  5.0</span></span>
+<span><span class="co">#&gt; high 5.9 3.8  3.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Stationary distribution:</span></span>
+<span><span class="co">#&gt;    low    mid   high </span></span>
+<span><span class="co">#&gt; 0.3483 0.3200 0.3317 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; --- weekend ---</span></span>
+<span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;      low mid high</span></span>
+<span><span class="co">#&gt; low  2.8 3.4  6.7</span></span>
+<span><span class="co">#&gt; mid  4.7 2.7  5.1</span></span>
+<span><span class="co">#&gt; high 5.6 3.1  3.6</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Stationary distribution:</span></span>
+<span><span class="co">#&gt;    low    mid   high </span></span>
+<span><span class="co">#&gt; 0.3549 0.3666 0.2785</span></span></code></pre></div>
+<p>The travel times are broadly similar — every state is reachable
+within three to seven steps on either day type — but the stationary
+distributions tilt: the weekday chain settles with 33.2% of its time in
+<code>high</code>, the weekend chain with 27.9%. Since the observed
+compositions are nearly identical, that tilt is carried by the dynamics,
+and it points at the same place the edge table did: weekends hold high
+effort less firmly.</p>
+</div>
+<div class="section level3">
+<h3 id="entropy-and-centrality">Entropy and centrality<a class="anchor" aria-label="anchor" href="#entropy-and-centrality"></a>
+</h3>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Transition Entropy - 2 groups: weekday, weekend</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Entropy rate per group:</span></span>
+<span><span class="co">#&gt; weekday weekend </span></span>
+<span><span class="co">#&gt;  1.3650  1.3853</span></span></code></pre></div>
+<p>Both day types run near the <code>log2(3) = 1.585</code> ceiling —
+1.37 and 1.39 bits — so momentary effort is weakly predictable
+everywhere; neither day type is a regime of rigid habit.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">day_centrality</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt; centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.</span></span>
+<span></span>
+<span><span class="va">day_centrality</span></span>
+<span><span class="co">#&gt; $weekday</span></span>
+<span><span class="co">#&gt;      state InStrength Betweenness  Diffusion</span></span>
+<span><span class="co">#&gt; low    low  0.4094755           0 0.08338405</span></span>
+<span><span class="co">#&gt; mid    mid  0.5360257           2 1.00000000</span></span>
+<span><span class="co">#&gt; high  high  0.3736830           0 0.00000000</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $weekend</span></span>
+<span><span class="co">#&gt;      state InStrength Betweenness Diffusion</span></span>
+<span><span class="co">#&gt; low    low  0.3854634           0 0.0000000</span></span>
+<span><span class="co">#&gt; mid    mid  0.6244548           2 1.0000000</span></span>
+<span><span class="co">#&gt; high  high  0.3569680           0 0.6771486</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attr(,"measures")</span></span>
+<span><span class="co">#&gt; [1] "InStrength"  "Betweenness" "Diffusion"  </span></span>
+<span><span class="co">#&gt; attr(,"class")</span></span>
+<span><span class="co">#&gt; [1] "net_centrality_group" "list"</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">day_centrality</span><span class="op">)</span></span></code></pre></div>
+<p><img src="group-models_files/figure-html/centrality-plot-1.png" class="r-plt" alt="Faceted centrality chart comparing in-strength, betweenness, and diffusion of the three states across the weekday and weekend networks, with the mid state carrying the highest in-strength and all betweenness in both." width="100%" style="display: block; margin: auto;"></p>
+<p><code>mid</code> is the hub of both networks — the highest
+in-strength (0.54 weekday, 0.62 weekend) and the only state with nonzero
+betweenness — because movement between <code>low</code> and
+<code>high</code> routes through the middle of the scale. The message
+printed above the tables matters for any transition network:
+self-transitions are excluded by default, or the diagonal would drown
+the between-state structure.</p>
+<p><code><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> runs group-wise as well, with one
+caveat: its result drops back to a plain <code>netobject_group</code>,
+so apply tsn’s tidy accessors before this step, not after it.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Group Networks (2 groups)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Group    Nodes  Edges  Weights</span></span>
+<span><span class="co">#&gt;   weekday  3      4      [2.000, 2.000]</span></span>
+<span><span class="co">#&gt;   weekend  3      4      [2.000, 2.000]</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="drawing-the-networks">Drawing the networks<a class="anchor" aria-label="anchor" href="#drawing-the-networks"></a>
@@ -305,448 +394,256 @@ anticipates the entropy analysis below.</p>
 <p>There is no single picture of a grouped model; <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
 draws one selected group with the full <code><a href="../reference/plot.ts_tna.html">plot.ts_tna()</a></code>
 surface.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">by_context</span>, group <span class="op">=</span> <span class="st">"Home"</span>, type <span class="op">=</span> <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="group-models_files/figure-html/plot-home-1.png" class="r-plt" alt="Transition network of the Home context: three nodes labelled low, mid, and high, with the heaviest directed edges pointing into the low state and a strong low-to-low self-loop." width="100%" style="display: block; margin: auto;"></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">by_context</span>, group <span class="op">=</span> <span class="st">"Personal"</span>, type <span class="op">=</span> <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="group-models_files/figure-html/plot-personal-1.png" class="r-plt" alt="Transition network of the Personal context: three nodes labelled low, mid, and high, with the heaviest directed edges pointing into the high state and a strong high-to-high self-loop." width="100%" style="display: block; margin: auto;"></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">by_context</span>, group <span class="op">=</span> <span class="st">"Work"</span>, type <span class="op">=</span> <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="group-models_files/figure-html/plot-work-1.png" class="r-plt" alt="Transition network of the Work context: three nodes labelled low, mid, and high, with edge weights spread more evenly than in the Home and Personal networks." width="100%" style="display: block; margin: auto;"></p>
-<p>Because the three networks share one node set, the figures are
-directly comparable: the heavy edges converge on <code>low</code> at
-home (<code>low → low</code> is 0.762) and on <code>high</code> in
-personal time (<code>high → high</code> is 0.664), while the work
-network’s weights are visibly more even — no edge above 0.518.</p>
-</div>
-<div class="section level2">
-<h2 id="dynamics-not-composition-alone">Dynamics, not composition alone<a class="anchor" aria-label="anchor" href="#dynamics-not-composition-alone"></a>
-</h2>
-<p>The state distributions above describe <em>where</em> the contexts
-spend their time. The networks describe <em>how they move</em>, and the
-two can disagree.</p>
-<div class="section level3">
-<h3 id="mean-first-passage-times">Mean first passage times<a class="anchor" aria-label="anchor" href="#mean-first-passage-times"></a>
-</h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code> reports, per group, the expected number
-of steps to reach each state from each other state (Kemeny &amp; Snell,
-1976).</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Mean First Passage Times -- 3 groups: Home, Personal, Work</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Home ---</span></span>
-<span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;      low mid high</span></span>
-<span><span class="co">#&gt; low  1.5 4.9 18.4</span></span>
-<span><span class="co">#&gt; mid  2.3 3.5 17.1</span></span>
-<span><span class="co">#&gt; high 2.2 3.9 16.2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Stationary distribution:</span></span>
-<span><span class="co">#&gt;    low    mid   high </span></span>
-<span><span class="co">#&gt; 0.6509 0.2874 0.0616 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Personal ---</span></span>
-<span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;      low mid high</span></span>
-<span><span class="co">#&gt; low  7.3 3.2  2.6</span></span>
-<span><span class="co">#&gt; mid  8.2 3.2  2.4</span></span>
-<span><span class="co">#&gt; high 9.6 3.6  1.8</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Stationary distribution:</span></span>
-<span><span class="co">#&gt;    low    mid   high </span></span>
-<span><span class="co">#&gt; 0.1361 0.3134 0.5505 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Work ---</span></span>
-<span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;      low mid high</span></span>
-<span><span class="co">#&gt; low  4.1 3.1  3.1</span></span>
-<span><span class="co">#&gt; mid  4.9 3.0  2.7</span></span>
-<span><span class="co">#&gt; high 5.4 3.1  2.4</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Stationary distribution:</span></span>
-<span><span class="co">#&gt;    low    mid   high </span></span>
-<span><span class="co">#&gt; 0.2434 0.3342 0.4224</span></span></code></pre></div>
-<p>At home, <code>low</code> is reached from anywhere within about two
-steps, while <code>high</code> takes sixteen to eighteen — low pleasure
-at home is an attractor. Personal time is the mirror image:
-<code>high</code> is two to three steps away from everything,
-<code>low</code> seven to ten. Work reaches <code>high</code> in about
-three steps. The stationary distributions agree with the composition
-table, which they should — but the passage times add the direction of
-pull, not only the destination.</p>
-</div>
-<div class="section level3">
-<h3 id="entropy-how-predictable-is-each-context">Entropy: how predictable is each context?<a class="anchor" aria-label="anchor" href="#entropy-how-predictable-is-each-context"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">by_day</span>, group <span class="op">=</span> <span class="st">"weekday"</span>, type <span class="op">=</span> <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="group-models_files/figure-html/plot-weekday-1.png" class="r-plt" alt="Transition network of weekday effort: three nodes labelled low, mid, and high with strong self-loops, the high-to-high loop heaviest." width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Transition Entropy - 3 groups: Home, Personal, Work</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Entropy rate per group:</span></span>
-<span><span class="co">#&gt;     Home Personal     Work </span></span>
-<span><span class="co">#&gt;   1.0943   1.3269   1.5096</span></span></code></pre></div>
-<p>The entropy rate is in bits, with <code>log2(3) = 1.585</code> as the
-ceiling for three states. Home, at 1.09, is the most predictable
-context: knowing the current state says a lot about the next one
-(mostly, that it will be <code>low</code> again). Work, at 1.51, runs
-close to the ceiling — from any state, the next work measurement is
-nearly a three-way coin toss. Structure and pleasantness are different
-axes: home is the most <em>predictable</em> context and also the least
-pleasant one.</p>
-</div>
-<div class="section level3">
-<h3 id="centrality-per-group">Centrality per group<a class="anchor" aria-label="anchor" href="#centrality-per-group"></a>
-</h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">context_centrality</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt; centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.</span></span>
-<span></span>
-<span><span class="va">context_centrality</span></span>
-<span><span class="co">#&gt; $Home</span></span>
-<span><span class="co">#&gt;      state InStrength Betweenness Diffusion</span></span>
-<span><span class="co">#&gt; low    low  0.9181012           0 0.0000000</span></span>
-<span><span class="co">#&gt; mid    mid  0.5685128           1 0.4288861</span></span>
-<span><span class="co">#&gt; high  high  0.1317970           0 1.0000000</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $Personal</span></span>
-<span><span class="co">#&gt;      state InStrength Betweenness Diffusion</span></span>
-<span><span class="co">#&gt; low    low  0.2612844           0 1.0000000</span></span>
-<span><span class="co">#&gt; mid    mid  0.6351881           1 0.7327731</span></span>
-<span><span class="co">#&gt; high  high  0.7888516           0 0.0000000</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $Work</span></span>
-<span><span class="co">#&gt;      state InStrength Betweenness Diffusion</span></span>
-<span><span class="co">#&gt; low    low  0.4000422           0 0.8177884</span></span>
-<span><span class="co">#&gt; mid    mid  0.6413604           0 1.0000000</span></span>
-<span><span class="co">#&gt; high  high  0.6880507           0 0.0000000</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; attr(,"measures")</span></span>
-<span><span class="co">#&gt; [1] "InStrength"  "Betweenness" "Diffusion"  </span></span>
-<span><span class="co">#&gt; attr(,"class")</span></span>
-<span><span class="co">#&gt; [1] "net_centrality_group" "list"</span></span></code></pre></div>
-<p>The in-strength ordering flips between contexts: <code>low</code>
-dominates at home (0.92), <code>high</code> dominates in personal time
-(0.79). The message printed above the tables matters for any transition
-network: self-transitions are excluded by default, because the diagonal
-is usually the largest entry and would otherwise drown the between-state
-structure. The result has its own plot method, which puts the three
-groups on one panel per measure:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">context_centrality</span><span class="op">)</span></span></code></pre></div>
-<p><img src="group-models_files/figure-html/centrality-plot-1.png" class="r-plt" alt="Faceted centrality chart comparing in-strength, betweenness, and diffusion of the three states across the Home, Personal, and Work networks, showing the in-strength ordering reversing between Home and Personal." width="100%" style="display: block; margin: auto;"></p>
-</div>
-<div class="section level3">
-<h3 id="edge-betweenness">Edge betweenness<a class="anchor" aria-label="anchor" href="#edge-betweenness"></a>
-</h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> scores each edge by the shortest
-paths that cross it. On a grouped model it runs group-wise:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Group Networks (3 groups)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Group     Nodes  Edges  Weights</span></span>
-<span><span class="co">#&gt;   Home      3      5      [1.000, 2.000]</span></span>
-<span><span class="co">#&gt;   Personal  3      5      [1.000, 2.000]</span></span>
-<span><span class="co">#&gt;   Work      3      6      [1.000, 1.000]</span></span></code></pre></div>
-<p>Home and Personal each concentrate their traffic on five edges while
-Work spreads it across six with uniform load — the betweenness
-restatement of the polarized-versus-even pattern. One caveat: this verb
-returns a plain <code>netobject_group</code> (the
-<code>ts_tna_group</code> subclass is dropped), so apply tsn’s tidy
-accessors before this step, not after it.</p>
-</div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">by_day</span>, group <span class="op">=</span> <span class="st">"weekend"</span>, type <span class="op">=</span> <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="group-models_files/figure-html/plot-weekend-1.png" class="r-plt" alt="Transition network of weekend effort: the same three nodes, with a lighter high-to-high self-loop and a heavier high-to-mid edge than the weekday network." width="100%" style="display: block; margin: auto;"></p>
+<p>Because the two networks share one node set, the figures are directly
+comparable, and the difference to look for is concentrated at the
+<code>high</code> node: its self-loop is heavier on weekdays (0.631
+against 0.534) and its outflow to <code>mid</code> heavier on
+weekends.</p>
 </div>
 <div class="section level2">
 <h2 id="are-the-differences-real">Are the differences real?<a class="anchor" aria-label="anchor" href="#are-the-differences-real"></a>
 </h2>
 <div class="section level3">
-<h3 id="pairwise-permutation-tests">Pairwise permutation tests<a class="anchor" aria-label="anchor" href="#pairwise-permutation-tests"></a>
+<h3 id="the-permutation-test">The permutation test<a class="anchor" aria-label="anchor" href="#the-permutation-test"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code> on a grouped model runs every pairwise
-comparison, shuffling sequences between the two groups to build a null
-distribution per edge.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation</a></span><span class="op">(</span><span class="va">by_context</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<p><code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code> on a grouped model shuffles sequences
+between the groups to build a null distribution per edge.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">day_comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation</a></span><span class="op">(</span><span class="va">by_day</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">comparison</span></span>
-<span><span class="co">#&gt; Grouped Permutation Test</span></span>
-<span><span class="co">#&gt; Groups: Home vs Personal, Home vs Work, Personal vs Work </span></span>
-<span><span class="co">#&gt; Use summary() on each element for edge-level results.</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> is the tidy edge-level table across all three
-pairs:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span>
-<span><span class="co">#&gt;               group from   to   weight_x   weight_y         diff effect_size</span></span>
-<span><span class="co">#&gt; 1  Home vs Personal  low  low 0.76160991 0.28571429  0.475895621   9.6011811</span></span>
-<span><span class="co">#&gt; 2  Home vs Personal  low  mid 0.19814241 0.36363636 -0.165493949  -3.9079590</span></span>
-<span><span class="co">#&gt; 3  Home vs Personal  low high 0.04024768 0.35064935 -0.310401673  -9.6318468</span></span>
-<span><span class="co">#&gt; 4  Home vs Personal  mid  low 0.43661972 0.19662921  0.239990505   3.9297924</span></span>
-<span><span class="co">#&gt; 5  Home vs Personal  mid  mid 0.47183099 0.36516854  0.106662447   2.0072211</span></span>
-<span><span class="co">#&gt; 6  Home vs Personal  mid high 0.09154930 0.43820225 -0.346652951  -6.4135986</span></span>
-<span><span class="co">#&gt; 7  Home vs Personal high  low 0.48148148 0.06465517  0.416826309  10.2551933</span></span>
-<span><span class="co">#&gt; 8  Home vs Personal high  mid 0.37037037 0.27155172  0.098818646   1.7043584</span></span>
-<span><span class="co">#&gt; 9  Home vs Personal high high 0.14814815 0.66379310 -0.515644955  -8.1556584</span></span>
-<span><span class="co">#&gt; 10     Home vs Work  low  low 0.76160991 0.39449541  0.367114494   8.1841788</span></span>
-<span><span class="co">#&gt; 11     Home vs Work  low  mid 0.19814241 0.31498471 -0.116842295  -3.3153932</span></span>
-<span><span class="co">#&gt; 12     Home vs Work  low high 0.04024768 0.29051988 -0.250272200  -7.1541625</span></span>
-<span><span class="co">#&gt; 13     Home vs Work  mid  low 0.43661972 0.24444444  0.192175274   3.5784102</span></span>
-<span><span class="co">#&gt; 14     Home vs Work  mid  mid 0.47183099 0.35802469  0.113806295   2.7796439</span></span>
-<span><span class="co">#&gt; 15     Home vs Work  mid high 0.09154930 0.39753086 -0.305981568  -5.9452449</span></span>
-<span><span class="co">#&gt; 16     Home vs Work high  low 0.48148148 0.15559772  0.325883759   7.1524791</span></span>
-<span><span class="co">#&gt; 17     Home vs Work high  mid 0.37037037 0.32637571  0.043994659   1.0993855</span></span>
-<span><span class="co">#&gt; 18     Home vs Work high high 0.14814815 0.51802657 -0.369878417  -7.1868514</span></span>
-<span><span class="co">#&gt; 19 Personal vs Work  low  low 0.28571429 0.39449541 -0.108781127  -2.0307871</span></span>
-<span><span class="co">#&gt; 20 Personal vs Work  low  mid 0.36363636 0.31498471  0.048651654   1.0328852</span></span>
-<span><span class="co">#&gt; 21 Personal vs Work  low high 0.35064935 0.29051988  0.060129473   1.1254199</span></span>
-<span><span class="co">#&gt; 22 Personal vs Work  mid  low 0.19662921 0.24444444 -0.047815231  -1.0647540</span></span>
-<span><span class="co">#&gt; 23 Personal vs Work  mid  mid 0.36516854 0.35802469  0.007143848   0.1755167</span></span>
-<span><span class="co">#&gt; 24 Personal vs Work  mid high 0.43820225 0.39753086  0.040671383   0.9161396</span></span>
-<span><span class="co">#&gt; 25 Personal vs Work high  low 0.06465517 0.15559772 -0.090942551  -3.1129284</span></span>
-<span><span class="co">#&gt; 26 Personal vs Work high  mid 0.27155172 0.32637571 -0.054823987  -1.6424138</span></span>
-<span><span class="co">#&gt; 27 Personal vs Work high high 0.66379310 0.51802657  0.145766538   3.9197122</span></span>
-<span><span class="co">#&gt;        p_value   sig</span></span>
-<span><span class="co">#&gt; 1  0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 2  0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 3  0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 4  0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 5  0.038961039  TRUE</span></span>
-<span><span class="co">#&gt; 6  0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 7  0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 8  0.083916084 FALSE</span></span>
-<span><span class="co">#&gt; 9  0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 10 0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 11 0.002997003  TRUE</span></span>
-<span><span class="co">#&gt; 12 0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 13 0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 14 0.009990010  TRUE</span></span>
-<span><span class="co">#&gt; 15 0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 16 0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 17 0.271728272 FALSE</span></span>
-<span><span class="co">#&gt; 18 0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 19 0.047952048  TRUE</span></span>
-<span><span class="co">#&gt; 20 0.308691309 FALSE</span></span>
-<span><span class="co">#&gt; 21 0.269730270 FALSE</span></span>
-<span><span class="co">#&gt; 22 0.311688312 FALSE</span></span>
-<span><span class="co">#&gt; 23 0.880119880 FALSE</span></span>
-<span><span class="co">#&gt; 24 0.375624376 FALSE</span></span>
-<span><span class="co">#&gt; 25 0.000999001  TRUE</span></span>
-<span><span class="co">#&gt; 26 0.100899101 FALSE</span></span>
-<span><span class="co">#&gt; 27 0.000999001  TRUE</span></span></code></pre></div>
-<p>The pattern is sharp. Home differs from Personal on eight of nine
-edges and from Work on eight of nine, most at the smallest p-value the
-permutation resolution allows (0.001). Personal and Work are much
-closer: only three edges separate them, and the largest of those
-differences is the retention of <code>high</code> —
-<code>high → high</code> is 0.66 in personal time against 0.52 at work
-(p = 0.001). The conclusion is not “everything differs from everything”:
-home has genuinely distinct dynamics, while personal time and work share
-most of their structure except how long a good state lasts.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">day_comparison</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                group from   to   weight_x   weight_y          diff  effect_size</span></span>
+<span><span class="co">#&gt; 1 weekday vs weekend  low  low 0.61990212 0.63276836 -0.0128662409 -0.289921277</span></span>
+<span><span class="co">#&gt; 2 weekday vs weekend  low  mid 0.28221860 0.28248588 -0.0002672786 -0.006925447</span></span>
+<span><span class="co">#&gt; 3 weekday vs weekend  low high 0.09787928 0.08474576  0.0131335195  0.584487518</span></span>
+<span><span class="co">#&gt; 4 weekday vs weekend  mid  low 0.29441624 0.26111111  0.0333051325  0.900900323</span></span>
+<span><span class="co">#&gt; 5 weekday vs weekend  mid  mid 0.42978003 0.46666667 -0.0368866328 -0.878891544</span></span>
+<span><span class="co">#&gt; 6 weekday vs weekend  mid high 0.27580372 0.27222222  0.0035815003  0.093352074</span></span>
+<span><span class="co">#&gt; 7 weekday vs weekend high  low 0.11505922 0.12435233 -0.0092931099 -0.329460065</span></span>
+<span><span class="co">#&gt; 8 weekday vs weekend high  mid 0.25380711 0.34196891 -0.0881618053 -2.327154276</span></span>
+<span><span class="co">#&gt; 9 weekday vs weekend high high 0.63113367 0.53367876  0.0974549153  2.092734296</span></span>
+<span><span class="co">#&gt;      p_value   sig</span></span>
+<span><span class="co">#&gt; 1 0.77722278 FALSE</span></span>
+<span><span class="co">#&gt; 2 0.99500500 FALSE</span></span>
+<span><span class="co">#&gt; 3 0.56143856 FALSE</span></span>
+<span><span class="co">#&gt; 4 0.38061938 FALSE</span></span>
+<span><span class="co">#&gt; 5 0.37662338 FALSE</span></span>
+<span><span class="co">#&gt; 6 0.92007992 FALSE</span></span>
+<span><span class="co">#&gt; 7 0.77822178 FALSE</span></span>
+<span><span class="co">#&gt; 8 0.02297702  TRUE</span></span>
+<span><span class="co">#&gt; 9 0.04595405  TRUE</span></span></code></pre></div>
+<p>One difference is robust: <code>high -&gt; mid</code> (0.254 weekday,
+0.342 weekend, p = 0.023). Its mirror image — weekend
+<code>high -&gt; high</code> retention falling from 0.631 to 0.534 —
+sits exactly on the significance boundary (p = 0.046) and moves around
+0.05 under other seeds, so it should be read as suggestive, not
+established. Together they tell one coherent story: on weekends, a
+high-effort spell is more likely to soften into the mid range and less
+likely to hold. The other seven edges do not differ; weekday and weekend
+self-regulation share most of their structure.</p>
 </div>
 <div class="section level3">
-<h3 id="a-metric-panel-for-one-pair">A metric panel for one pair<a class="anchor" aria-label="anchor" href="#a-metric-panel-for-one-pair"></a>
+<h3 id="the-metric-panel">The metric panel<a class="anchor" aria-label="anchor" href="#the-metric-panel"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code> picks two groups by name and returns a
-panel of matrix comparison metrics.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">by_context</span>, i <span class="op">=</span> <span class="st">"Home"</span>, j <span class="op">=</span> <span class="st">"Personal"</span><span class="op">)</span></span>
+<p><code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code> condenses the pair into
+matrix-comparison metrics.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">by_day</span>, i <span class="op">=</span> <span class="st">"weekday"</span>, j <span class="op">=</span> <span class="st">"weekend"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network comparison</span></span>
 <span><span class="co">#&gt; ==================</span></span>
 <span><span class="co">#&gt; Summary metrics:</span></span>
 <span><span class="co">#&gt;              category               metric   value</span></span>
-<span><span class="co">#&gt;     Weight Deviations      Mean Abs. Diff.  0.2974</span></span>
-<span><span class="co">#&gt;     Weight Deviations    Median Abs. Diff.  0.3104</span></span>
-<span><span class="co">#&gt;     Weight Deviations            RMS Diff.  0.3315</span></span>
-<span><span class="co">#&gt;     Weight Deviations       Max Abs. Diff.  0.5156</span></span>
-<span><span class="co">#&gt;     Weight Deviations Rel. Mean Abs. Diff.  0.8921</span></span>
-<span><span class="co">#&gt;     Weight Deviations             CV Ratio   1.406</span></span>
-<span><span class="co">#&gt;          Correlations              Pearson -0.5445</span></span>
-<span><span class="co">#&gt;          Correlations             Spearman   -0.55</span></span>
-<span><span class="co">#&gt;          Correlations              Kendall -0.3889</span></span>
-<span><span class="co">#&gt;          Correlations             Distance  0.4772</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Euclidean  0.9944</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Manhattan   2.676</span></span>
-<span><span class="co">#&gt;       Dissimilarities             Canberra   4.256</span></span>
-<span><span class="co">#&gt;       Dissimilarities          Bray-Curtis  0.4461</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Frobenius  0.8119</span></span>
-<span><span class="co">#&gt;          Similarities               Cosine  0.6293</span></span>
-<span><span class="co">#&gt;          Similarities              Jaccard  0.3831</span></span>
-<span><span class="co">#&gt;          Similarities                 Dice  0.5539</span></span>
-<span><span class="co">#&gt;          Similarities              Overlap  0.5539</span></span>
-<span><span class="co">#&gt;          Similarities                   RV  0.3794</span></span>
-<span><span class="co">#&gt;  Pattern Similarities       Rank Agreement  0.8333</span></span>
+<span><span class="co">#&gt;     Weight Deviations      Mean Abs. Diff. 0.03277</span></span>
+<span><span class="co">#&gt;     Weight Deviations    Median Abs. Diff. 0.01313</span></span>
+<span><span class="co">#&gt;     Weight Deviations            RMS Diff. 0.04735</span></span>
+<span><span class="co">#&gt;     Weight Deviations       Max Abs. Diff. 0.09745</span></span>
+<span><span class="co">#&gt;     Weight Deviations Rel. Mean Abs. Diff. 0.09832</span></span>
+<span><span class="co">#&gt;     Weight Deviations             CV Ratio   1.059</span></span>
+<span><span class="co">#&gt;          Correlations              Pearson  0.9657</span></span>
+<span><span class="co">#&gt;          Correlations             Spearman  0.8333</span></span>
+<span><span class="co">#&gt;          Correlations              Kendall  0.6667</span></span>
+<span><span class="co">#&gt;          Correlations             Distance  0.9357</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Euclidean   0.142</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Manhattan   0.295</span></span>
+<span><span class="co">#&gt;       Dissimilarities             Canberra  0.4608</span></span>
+<span><span class="co">#&gt;       Dissimilarities          Bray-Curtis 0.04916</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Frobenius   0.116</span></span>
+<span><span class="co">#&gt;          Similarities               Cosine  0.9922</span></span>
+<span><span class="co">#&gt;          Similarities              Jaccard  0.9063</span></span>
+<span><span class="co">#&gt;          Similarities                 Dice  0.9508</span></span>
+<span><span class="co">#&gt;          Similarities              Overlap  0.9508</span></span>
+<span><span class="co">#&gt;          Similarities                   RV  0.9744</span></span>
+<span><span class="co">#&gt;  Pattern Similarities       Rank Agreement       1</span></span>
 <span><span class="co">#&gt;  Pattern Similarities       Sign Agreement       1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Network metrics (x vs y):</span></span>
-<span><span class="co">#&gt;                       metric      x      y</span></span>
-<span><span class="co">#&gt;                   Node Count      3      3</span></span>
-<span><span class="co">#&gt;                   Edge Count      9      9</span></span>
-<span><span class="co">#&gt;              Network Density      1      1</span></span>
-<span><span class="co">#&gt;                Mean Distance 0.2697 0.2809</span></span>
-<span><span class="co">#&gt;            Mean Out-Strength      1      1</span></span>
-<span><span class="co">#&gt;              SD Out-Strength 0.7008 0.4528</span></span>
-<span><span class="co">#&gt;             Mean In-Strength      1      1</span></span>
-<span><span class="co">#&gt;               SD In-Strength      0      0</span></span>
-<span><span class="co">#&gt;              Mean Out-Degree      3      3</span></span>
-<span><span class="co">#&gt;                SD Out-Degree      0      0</span></span>
-<span><span class="co">#&gt;  Centralization (Out-Degree)      0      0</span></span>
-<span><span class="co">#&gt;   Centralization (In-Degree)      0      0</span></span>
-<span><span class="co">#&gt;                  Reciprocity      1      1</span></span></code></pre></div>
-<p>The Pearson correlation between the two weight matrices is
-<strong>−0.54</strong>: the home and personal-time networks are not
-merely different, they are inversely related — the transitions that are
-strong in one are weak in the other. The mean absolute edge difference
-is 0.30 and the largest single gap is 0.52 (the <code>high → high</code>
-retention). Always name <code>i</code> and <code>j</code>: with more
-than two groups there is no meaningful default pair.</p>
+<span><span class="co">#&gt;                       metric       x      y</span></span>
+<span><span class="co">#&gt;                   Node Count       3      3</span></span>
+<span><span class="co">#&gt;                   Edge Count       9      9</span></span>
+<span><span class="co">#&gt;              Network Density       1      1</span></span>
+<span><span class="co">#&gt;                Mean Distance  0.2199 0.2278</span></span>
+<span><span class="co">#&gt;            Mean Out-Strength       1      1</span></span>
+<span><span class="co">#&gt;              SD Out-Strength 0.03206 0.1015</span></span>
+<span><span class="co">#&gt;             Mean In-Strength       1      1</span></span>
+<span><span class="co">#&gt;               SD In-Strength       0      0</span></span>
+<span><span class="co">#&gt;              Mean Out-Degree       3      3</span></span>
+<span><span class="co">#&gt;                SD Out-Degree       0      0</span></span>
+<span><span class="co">#&gt;  Centralization (Out-Degree)       0      0</span></span>
+<span><span class="co">#&gt;   Centralization (In-Degree)       0      0</span></span>
+<span><span class="co">#&gt;                  Reciprocity       1      1</span></span></code></pre></div>
+<p>A Pearson correlation of 0.966 between the two weight matrices, with
+a maximum absolute difference of 0.097 on the
+<code>high -&gt; high</code> retention: close networks whose one real
+gap is how long high effort lasts. Always name <code>i</code> and
+<code>j</code> — with more than two groups there is no meaningful
+default pair.</p>
 </div>
 <div class="section level3">
 <h3 id="bootstrap-and-bayesian-certainty-per-group">Bootstrap and Bayesian certainty per group<a class="anchor" aria-label="anchor" href="#bootstrap-and-bayesian-certainty-per-group"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code> on the collection resamples
-sequences within each group; <code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> reaches a similar
-verdict from a Dirichlet posterior, without resampling.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">by_context</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Edge                   Home      Personal  Work    </span></span>
-<span><span class="co">#&gt;   ------------------------------------------------------</span></span>
-<span><span class="co">#&gt;   mid→mid               0.470     0.370     0.356   </span></span>
+<p><code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code> resamples sequences within each
+group; <code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> reaches a similar verdict from a
+Dirichlet posterior, without resampling.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">by_day</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Edge                   weekday   weekend </span></span>
+<span><span class="co">#&gt;   --------------------------------------------</span></span>
+<span><span class="co">#&gt;   low→low               0.619     0.632   </span></span>
+<span><span class="co">#&gt;   high→high             0.632     0.533   </span></span>
+<span><span class="co">#&gt;   mid→mid               0.428     0.469   </span></span>
+<span><span class="co">#&gt;   high→mid              0.254     0.342   </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Grouped Bootstrap  [3 groups | 200 iterations | 95% CI]</span></span>
-<span><span class="co">#&gt;   Home                  4 sig / 9 total</span></span>
-<span><span class="co">#&gt;   Personal              3 sig / 9 total</span></span>
-<span><span class="co">#&gt;   Work                  8 sig / 9 total</span></span>
-<span><span class="co">#&gt;   Shared (all groups)   1 edges</span></span></code></pre></div>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; Grouped Bootstrap  [2 groups | 200 iterations | 95% CI]</span></span>
+<span><span class="co">#&gt;   weekday               8 sig / 9 total</span></span>
+<span><span class="co">#&gt;   weekend               4 sig / 9 total</span></span>
+<span><span class="co">#&gt;   Shared (all groups)   4 edges</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Edge                   Home      Personal  Work    </span></span>
-<span><span class="co">#&gt;   ------------------------------------------------------</span></span>
-<span><span class="co">#&gt;   mid→mid               0.470     0.365     0.358   </span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Edge                   weekday   weekend </span></span>
+<span><span class="co">#&gt;   --------------------------------------------</span></span>
+<span><span class="co">#&gt;   high→high             0.630     0.532   </span></span>
+<span><span class="co">#&gt;   low→low               0.619     0.630   </span></span>
+<span><span class="co">#&gt;   mid→mid               0.430     0.466   </span></span>
+<span><span class="co">#&gt;   high→mid              0.254     0.342   </span></span>
+<span><span class="co">#&gt;   mid→low               0.295     0.262   </span></span>
+<span><span class="co">#&gt;   ... and 2 more shared significant edges</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Grouped Bootstrap  [3 groups | NA iterations | 95% CI]</span></span>
-<span><span class="co">#&gt;   Home                  4 sig / 9 total</span></span>
-<span><span class="co">#&gt;   Personal              4 sig / 9 total</span></span>
-<span><span class="co">#&gt;   Work                  9 sig / 9 total</span></span>
-<span><span class="co">#&gt;   Shared (all groups)   1 edges</span></span></code></pre></div>
-<p>Work, with 976 sequences and 2,235 observations, keeps eight of nine
-bootstrap edges and all nine posterior-certain ones; Home and Personal
-keep three to four under either criterion. The groups table from the
-start of this vignette predicted this: equal-looking observation counts
-do not buy equal precision when the observations arrive in short runs,
-because resampling operates on runs, not measurements. Reading
-<code>sequences</code> first is not a formality.</p>
+<span><span class="co">#&gt; Grouped Bootstrap  [2 groups | NA iterations | 95% CI]</span></span>
+<span><span class="co">#&gt;   weekday               9 sig / 9 total</span></span>
+<span><span class="co">#&gt;   weekend               7 sig / 9 total</span></span>
+<span><span class="co">#&gt;   Shared (all groups)   7 edges</span></span></code></pre></div>
+<p>The weekday network, with 2,033 observations behind it, keeps eight
+of nine bootstrap edges and all nine posterior-certain ones; the weekend
+network, with 783, keeps four and seven. Equal sequence counts (238
+against 233) do not buy equal precision when the sequences differ in
+length — a weekend run is a third as long as a weekday run, so the
+weekend estimates simply rest on less data. Reading the index table
+first is not a formality.</p>
 </div>
 <div class="section level3">
 <h3 id="is-first-order-enough-per-group">Is first order enough, per group?<a class="anchor" aria-label="anchor" href="#is-first-order-enough-per-group"></a>
 </h3>
-<p>Each group’s network assumes the next state depends only on the
-current one. <code><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code> (after Anderson &amp;
-Goodman, 1957) checks that assumption group by group.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<p><code><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code> (after Anderson &amp; Goodman, 1957)
+checks the Markov assumption group by group.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Markov Order Test -- 3 groups: Home, Personal, Work</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Markov Order Test -- 2 groups: weekday, weekend</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Home ---</span></span>
+<span><span class="co">#&gt; --- weekday ---</span></span>
 <span><span class="co">#&gt; Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]</span></span>
-<span><span class="co">#&gt;   300 sequences / 792 observations / 3 states</span></span>
+<span><span class="co">#&gt;   238 sequences / 2033 observations / 3 states</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Selected order  BIC: 1   AIC: 3   permutation-LRT: 1</span></span>
+<span><span class="co">#&gt;   Selected order  BIC: 2   AIC: 3   permutation-LRT: 3</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  order  loglik     AIC     BIC df    g2 p_permutation p_asymptotic significant</span></span>
-<span><span class="co">#&gt;      0 -641.97 1287.95 1297.30 NA    NA            NA           NA          NA</span></span>
-<span><span class="co">#&gt;      1 -616.95 1249.90 1287.30  4 49.98   0.001996008 3.638784e-10        TRUE</span></span>
-<span><span class="co">#&gt;      2 -605.72 1251.44 1344.94 12 15.62   0.287425150 2.090956e-01       FALSE</span></span>
-<span><span class="co">#&gt;      3 -594.94 1239.89 1356.75 10 16.43   0.359281437 8.793532e-02       FALSE</span></span>
+<span><span class="co">#&gt;  order   loglik     AIC     BIC df    g2 p_permutation  p_asymptotic</span></span>
+<span><span class="co">#&gt;      0 -2233.12 4470.24 4481.48 NA    NA            NA            NA</span></span>
+<span><span class="co">#&gt;      1 -1963.44 3942.88 3987.82  4 539.1   0.001996008 2.336904e-115</span></span>
+<span><span class="co">#&gt;      2 -1860.32 3772.65 3918.70 12 204.5   0.001996008  3.830703e-37</span></span>
+<span><span class="co">#&gt;      3 -1803.75 3767.49 4216.87 36 111.7   0.001996008  1.110201e-09</span></span>
+<span><span class="co">#&gt;  significant</span></span>
+<span><span class="co">#&gt;           NA</span></span>
+<span><span class="co">#&gt;         TRUE</span></span>
+<span><span class="co">#&gt;         TRUE</span></span>
+<span><span class="co">#&gt;         TRUE</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Personal ---</span></span>
+<span><span class="co">#&gt; --- weekend ---</span></span>
 <span><span class="co">#&gt; Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]</span></span>
-<span><span class="co">#&gt;   306 sequences / 793 observations / 3 states</span></span>
+<span><span class="co">#&gt;   219 sequences / 769 observations / 3 states</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Selected order  BIC: 1   AIC: 1   permutation-LRT: 1</span></span>
+<span><span class="co">#&gt;   Selected order  BIC: 1   AIC: 2   permutation-LRT: 2</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  order  loglik     AIC     BIC df    g2 p_permutation p_asymptotic significant</span></span>
-<span><span class="co">#&gt;      0 -793.46 1590.93 1600.28 NA    NA            NA           NA          NA</span></span>
-<span><span class="co">#&gt;      1 -771.13 1558.26 1595.67  4 43.02   0.001996008 1.023045e-08        TRUE</span></span>
-<span><span class="co">#&gt;      2 -760.74 1567.48 1675.03 12 15.37   0.297405190 2.219595e-01       FALSE</span></span>
-<span><span class="co">#&gt;      3 -743.05 1574.09 1779.83 24 29.95   0.508982036 1.864762e-01       FALSE</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Work ---</span></span>
-<span><span class="co">#&gt; Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]</span></span>
-<span><span class="co">#&gt;   512 sequences / 1771 observations / 3 states</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Selected order  BIC: 1   AIC: 1   permutation-LRT: 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  order   loglik     AIC     BIC df    g2 p_permutation p_asymptotic significant</span></span>
-<span><span class="co">#&gt;      0 -1912.04 3828.08 3839.04 NA    NA            NA           NA          NA</span></span>
-<span><span class="co">#&gt;      1 -1875.41 3766.81 3810.65  4 72.39   0.001996008 7.084272e-15        TRUE</span></span>
-<span><span class="co">#&gt;      2 -1860.87 3773.74 3916.20 12 27.89   0.003992016 5.733952e-03        TRUE</span></span>
-<span><span class="co">#&gt;      3 -1835.40 3828.81 4261.67 36 48.50   0.205588822 7.966126e-02       FALSE</span></span></code></pre></div>
-<p>Home and Personal select order 1 on BIC and the permutation LRT;
-Work’s permutation test flags order 2 while BIC still prefers 1. The
-first-order models above are adequate summaries for home and personal
-time; for work, yesterday’s state carries some extra information, so its
-network should be read as a one-step summary rather than the full
-process.</p>
+<span><span class="co">#&gt;  order  loglik     AIC     BIC df     g2 p_permutation p_asymptotic significant</span></span>
+<span><span class="co">#&gt;      0 -844.60 1693.21 1702.50 NA     NA            NA           NA          NA</span></span>
+<span><span class="co">#&gt;      1 -768.44 1552.88 1590.04  4 149.69   0.001996008 2.367982e-31        TRUE</span></span>
+<span><span class="co">#&gt;      2 -741.43 1534.85 1655.62 12  52.90   0.001996008 4.292255e-07        TRUE</span></span>
+<span><span class="co">#&gt;      3 -720.22 1546.44 1792.63 26  28.57   0.630738523 3.311396e-01       FALSE</span></span></code></pre></div>
+<p>The weekday test prefers a higher order (BIC selects 2, AIC and the
+permutation LRT select 3): within a working week, yesterday’s effort
+carries information beyond today’s. The weekend test is more temperate —
+BIC keeps order 1 and the LRT stops at 2 — though its shorter runs give
+order-3 contexts little data to show up in. Read both networks as
+one-step summaries, with the weekday summary the more visibly incomplete
+of the two.</p>
+</div>
+<div class="section level3">
+<h3 id="stability-under-case-dropping">Stability under case dropping<a class="anchor" aria-label="anchor" href="#stability-under-case-dropping"></a>
+</h3>
+<p>Two checks ask whether the results would survive a smaller sample:
+<code><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code> for the centrality
+<em>orderings</em>, <code><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code> for the edge
+weights themselves (both after Epskamp, Borsboom &amp; Fried, 2018).</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">by_day</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Centrality Stability (2 networks, threshold = 0.70)</span></span>
+<span><span class="co">#&gt;         InStrength OutStrength Betweenness</span></span>
+<span><span class="co">#&gt; weekday        0.6         0.7         0.9</span></span>
+<span><span class="co">#&gt; weekend        0.7         0.5         0.8</span></span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">day_reliability</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability</a></span><span class="op">(</span><span class="va">by_day</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">day_reliability</span></span>
+<span><span class="co">#&gt; Edge-weight Case-dropping Stability (2 networks, threshold = 0.70)</span></span>
+<span><span class="co">#&gt;         n_cases n_edges  CS</span></span>
+<span><span class="co">#&gt; weekday     238       6 0.3</span></span>
+<span><span class="co">#&gt; weekend     233       6 0.5</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">day_reliability</span><span class="op">)</span></span></code></pre></div>
+<p><img src="group-models_files/figure-html/casedrop-plot-1.png" class="r-plt" alt="Case-dropping stability curves for the weekday and weekend networks, showing the correlation between full-sample and subsampled edge weights declining as larger fractions of sequences are dropped." width="100%" style="display: block; margin: auto;"></p>
+<p>The verdicts are mixed, and the mixture is the point. The centrality
+orderings are serviceable (coefficients of 0.5 to 0.9), but the
+edge-weight CS-coefficients come back at 0.3 for weekdays and 0.5 for
+weekends — at or below the 0.5 bar for acceptable. Individual edge
+weights from this panel should be reported with their intervals, not as
+point values, and the permutation result above should carry the
+inferential weight. A stability check that returns an uncomfortable
+number has done its job.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="pruning-and-stability">Pruning and stability<a class="anchor" aria-label="anchor" href="#pruning-and-stability"></a>
+<h2 id="pruning-the-collection">Pruning the collection<a class="anchor" aria-label="anchor" href="#pruning-the-collection"></a>
 </h2>
 <p><code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code> applies group-wise and returns the same
 class, so a pruned collection flows back into every verb above.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">by_context</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Group Networks (3 groups)</span></span>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">by_day</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Group Networks (2 groups)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Group     Nodes  Edges  Weights</span></span>
-<span><span class="co">#&gt;   Home      3      6      [0.148, 0.762]</span></span>
-<span><span class="co">#&gt;   Personal  3      6      [0.286, 0.664]</span></span>
-<span><span class="co">#&gt;   Work      3      6      [0.315, 0.518]</span></span></code></pre></div>
-<p>Each context keeps six of its nine edges at a 0.3 threshold. Prune
-after testing, not before: the permutation table above is exactly the
-kind of result a premature prune would have deleted edges from.</p>
-<p>Two stability checks ask whether the results would survive a smaller
-sample. <code><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code> tracks the centrality
-<em>ordering</em> under case dropping;
-<code><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code> tracks the edge weights themselves
-(both follow the case-drop logic of Epskamp, Borsboom &amp; Fried,
-2018).</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">by_context</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Centrality Stability (3 networks, threshold = 0.70)</span></span>
-<span><span class="co">#&gt;          InStrength OutStrength Betweenness</span></span>
-<span><span class="co">#&gt; Home            0.7         0.8         0.4</span></span>
-<span><span class="co">#&gt; Personal        0.8         0.8         0.8</span></span>
-<span><span class="co">#&gt; Work            0.7         0.6          NA</span></span></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">context_reliability</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability</a></span><span class="op">(</span><span class="va">by_context</span>, iter <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>                                            seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">context_reliability</span></span>
-<span><span class="co">#&gt; Edge-weight Case-dropping Stability (3 networks, threshold = 0.70)</span></span>
-<span><span class="co">#&gt;          n_cases n_edges  CS</span></span>
-<span><span class="co">#&gt; Home         832       6 0.6</span></span>
-<span><span class="co">#&gt; Personal     822       6 0.6</span></span>
-<span><span class="co">#&gt; Work         976       6 0.6</span></span></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">context_reliability</span><span class="op">)</span></span></code></pre></div>
-<p><img src="group-models_files/figure-html/casedrop-plot-1.png" class="r-plt" alt="Case-dropping stability curves for the three context networks, showing the correlation between full-sample and subsampled edge weights declining as larger fractions of sequences are dropped." width="100%" style="display: block; margin: auto;"></p>
-<p>In-strength and out-strength orderings hold at 0.6 to 0.8 across
-groups, and every group’s edge weights carry a CS-coefficient of 0.6 —
-above the 0.5 bar for acceptable, short of the 0.7 bar for excellent.
-Work’s betweenness column is <code>NA</code> because its betweenness
-scores are degenerate (the centrality table above showed zeros); a
-coefficient cannot be computed for an ordering that does not exist. The
-verdict across both checks: these grouped estimates tolerate losing
-roughly half their sequences, and claims resting on finer distinctions
-than that should not be made from this sample.</p>
+<span><span class="co">#&gt;   Group    Nodes  Edges  Weights</span></span>
+<span><span class="co">#&gt;   weekday  3      5      [0.098, 0.631]</span></span>
+<span><span class="co">#&gt;   weekend  3      5      [0.085, 0.633]</span></span></code></pre></div>
+<p>Each day type keeps five of its nine edges at a 0.3 threshold. Prune
+after testing, not before: the <code>high -&gt; mid</code> edge that
+carries the weekend difference sits at 0.254 on weekdays — a premature
+prune would have deleted one side of the finding.</p>
 </div>
 <div class="section level2">
 <h2 id="what-to-watch-for">What to watch for<a class="anchor" aria-label="anchor" href="#what-to-watch-for"></a>
@@ -754,19 +651,18 @@ than that should not be made from this sample.</p>
 <p>Four failure modes, all of which announce themselves:</p>
 <ul>
 <li>
-<strong>A level with almost no data.</strong> <code>Other</code>
-above: it gets a network because it is a level, and the network means
-nothing. The <code>groups</code> table is the guard; read
-<code>sequences</code> and <code>observations</code> before edges.</li>
+<strong>A level with almost no data.</strong> Every level of the
+grouping column gets a network, however little stands behind it. The
+<code>groups</code> index is the guard; read <code>sequences</code> and
+<code>observations</code> before edges.</li>
 <li>
 <strong>A group column that alternates too fast.</strong> Every
 change of group cuts a sequence, so a column that flips at almost every
 observation leaves runs of length one and no transitions at all. In the
 extreme case — a group whose observations are <em>never</em> adjacent —
-the model warns that the group’s network is empty. This study’s contexts
-alternate heavily (about 2,630 runs across 4,868 observations) and still
-leave 487 to 1,259 transitions per context; a faster-alternating column
-would not.</li>
+the model warns that the group’s network is empty. Day type is a
+well-behaved grouping variable precisely because it changes only twice a
+week.</li>
 <li>
 <strong>A group whose rows do not survive discretization.</strong>
 Temporal discretizers such as <code>ordinal</code> drop tail rows that
@@ -791,16 +687,16 @@ itself is the point. Pooled discretization and boundary-safe sequence
 cutting come built in.</li>
 <li>
 <strong>Two models plus <code>permutation(x, y)</code></strong> —
-the split is not a column but a derived rule (a date cutoff, an external
-roster), and there are exactly two sides. Fix the state alphabet
-yourself with explicit <code>breaks</code>, or the comparison inherits
-the threshold artifact. The companion vignette
+the split is not a column but a derived rule (an occasion cutoff, an
+external roster), and there are exactly two sides. Fix the state
+alphabet yourself with explicit <code>breaks</code>, or the comparison
+inherits the threshold artifact. The companion vignette
 <code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow", package = "tsn")</a></code> runs this
-design on the step-count data.</li>
+design on the <code>srl</code> panel’s course halves.</li>
 <li>
 <strong><code><a href="../reference/series_networks.html">series_networks()</a></code></strong> — the unit of
-comparison is the individual series (one network per participant), not a
-condition shared across series.</li>
+comparison is the individual student (one network per person), not a
+condition shared across students.</li>
 <li>
 <strong>A single pooled model</strong> — no conditioning variable at
 all; the average dynamics are the question.</li>

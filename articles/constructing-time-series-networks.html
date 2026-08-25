@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,8 +67,8 @@ López-Pernas</h4>
 Finland<br><h4 data-toc-skip class="author">Manuel
 J. Gómez</h4>
             <address class="author_afil">
-      University of Murcia<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/pleasure-all-functions.Rmd" class="external-link"><code>vignettes/pleasure-all-functions.Rmd</code></a></small>
-      <div class="d-none name"><code>pleasure-all-functions.Rmd</code></div>
+      University of Murcia<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/constructing-time-series-networks.Rmd" class="external-link"><code>vignettes/constructing-time-series-networks.Rmd</code></a></small>
+      <div class="d-none name"><code>constructing-time-series-networks.Rmd</code></div>
     </address>
 </address>
 </address>
@@ -220,50 +220,47 @@ indexes the results by source series.</p>
 <div class="section level2">
 <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
-<p>The <code>motivation</code> data set bundled with the package is an
-example of experience-sampling, or intensive longitudinal, data: the
-same respondent was prompted several times a day and asked to report, in
-the moment, how they felt about the activity they were engaged in. Each
-of its 4,871 rows is one such momentary report, collected between
-September 2018 and July 2021, and no values are missing. The thirteen
-columns fall into a few natural groups. Three record motivation
-(<code>autonomy</code>, <code>competence</code>,
-<code>relatedness</code>); three record appraisal of the current
-activity (<code>pleasure</code>, <code>interest</code>,
-<code>importance</code>); several describe the situation and its
-emotional framing, together with a categorical context label whose
-values are Home, Work, Personal, and Other; and one records overall
-<code>mood</code>. Two further columns place each report in time, giving
-the calendar date and the position of the report within that day’s
-sequence of prompts.</p>
-<p>This vignette follows a single one of these signals, the
-<code>pleasure</code> rating, which captures how pleasant the respondent
-found the current activity at the moment of the prompt. To keep every
-network small enough to read in full, the analysis uses only the first
+<p>The <code>esm_srl</code> data set bundled with the package is an
+example of experience-sampling, or intensive longitudinal, data: 41
+students were prompted repeatedly, usually more than once a day, and
+asked to rate their momentary self-regulation, motivation, and anxiety
+on 0-100 scales. Each of its 2,820 rows is one such momentary report.
+The data are fully anonymized — the participant identifiers are
+fictional names and the calendar dates have been shifted by a constant
+offset, so within-person spacing is preserved while no real dates or
+identities remain. The nine indicators span self-regulation
+(<code>planning</code>, <code>monitoring</code>, <code>effort</code>,
+<code>regulation</code>), motivation (<code>efficacy</code>,
+<code>value</code>, <code>motivated</code>, <code>enjoyment</code>), and
+<code>anxiety</code>; a derived <code>day_type</code> column marks
+weekday and weekend reports.</p>
+<p>This vignette follows a single one of these signals for a single
+student: the momentary <code>anxiety</code> ratings of the participant
+recorded as Jamal, who reported 79 occasions in total. To keep every
+network small enough to read in full, the analysis uses only his first
 60 reports, which each verb selects by name from the data frame. Passing
 the data frame rather than a bare vector preserves the recorded order of
 the observations, and that order is what every method below treats as
 the flow of time.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"motivation"</span>, package <span class="op">=</span> <span class="st">"tsn"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"esm_srl"</span>, package <span class="op">=</span> <span class="st">"tsn"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">pleasure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">motivation</span>, <span class="fl">60</span><span class="op">)</span></span>
+<span><span class="va">anxiety</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">esm_srl</span>, <span class="va">name</span> <span class="op">==</span> <span class="st">"Jamal"</span><span class="op">)</span>, <span class="fl">60</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pleasure</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">anxiety</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 60 13</span></span></code></pre></div>
-<p>These 60 reports were collected over 21 days, from 29 September to 19
-October 2018. The pleasure ratings occupy the observed range 6 to 44,
-with a median of 30, a mean of 26.8, and a standard deviation of about
-10, so they spread across a wide band rather than clustering near a
-single value. The segment carries no systematic trend: the first twenty
-reports average 27.5 and the last twenty average 27.0, essentially
-unchanged. The representations that follow should therefore be read as
-descriptions of short-run fluctuation around a roughly constant level,
-not of a rising or falling series. The distinction matters for
-interpretation, because several of the constructions below, in
-particular the visibility graph and the trend labels, respond to the
-local rises and falls of the series rather than to its overall
-direction.</p>
+<p>These 60 reports span 31 anonymized calendar days. The anxiety
+ratings occupy the full observed range 0 to 100, with a median of 49, a
+mean of 47.0, and a standard deviation of about 27, so they spread
+across a wide band rather than clustering near a single value. The
+segment carries no systematic trend: the first twenty reports average
+44.9 and the last twenty average 46.3, essentially unchanged. The
+representations that follow should therefore be read as descriptions of
+short-run fluctuation around a roughly constant level, not of a rising
+or falling series. The distinction matters for interpretation, because
+several of the constructions below, in particular the visibility graph
+and the trend labels, respond to the local rises and falls of the series
+rather than to its overall direction.</p>
 </div>
 <div class="section level2">
 <h2 id="transition-network-analysis">Transition Network Analysis<a class="anchor" aria-label="anchor" href="#transition-network-analysis"></a>
@@ -281,29 +278,29 @@ the observations and replaces their continuous values with ordered
 categorical states.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">states</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/discretize.html">discretize</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">anxiety</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Low"</span>, <span class="st">"Middle"</span>, <span class="st">"High"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">states</span></span>
 <span><span class="co">#&gt; &lt;tsn_states&gt; quantile discretization (transform: none): 60 observations, 3 states</span></span>
-<span><span class="co">#&gt;        id time value  state probability</span></span>
-<span><span class="co">#&gt;  pleasure    1    32 Middle           1</span></span>
-<span><span class="co">#&gt;  pleasure    2    32 Middle           1</span></span>
-<span><span class="co">#&gt;  pleasure    3    32 Middle           1</span></span>
-<span><span class="co">#&gt;  pleasure    4    26 Middle           1</span></span>
-<span><span class="co">#&gt;  pleasure    5    16    Low           1</span></span>
-<span><span class="co">#&gt;  pleasure    6     6    Low           1</span></span>
-<span><span class="co">#&gt;  pleasure    7    30 Middle           1</span></span>
-<span><span class="co">#&gt;  pleasure    8     6    Low           1</span></span>
-<span><span class="co">#&gt;  pleasure    9    44   High           1</span></span>
-<span><span class="co">#&gt;  pleasure   10    42   High           1</span></span>
+<span><span class="co">#&gt;       id time     value  state probability</span></span>
+<span><span class="co">#&gt;  anxiety    1 18.279570    Low           1</span></span>
+<span><span class="co">#&gt;  anxiety    2 58.064516 Middle           1</span></span>
+<span><span class="co">#&gt;  anxiety    3 16.129032    Low           1</span></span>
+<span><span class="co">#&gt;  anxiety    4 56.989247 Middle           1</span></span>
+<span><span class="co">#&gt;  anxiety    5 55.913978 Middle           1</span></span>
+<span><span class="co">#&gt;  anxiety    6 70.967742   High           1</span></span>
+<span><span class="co">#&gt;  anxiety    7 74.193548   High           1</span></span>
+<span><span class="co">#&gt;  anxiety    8 56.989247 Middle           1</span></span>
+<span><span class="co">#&gt;  anxiety    9  8.602151    Low           1</span></span>
+<span><span class="co">#&gt;  anxiety   10 50.537634 Middle           1</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">states</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    state count proportion mean_value</span></span>
-<span><span class="co">#&gt; 1    Low    20  0.3333333   14.75000</span></span>
-<span><span class="co">#&gt; 2 Middle    23  0.3833333   29.13043</span></span>
-<span><span class="co">#&gt; 3   High    17  0.2833333   37.82353</span></span></code></pre></div>
+<span><span class="co">#&gt; 1    Low    20  0.3333333   17.04301</span></span>
+<span><span class="co">#&gt; 2 Middle    20  0.3333333   45.69892</span></span>
+<span><span class="co">#&gt; 3   High    20  0.3333333   78.38710</span></span></code></pre></div>
 <p>Each row records the source identifier, the time index, the observed
 value, the assigned state, and an assignment probability. The
 <code>probability</code> column reports the confidence of the
@@ -312,10 +309,9 @@ used here, and takes values in the unit interval for probabilistic
 discretizers such as <code>gaussian</code> or <code>kde</code>. Because
 the state labels follow the ordering of the values, <code>Low</code>,
 <code>Middle</code>, and <code>High</code> retain a strict ordinal
-meaning. Quantile boundaries do not, in general, divide the observations
-into exactly equal groups when values are tied; in this segment the
-counts are 20 <code>Low</code>, 23 <code>Middle</code>, and 17
-<code>High</code>.</p>
+meaning. Quantile boundaries need not divide tied observations into
+exactly equal groups; in this segment they happen to do so, with 20
+observations in each state and state means of 17.0, 45.7, and 78.4.</p>
 <p>The state sequence is the intermediate object from which every
 transition network below is built. Its three states become the network
 nodes, and each adjacent pair of observations defines one possible
@@ -324,7 +320,7 @@ this same sequence; what differs between them is the quantity placed on
 the edges.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">states</span>, type <span class="op">=</span> <span class="st">"ribbon"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/discretize-plot-1.png" class="r-plt" alt="Ribbon plot of the pleasure series with a strip of Low, Middle, and High states drawn beneath the measured values along observation order." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/discretize-plot-1.png" class="r-plt" alt="Ribbon plot of the anxiety series with a strip of Low, Middle, and High states drawn beneath the measured values along observation order." width="100%" style="display: block; margin: auto;"></p>
 <p>The ribbon view places the discrete states beneath the measured
 series, so the correspondence between an observation and its assigned
 state stays visible without a full-panel overlay obscuring the values
@@ -342,38 +338,41 @@ weights of a state sum to one.</p>
 <span></span>
 <span><span class="va">probabilities</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.227, 0.409]  |  mean: 0.333</span></span>
+<span><span class="co">#&gt;   Weights: [0.158, 0.526]  |  mean: 0.333</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;            Low Middle  High</span></span>
-<span><span class="co">#&gt;   Low    0.300  0.350 0.350</span></span>
-<span><span class="co">#&gt;   Middle 0.364  0.409 0.227</span></span>
-<span><span class="co">#&gt;   High   0.353  0.353 0.294 </span></span>
+<span><span class="co">#&gt;   Low    0.316  0.526 0.158</span></span>
+<span><span class="co">#&gt;   Middle 0.350  0.200 0.450</span></span>
+<span><span class="co">#&gt;   High   0.300  0.300 0.400 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Middle        1.000  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Low           0.000  </span></span>
+<span><span class="co">#&gt;   Low           1.000  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   Middle        0.000  </span></span>
 <span><span class="co">#&gt;   High          0.000</span></span></code></pre></div>
 <p>The diagonal entries measure persistence, the probability that the
-next observation stays in the current state: 0.300 for <code>Low</code>,
-0.409 for <code>Middle</code>, and 0.294 for <code>High</code>.
-Comparing these with the marginal state proportions (0.333, 0.383, and
-0.283) separates persistence from mere prevalence. <code>Middle</code>
-and <code>High</code> both persist above their marginal share, so a
-<code>Middle</code> or <code>High</code> observation is more likely to
-be followed by its own state than random ordering would imply.
-<code>Low</code> sits marginally below its share (0.300 against 0.333),
-indicating no such tendency to persist over this short segment.</p>
+next observation stays in the current state: 0.316 for <code>Low</code>,
+0.200 for <code>Middle</code>, and 0.400 for <code>High</code>.
+Comparing these with the marginal state proportions (each exactly one
+third here) separates persistence from mere prevalence.
+<code>High</code> persists above its marginal share, so a high-anxiety
+report is more likely to be followed by another one than random ordering
+would imply. <code>Low</code> sits near its share, while
+<code>Middle</code> falls well below it: after a mid-range report the
+series usually leaves, most often upward (<code>Middle</code> to
+<code>High</code> is 0.450). The single largest transition probability
+is <code>Low</code> to <code>Middle</code> at 0.526 — low anxiety
+resolves toward the middle of the scale rather than holding.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">probabilities</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/ts-tna-plot-1.png" class="r-plt" alt="Directed transition-probability network over the Low, Middle, and High states, with arrows labelled by conditional probabilities." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/ts-tna-plot-1.png" class="r-plt" alt="Directed transition-probability network over the Low, Middle, and High states, with arrows labelled by conditional probabilities." width="100%" style="display: block; margin: auto;"></p>
 <p>Row normalization is what makes this representation interpretable.
 Each row is the conditional distribution of the next state given the
 current one, so the outgoing patterns of different states remain
-comparable even though the states have different marginal frequencies. A
-sequence of 60 observations is thereby reduced to three nodes and the
-directed relationships among them, with the temporal order retained as
-the basis for the estimates.</p>
+comparable even though the states may have different marginal
+frequencies. A sequence of 60 observations is thereby reduced to three
+nodes and the directed relationships among them, with the temporal order
+retained as the basis for the estimates.</p>
 </div>
 <div class="section level3">
 <h3 id="transition-frequencies-with-ts_ftna">Transition frequencies with <code>ts_ftna()</code><a class="anchor" aria-label="anchor" href="#transition-frequencies-with-ts_ftna"></a>
@@ -387,34 +386,32 @@ absolute number of times each transition occurred.</p>
 <span></span>
 <span><span class="va">counts</span></span>
 <span><span class="co">#&gt; Transition Network (frequency counts) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [5.000, 9.000]  |  mean: 6.556</span></span>
+<span><span class="co">#&gt;   Weights: [3.000, 10.000]  |  mean: 6.556</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;          Low Middle High</span></span>
-<span><span class="co">#&gt;   Low      6      7    7</span></span>
-<span><span class="co">#&gt;   Middle   8      9    5</span></span>
-<span><span class="co">#&gt;   High     6      6    5 </span></span>
+<span><span class="co">#&gt;   Low      6     10    3</span></span>
+<span><span class="co">#&gt;   Middle   7      4    9</span></span>
+<span><span class="co">#&gt;   High     6      6    8 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Middle        1.000  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Low           0.000  </span></span>
+<span><span class="co">#&gt;   Low           1.000  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   Middle        0.000  </span></span>
 <span><span class="co">#&gt;   High          0.000</span></span></code></pre></div>
 <p>The 60 observations form 59 adjacent pairs, so the count matrix sums
-to 59. The most frequent single transition is <code>Middle</code> to
-<code>Middle</code>, which occurs 9 times and is the only
-self-transition that is also the largest count in its row. The
-<code>Low</code> and <code>High</code> rows are more evenly spread: a
-<code>Low</code> observation is followed equally often by
-<code>Middle</code> or <code>High</code> (7 each) rather than by another
-<code>Low</code> (6), so persistence, although present, does not
-dominate the raw counts here. The frequency and probability networks
-describe the same transitions but answer different questions: the
-frequency network reports <strong>how often</strong> each transition
-occurred, whereas the probability network reports <strong>how
-likely</strong> it is given the current state.</p>
+to 59. The most frequent single transition is <code>Low</code> to
+<code>Middle</code>, which occurs 10 times; the largest self-transition,
+<code>High</code> to <code>High</code>, occurs 8. No row is dominated by
+its own diagonal — <code>Middle</code> follows itself only 4 times
+against 16 departures — so persistence, although present for
+<code>High</code>, does not dominate the raw counts here. The frequency
+and probability networks describe the same transitions but answer
+different questions: the frequency network reports <strong>how
+often</strong> each transition occurred, whereas the probability network
+reports <strong>how likely</strong> it is given the current state.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/ts-ftna-plot-1.png" class="r-plt" alt="Directed frequency transition network over the three states, with arrows labelled by observed transition counts." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/ts-ftna-plot-1.png" class="r-plt" alt="Directed frequency transition network over the three states, with arrows labelled by observed transition counts." width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="state-co-occurrence-with-ts_cna">State co-occurrence with <code>ts_cna()</code><a class="anchor" aria-label="anchor" href="#state-co-occurrence-with-ts_cna"></a>
@@ -428,26 +425,26 @@ directed transition networks.</p>
 <span></span>
 <span><span class="va">cooccurrence</span></span>
 <span><span class="co">#&gt; Co-occurrence Network [undirected]</span></span>
-<span><span class="co">#&gt;   Weights: [136.000, 460.000]  |  mean: 295.000</span></span>
+<span><span class="co">#&gt;   Weights: [190.000, 400.000]  |  mean: 295.000</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;          Low Middle High</span></span>
-<span><span class="co">#&gt;   Low    190    460  340</span></span>
-<span><span class="co">#&gt;   Middle 460    253  391</span></span>
-<span><span class="co">#&gt;   High   340    391  136</span></span></code></pre></div>
+<span><span class="co">#&gt;   Low    190    400  400</span></span>
+<span><span class="co">#&gt;   Middle 400    190  400</span></span>
+<span><span class="co">#&gt;   High   400    400  190</span></span></code></pre></div>
 <p>For a single sequence, these co-occurrence counts follow directly
 from the marginal state frequencies. An off-diagonal entry is the
-product of the two state counts, so the
-<code>Low</code>-<code>Middle</code> weight is
-<code>20 * 23 = 460</code>; a diagonal entry counts the unordered pairs
-within a state, so the <code>Low</code>-<code>Low</code> weight is
+product of the two state counts, so with 20 observations per state every
+between-state weight is <code>20 * 20 = 400</code>; a diagonal entry
+counts the unordered pairs within a state, so every self-weight is
 <code>20 * 19 / 2 = 190</code>. The network therefore reflects the
 composition of the state alphabet rather than the temporal direction of
-transitions. A strong edge means the two states are both common, not
-that one tends to follow the other.</p>
+transitions — with exactly equal state counts it is completely uniform.
+A strong edge means the two states are both common, not that one tends
+to follow the other.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cooccurrence</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/ts-cna-plot-1.png" class="r-plt" alt="Undirected co-occurrence network over the three states, with symmetric edges weighted by state co-occurrence." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/ts-cna-plot-1.png" class="r-plt" alt="Undirected co-occurrence network over the three states, with symmetric edges weighted by state co-occurrence." width="100%" style="display: block; margin: auto;"></p>
 <p>The symmetric drawing makes the distinction explicit: an edge carries
 no source-to-target direction, in contrast to the transition networks
 above.</p>
@@ -464,30 +461,30 @@ probability network.</p>
 <span></span>
 <span><span class="va">attention</span></span>
 <span><span class="co">#&gt; Attention Network (decay-weighted transitions) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [2.875, 5.015]  |  mean: 3.778</span></span>
+<span><span class="co">#&gt;   Weights: [2.462, 5.000]  |  mean: 3.778</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;            Low Middle  High</span></span>
-<span><span class="co">#&gt;   Low    3.524  4.055 4.031</span></span>
-<span><span class="co">#&gt;   Middle 5.015  4.801 2.988</span></span>
-<span><span class="co">#&gt;   High   3.085  3.625 2.875 </span></span>
+<span><span class="co">#&gt;   Low    3.470  4.793 2.462</span></span>
+<span><span class="co">#&gt;   Middle 3.771  2.867 5.000</span></span>
+<span><span class="co">#&gt;   High   3.738  3.726 4.172 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Middle        1.000  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Low           0.000  </span></span>
+<span><span class="co">#&gt;   Low           1.000  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   Middle        0.000  </span></span>
 <span><span class="co">#&gt;   High          0.000</span></span></code></pre></div>
-<p>The weights range from 2.875 to 5.015. Unlike the frequency and
+<p>The weights range from 2.462 to 5.000. Unlike the frequency and
 probability networks, the largest weights here are off-diagonal: the
-strongest attention-weighted transition is <code>Middle</code> to
-<code>Low</code> (5.015), and the persistence diagonals are not the
-dominant entries in their rows. The attention mechanism consequently
-redistributes emphasis away from the self-transitions that the raw
-counts favour, and the weights should be read on the model’s own
-attention scale rather than compared directly with counts or
+strongest attention-weighted transitions are <code>Middle</code> to
+<code>High</code> (5.000) and <code>Low</code> to <code>Middle</code>
+(4.793), and the persistence diagonals are not the dominant entries in
+their rows. The attention mechanism consequently redistributes emphasis
+away from self-transitions, and the weights should be read on the
+model’s own attention scale rather than compared directly with counts or
 probabilities.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">attention</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/ts-atna-plot-1.png" class="r-plt" alt="Directed attention-weighted transition network over the three states, with edges weighted by accumulated attention values." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/ts-atna-plot-1.png" class="r-plt" alt="Directed attention-weighted transition network over the three states, with edges weighted by accumulated attention values." width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="indexing-the-model-with-series_networks">Indexing the model with <code>series_networks()</code><a class="anchor" aria-label="anchor" href="#indexing-the-model-with-series_networks"></a>
@@ -497,20 +494,20 @@ network models attached to the source series. It is designed for
 analyses that extract networks across many series at once, where the
 index preserves the link between each series and its model. With a
 single input series it returns one entry, corresponding to
-<code>pleasure</code>.</p>
+<code>anxiety</code>.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">individual</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">probabilities</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">individual</span></span>
-<span><span class="co">#&gt;    series type observations states edges</span></span>
-<span><span class="co">#&gt;  pleasure  tna           60      3     9</span></span></code></pre></div>
+<span><span class="co">#&gt;   series type observations states edges</span></span>
+<span><span class="co">#&gt;  anxiety  tna           60      3     9</span></span></code></pre></div>
 <p>The index records the source series, the network type, and the number
 of observations, states, and edges. For the transition-probability
 network the three states generate nine directed relationships, the six
 between distinct states plus the three self-transitions.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">individual</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/series-networks-plot-1.png" class="r-plt" alt="The single indexed transition-probability network for the pleasure series, drawn from the series_networks collection." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/series-networks-plot-1.png" class="r-plt" alt="The single indexed transition-probability network for the anxiety series, drawn from the series_networks collection." width="100%" style="display: block; margin: auto;"></p>
 <p>The collection thus provides a higher-level handle on the extracted
 networks while keeping their provenance. Given several source series,
 the same structure organizes and compares their models
@@ -528,46 +525,47 @@ of the series length, which is 6 observations here, and the default
 Theil-Sen slope limits the influence of isolated extreme ratings.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">directions</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/trend.html">trend</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span></span>
+<span>  data <span class="op">=</span> <span class="va">anxiety</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">directions</span></span>
 <span><span class="co">#&gt; &lt;tsn_trend&gt; slope (robust), window 6: 60 observations across 1 series</span></span>
-<span><span class="co">#&gt;        id time value    metric      state</span></span>
-<span><span class="co">#&gt;  pleasure    1    32        NA    Initial</span></span>
-<span><span class="co">#&gt;  pleasure    2    32        NA    Initial</span></span>
-<span><span class="co">#&gt;  pleasure    3    32 -5.333333 Descending</span></span>
-<span><span class="co">#&gt;  pleasure    4    26 -5.333333 Descending</span></span>
-<span><span class="co">#&gt;  pleasure    5    16 -5.200000 Descending</span></span>
-<span><span class="co">#&gt;  pleasure    6     6  1.333333  Ascending</span></span>
-<span><span class="co">#&gt;  pleasure    7    30  7.000000  Turbulent</span></span>
-<span><span class="co">#&gt;  pleasure    8     6  6.200000  Ascending</span></span>
-<span><span class="co">#&gt;  pleasure    9    44 -0.800000 Descending</span></span>
-<span><span class="co">#&gt;  pleasure   10    42 -3.500000  Turbulent</span></span>
+<span><span class="co">#&gt;       id time     value    metric      state</span></span>
+<span><span class="co">#&gt;  anxiety    1 18.279570        NA    Initial</span></span>
+<span><span class="co">#&gt;  anxiety    2 58.064516        NA    Initial</span></span>
+<span><span class="co">#&gt;  anxiety    3 16.129032  9.408602  Ascending</span></span>
+<span><span class="co">#&gt;  anxiety    4 56.989247  5.734767  Ascending</span></span>
+<span><span class="co">#&gt;  anxiety    5 55.913978  6.989247  Ascending</span></span>
+<span><span class="co">#&gt;  anxiety    6 70.967742 -1.075269 Descending</span></span>
+<span><span class="co">#&gt;  anxiety    7 74.193548 -5.107527  Turbulent</span></span>
+<span><span class="co">#&gt;  anxiety    8 56.989247 -3.225806 Descending</span></span>
+<span><span class="co">#&gt;  anxiety    9  8.602151  1.792115  Ascending</span></span>
+<span><span class="co">#&gt;  anxiety   10 50.537634  1.792115  Turbulent</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">directions</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        state count proportion</span></span>
-<span><span class="co">#&gt; 1  Ascending    21 0.35000000</span></span>
-<span><span class="co">#&gt; 2 Descending    17 0.28333333</span></span>
-<span><span class="co">#&gt; 3       Flat     4 0.06666667</span></span>
-<span><span class="co">#&gt; 4  Turbulent    13 0.21666667</span></span>
-<span><span class="co">#&gt; 5    Initial     5 0.08333333</span></span></code></pre></div>
-<p><code>Ascending</code> is the most common label with 21 observations,
-followed by <code>Descending</code> with 17, <code>Turbulent</code> with
-13, <code>Initial</code> with 5, and <code>Flat</code> with 4. The near
-balance between ascending and descending positions is what a segment
-without drift should produce: local direction keeps reversing rather
-than accumulating in one direction. <code>Initial</code> marks the
-leading positions that lack a complete centered window, and
-<code>Missing Data</code> would mark absent values, of which this
-segment has none.</p>
+<span><span class="co">#&gt; 1  Ascending    24 0.40000000</span></span>
+<span><span class="co">#&gt; 2 Descending    21 0.35000000</span></span>
+<span><span class="co">#&gt; 3  Turbulent    10 0.16666667</span></span>
+<span><span class="co">#&gt; 4    Initial     5 0.08333333</span></span></code></pre></div>
+<p><code>Ascending</code> is the most common label with 24 observations,
+followed by <code>Descending</code> with 21, <code>Turbulent</code> with
+10, and <code>Initial</code> with 5. The near balance between ascending
+and descending positions is what a segment without drift should produce:
+local direction keeps reversing rather than accumulating in one
+direction. No observation earns the <code>Flat</code> label at all — in
+this segment the local slope is never both small and steady for a full
+window, which is itself a description of how restless the momentary
+ratings are. <code>Initial</code> marks the leading positions that lack
+a complete centered window, and <code>Missing Data</code> would mark
+absent values, of which this segment has none.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">directions</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/trend-plot-1.png" class="r-plt" alt="The pleasure series with each observation coloured by its trend label: Ascending, Descending, Flat, Turbulent, or Initial." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/trend-plot-1.png" class="r-plt" alt="The anxiety series with each observation coloured by its trend label: Ascending, Descending, Turbulent, or Initial." width="100%" style="display: block; margin: auto;"></p>
 <p>The default plot colours each observation by its trend label.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">directions</span>, type <span class="op">=</span> <span class="st">"panels"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/trend-panels-1.png" class="r-plt" alt="Two stacked panels: the pleasure series on top and its rolling slope metric below, with a shaded flat band marking near-zero slope." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/trend-panels-1.png" class="r-plt" alt="Two stacked panels: the anxiety series on top and its rolling slope metric below, with a shaded flat band marking near-zero slope." width="100%" style="display: block; margin: auto;"></p>
 <p>The panel view places the rolling metric below the measurements, so
 the points at which the metric crosses the flat band can be checked
 against the assigned direction.</p>
@@ -582,48 +580,48 @@ they are joined only when every intervening value lies below both
 endpoints, a strictly stronger condition.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">natural</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vg.html">vg</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span></span>
+<span>  data <span class="op">=</span> <span class="va">anxiety</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">natural</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       method unit nodes dyads edges    density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 visibility time    60   143   143 0.08079096              1              1</span></span>
+<span><span class="co">#&gt; 1 visibility time    60   144   144 0.08135593              1              1</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The natural visibility graph has 60 nodes and 143 edges. At this
+<p>The natural visibility graph has 60 nodes and 144 edges. At this
 length the edges remain distinguishable, so it can be drawn directly.
 Node size encodes degree, and the peaks accumulate the most connections
 because they stay visible over the smaller values around them.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">natural</span>, layout <span class="op">=</span> <span class="st">"fr"</span>, node_size_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.4</span>, <span class="fl">4.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/vg-network-1.png" class="r-plt" alt="Natural visibility graph of sixty pleasure observations, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the high-degree hubs correspond to peaks that see far along the series, spread apart so individual nodes stay distinguishable." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/vg-network-1.png" class="r-plt" alt="Natural visibility graph of sixty anxiety observations, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the high-degree hubs correspond to peaks that see far along the series, spread apart so individual nodes stay distinguishable." width="100%" style="display: block; margin: auto;"></p>
 <p>The horizontal rule keeps the same 60 nodes but fewer edges.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">horizontal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vg.html">vg</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">anxiety</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"horizontal"</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span></span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">horizontal</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       method unit nodes dyads edges    density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 visibility time    60   107   107 0.06045198              1              1</span></span>
+<span><span class="co">#&gt; 1 visibility time    60   106   106 0.05988701              1              1</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>It retains 107 of the 143 connections, removing the 36 that a natural
+<p>It retains 106 of the 144 connections, removing the 38 that a natural
 line of sight can clear but a horizontal one cannot. The result keeps
 the temporal chain of consecutive observations while dropping the longer
 sightlines that only the natural view permits. In both graphs the edge
 weights are binary, since visibility either holds or it does not.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">horizontal</span>, layout <span class="op">=</span> <span class="st">"fr"</span>, node_size_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.4</span>, <span class="fl">4.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/vg-network-horizontal-1.png" class="r-plt" alt="Horizontal visibility graph of the same sixty observations, drawn with the same Fruchterman-Reingold layout and degree-scaled nodes; it is sparser than the natural graph, with the temporal chain visible alongside a smaller number of longer edges." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/vg-network-horizontal-1.png" class="r-plt" alt="Horizontal visibility graph of the same sixty observations, drawn with the same Fruchterman-Reingold layout and degree-scaled nodes; it is sparser than the natural graph, with the temporal chain visible alongside a smaller number of longer edges." width="100%" style="display: block; margin: auto;"></p>
 <p>Every network also retains the series it was built from, which the
 source-series view recovers.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">horizontal</span>, type <span class="op">=</span> <span class="st">"series"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/vg-series-1.png" class="r-plt" alt="The sixty pleasure observations behind the visibility graph, plotted as a line over observation order." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/vg-series-1.png" class="r-plt" alt="The sixty anxiety observations behind the visibility graph, plotted as a line over observation order." width="100%" style="display: block; margin: auto;"></p>
 <p>This view makes the short-run fluctuation that the visibility rule
 reads directly apparent.</p>
 </div>
@@ -637,15 +635,15 @@ series length, which is 6 here, and a step of 2 yields 28 overlapping
 windows.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">windows</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">anxiety</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span>,</span>
 <span>  step <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">windows</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     method   unit nodes dyads edges density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 distance window    28   378   378       1     0.01682183      0.1118912</span></span>
+<span><span class="co">#&gt; 1 distance window    28   378   378       1    0.006923743     0.03540467</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
 <p>The default full connection rule evaluates and keeps all 378 window
@@ -653,9 +651,9 @@ pairs. Each edge weight is <code>1 / (1 + distance)</code>, so larger
 weights mark more similar windows.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">anxiety</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span>,</span>
 <span>  step <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  connect <span class="op">=</span> <span class="st">"nearest"</span>,</span>
 <span>  neighbors <span class="op">=</span> <span class="fl">2</span></span>
@@ -663,20 +661,19 @@ weights mark more similar windows.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     method   unit nodes dyads edges   density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 distance window    28   378    40 0.1058201     0.03137678      0.1118912</span></span>
+<span><span class="co">#&gt; 1 distance window    28   378    41 0.1084656     0.01240041     0.03540467</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>Nearest-neighbour sparsification keeps 40 edges and lowers the
-density from 1 to 0.106, retaining the strongest local similarities
+<p>Nearest-neighbour sparsification keeps 41 edges and lowers the
+density from 1 to 0.108, retaining the strongest local similarities
 instead of drawing every pair.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/tsn-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over twenty-eight sliding windows of the pleasure series, with edges joining the most similar windows." width="100%" style="display: block; margin: auto;"></p>
-<p>No retained edge joins immediately adjacent windows. The closest
-retained pairs are two windows apart and the most distant are twenty-one
-windows apart, which shows that overlap in time does not by itself
-determine similarity in value: windows far apart in the sequence can
-still be each other’s nearest neighbours.</p>
+<p><img src="constructing-time-series-networks_files/figure-html/tsn-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over twenty-eight sliding windows of the anxiety series, with edges joining the most similar windows." width="100%" style="display: block; margin: auto;"></p>
+<p>Only two of the retained edges join immediately adjacent windows; the
+others span anywhere from two to nineteen positions. Overlap in time
+therefore does not by itself determine similarity in value: windows far
+apart in the sequence can still be each other’s nearest neighbours.</p>
 <p>The distance measure is itself a modelling choice. Dynamic time
 warping aligns two windows by their shape, tolerating the shift or
 stretch in time that Euclidean distance penalizes. Repeating the
@@ -684,9 +681,9 @@ sparsification under <code>distance = "dtw"</code> redraws the neighbour
 graph on the same 28 windows.</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">warped</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tsn.html">tsn</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">pleasure</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">anxiety</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span>,</span>
 <span>  step <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  distance <span class="op">=</span> <span class="st">"dtw"</span>,</span>
 <span>  connect <span class="op">=</span> <span class="st">"nearest"</span>,</span>
@@ -695,16 +692,17 @@ graph on the same 28 windows.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">warped</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     method   unit nodes dyads edges   density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 distance window    28   378    39 0.1031746     0.01851852     0.05555556</span></span>
+<span><span class="co">#&gt; 1 distance window    28   378    37 0.0978836    0.007326873     0.04443383</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The warped network keeps 39 edges, almost as many as the Euclidean
-version’s 40, yet it connects largely different pairs of windows.
-Whether two windows count as similar therefore depends as much on the
-chosen distance as on the series itself.</p>
+<p>The warped network keeps 37 edges against the Euclidean version’s 41,
+yet only 12 edges appear in both: the two rules connect largely
+different pairs of windows. Whether two windows count as similar
+therefore depends as much on the chosen distance as on the series
+itself.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">warped</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pleasure-all-functions_files/figure-html/tsn-dtw-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over the same twenty-eight windows using dynamic time warping, connecting a different set of window pairs than the Euclidean network." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="constructing-time-series-networks_files/figure-html/tsn-dtw-network-1.png" class="r-plt" alt="Nearest-neighbour distance network over the same twenty-eight windows using dynamic time warping, connecting a different set of window pairs than the Euclidean network." width="100%" style="display: block; margin: auto;"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

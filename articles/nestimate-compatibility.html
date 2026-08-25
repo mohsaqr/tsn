@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,13 +56,23 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>The Nestimate Compatibility Map</h1>
-                        <h4 data-toc-skip class="author">tsn package
-authors</h4>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/nestimate-compatibility.Rmd" class="external-link"><code>vignettes/nestimate-compatibility.Rmd</code></a></small>
+                        <h4 data-toc-skip class="author">Mohammed
+Saqr</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Sonsoles
+López-Pernas</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Manuel
+J. Gómez</h4>
+            <address class="author_afil">
+      University of Murcia<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/tsn/blob/main/vignettes/nestimate-compatibility.Rmd" class="external-link"><code>vignettes/nestimate-compatibility.Rmd</code></a></small>
       <div class="d-none name"><code>nestimate-compatibility.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
     
@@ -77,27 +87,28 @@ result draws, and which parts do not apply and why. The companion
 vignette <code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow", package = "tsn")</a></code>
 runs a single analysis end to end; this one is the reference you consult
 when deciding which verb to reach for.</p>
-<p>The running example is the model from that workflow: 151
-participants’ daily step counts, cut at 5,000 and 10,000 steps so the
-states mean something outside the sample.</p>
+<p>The running example is the model from that workflow: the 36 students
+of the <code>srl</code> daily panel, whose <code>effort</code> reports
+are cut at 40 and 70 on the 0-100 scale so the states mean something
+outside the sample.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/tsn/" class="external-link">tsn</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span></span>
-<span><span class="va">walkers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">steps</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">srl</span><span class="op">)</span></span>
+<span><span class="va">students</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">srl</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">effort</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">walkers</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span><span class="va">effort_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="va">students</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>,</span>
-<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "ts_tna"          "netobject"       "cograph_network"</span></span></code></pre></div>
 <p>The class chain is the whole compatibility story. <code>ts_tna</code>
 is the tsn layer (it remembers the source series and discretization),
@@ -105,14 +116,14 @@ is the tsn layer (it remembers the source series and discretization),
 <code>cograph_network</code> is what <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code>
 renders. Nestimate’s own validator agrees:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/validate_netobject.html" class="external-link">validate_netobject</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/validate_netobject.html" class="external-link">validate_netobject</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
 <p>And because the object is a <code>cograph_network</code>, the model
 itself is one <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> away:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_model</span>, type <span class="op">=</span> <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/plot-model-1.png" class="r-plt" alt="Directed transition network with sedentary, moderate, and active nodes; edge labels show transition probabilities, with the heaviest self-loop on the active state." width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_model</span>, type <span class="op">=</span> <span class="st">"network"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/plot-model-1.png" class="r-plt" alt="Directed transition network with low, moderate, and high effort nodes; edge labels show transition probabilities, with the heaviest self-loop on the high state." width="100%" style="display: block; margin: auto;"></p>
 <p>The strong diagonal is the first substantive fact: every state
-prefers itself, <code>active</code> most of all at 0.62.</p>
+prefers itself, <code>high</code> most of all at 0.575.</p>
 </div>
 <div class="section level2">
 <h2 id="reading-the-model-as-data">Reading the model as data<a class="anchor" aria-label="anchor" href="#reading-the-model-as-data"></a>
@@ -122,50 +133,50 @@ questions. tsn’s <code><a href="https://rdrr.io/r/base/as.data.frame.html" cla
 including self-transitions; <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix()</a></code> returns the
 row-stochastic weight matrix.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        from        to     weight</span></span>
-<span><span class="co">#&gt; 1 sedentary sedentary 0.35281837</span></span>
-<span><span class="co">#&gt; 2  moderate sedentary 0.15365259</span></span>
-<span><span class="co">#&gt; 3    active sedentary 0.06159838</span></span>
-<span><span class="co">#&gt; 4 sedentary  moderate 0.44514034</span></span>
-<span><span class="co">#&gt; 5  moderate  moderate 0.50129748</span></span>
-<span><span class="co">#&gt; 6    active  moderate 0.31989325</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       from       to    weight</span></span>
+<span><span class="co">#&gt; 1      low      low 0.4148311</span></span>
+<span><span class="co">#&gt; 2 moderate      low 0.2184517</span></span>
+<span><span class="co">#&gt; 3     high      low 0.1648021</span></span>
+<span><span class="co">#&gt; 4      low moderate 0.3135095</span></span>
+<span><span class="co">#&gt; 5 moderate moderate 0.4528102</span></span>
+<span><span class="co">#&gt; 6     high moderate 0.2603270</span></span></code></pre></div>
 <p>Nestimate’s extractors return the same estimates in its own
 shapes:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt;            sedentary  moderate    active</span></span>
-<span><span class="co">#&gt; sedentary 0.35281837 0.4451403 0.2020413</span></span>
-<span><span class="co">#&gt; moderate  0.15365259 0.5012975 0.3450499</span></span>
-<span><span class="co">#&gt; active    0.06159838 0.3198932 0.6185084</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                low  moderate      high</span></span>
+<span><span class="co">#&gt; low      0.4148311 0.3135095 0.2716593</span></span>
+<span><span class="co">#&gt; moderate 0.2184517 0.4528102 0.3287381</span></span>
+<span><span class="co">#&gt; high     0.1648021 0.2603270 0.5748709</span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "nest_transition_matrix" "matrix"                 "array"</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_initial_probs.html" class="external-link">extract_initial_probs</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt; sedentary  moderate    active </span></span>
-<span><span class="co">#&gt; 0.1125828 0.3112583 0.5761589 </span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_initial_probs.html" class="external-link">extract_initial_probs</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       low  moderate      high </span></span>
+<span><span class="co">#&gt; 0.1944444 0.3888889 0.4166667 </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "nest_initial_probs" "numeric"</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        from        to     weight</span></span>
-<span><span class="co">#&gt; 1 sedentary  moderate 0.44514034</span></span>
-<span><span class="co">#&gt; 2  moderate    active 0.34504993</span></span>
-<span><span class="co">#&gt; 3    active  moderate 0.31989325</span></span>
-<span><span class="co">#&gt; 4 sedentary    active 0.20204129</span></span>
-<span><span class="co">#&gt; 5  moderate sedentary 0.15365259</span></span>
-<span><span class="co">#&gt; 6    active sedentary 0.06159838</span></span></code></pre></div>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       from       to    weight</span></span>
+<span><span class="co">#&gt; 1 moderate     high 0.3287381</span></span>
+<span><span class="co">#&gt; 2      low moderate 0.3135095</span></span>
+<span><span class="co">#&gt; 3      low     high 0.2716593</span></span>
+<span><span class="co">#&gt; 4     high moderate 0.2603270</span></span>
+<span><span class="co">#&gt; 5 moderate      low 0.2184517</span></span>
+<span><span class="co">#&gt; 6     high      low 0.1648021</span></span></code></pre></div>
 <p>One difference matters for transition networks:
 <code><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code> <strong>excludes self-transitions</strong>
 — it returns the six between-state edges, sorted by weight, and omits
 the diagonal. For this model the diagonal is where most of the
-probability lives, so use <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> or
-<code><a href="https://saqr.me/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix()</a></code> whenever persistence is part of
-the question, and <code><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code> when only between-state
-movement is.</p>
-<p>The initial-state probabilities say the panel starts active: 57.6% of
-participants’ first recorded day is an <code>active</code> day, 11.3% a
-<code>sedentary</code> one.</p>
+probability lives (<code>high → high</code> is 0.575), so use
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> or <code><a href="https://saqr.me/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix()</a></code>
+whenever persistence is part of the question, and
+<code><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code> when only between-state movement is.</p>
+<p>The initial-state probabilities say the panel starts engaged: 41.7%
+of students’ first recorded day is a <code>high</code>-effort day, 19.4%
+a <code>low</code> one.</p>
 </div>
 <div class="section level2">
 <h2 id="where-the-process-spends-its-time">Where the process spends its time<a class="anchor" aria-label="anchor" href="#where-the-process-spends-its-time"></a>
@@ -174,37 +185,31 @@ participants’ first recorded day is an <code>active</code> day, 11.3% a
 <code><a href="https://saqr.me/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies()</a></code> count observations per state — the
 marginal composition, before any dynamics.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   group     state count proportion</span></span>
-<span><span class="co">#&gt; 1   all    active 13921  0.4484425</span></span>
-<span><span class="co">#&gt; 2   all  moderate 12776  0.4115582</span></span>
-<span><span class="co">#&gt; 3   all sedentary  4346  0.1399994</span></span>
-<span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       state count proportion</span></span>
-<span><span class="co">#&gt; 1    active 13921     0.4484</span></span>
-<span><span class="co">#&gt; 2  moderate 12776     0.4116</span></span>
-<span><span class="co">#&gt; 3 sedentary  4346     0.1400</span></span></code></pre></div>
-<p>Active days make up 44.8% of the panel and sedentary days 14.0%.
-Three displays draw the composition from different angles. The mosaic is
-the proportion bar:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      state count proportion</span></span>
+<span><span class="co">#&gt; 1     high  2341     0.4174</span></span>
+<span><span class="co">#&gt; 2 moderate  1900     0.3388</span></span>
+<span><span class="co">#&gt; 3      low  1367     0.2438</span></span></code></pre></div>
+<p>High-effort days make up 41.7% of the panel and low-effort days
+24.4%. Three displays draw the composition from different angles. The
+mosaic is the proportion bar:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/mosaic-1.png" class="r-plt" alt="Mosaic plot of the step-count model's state composition, with active and moderate days forming most of the area and sedentary days a narrow band." width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/mosaic-1.png" class="r-plt" alt="Mosaic plot of the effort model's state composition, with high and moderate days forming most of the area and low days a narrower band." width="100%" style="display: block; margin: auto;"></p>
 <p><code><a href="https://saqr.me/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot()</a></code> is the sequence carpet — one row per
-participant, one coloured cell per day:</p>
+student, one coloured cell per day:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/carpet-1.png" class="r-plt" alt="Sequence heatmap with one row per participant and one coloured cell per day, showing long same-state spells as horizontal streaks of colour." width="100%" style="display: block; margin: auto;"></p>
-<p>The streaks are persistence made visible: participants hold a state
-for spells, not single days. <code><a href="https://saqr.me/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot()</a></code> stacks the
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/carpet-1.png" class="r-plt" alt="Sequence heatmap with one row per student and one coloured cell per day, showing same-state spells as horizontal streaks of colour." width="100%" style="display: block; margin: auto;"></p>
+<p>The streaks are persistence made visible: students hold a state for
+spells, not single days. <code><a href="https://saqr.me/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot()</a></code> stacks the
 day-by-day state mix of the whole panel:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/composition-time-1.png" class="r-plt" alt="Stacked area chart of the panel's state proportions across the study days, with bands for sedentary, moderate, and active days." width="100%" style="display: block; margin: auto;"></p>
-<p>This is composition over calendar time — the view in which the
-seasonal shift quantified in the workflow vignette (active days falling
-from 46.9% to 42.8% after November) lives.
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/composition-time-1.png" class="r-plt" alt="Stacked area chart of the panel's state proportions across the 156 course days, with bands for low, moderate, and high effort." width="100%" style="display: block; margin: auto;"></p>
+<p>This is composition over course time — the view in which a
+first-to-second half shift would appear, and the workflow vignette’s
+period comparison shows there is none.
 <code><a href="https://saqr.me/Nestimate/reference/plot_state_frequencies.html" class="external-link">plot_state_frequencies()</a></code> offers a fourth, marimekko-style
 variant of the same information.</p>
 </div>
@@ -215,42 +220,43 @@ variant of the same information.</p>
 excluded by default — for a transition network the diagonal would
 otherwise dominate every strength measure.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_centrality</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_centrality</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.</span></span>
 <span></span>
-<span><span class="va">walk_centrality</span></span>
-<span><span class="co">#&gt;               state InStrength Betweenness Diffusion</span></span>
-<span><span class="co">#&gt; sedentary sedentary  0.2152510           0 1.0000000</span></span>
-<span><span class="co">#&gt; moderate   moderate  0.7650336           1 0.4116171</span></span>
-<span><span class="co">#&gt; active       active  0.5470912           0 0.0000000</span></span></code></pre></div>
+<span><span class="va">effort_centrality</span></span>
+<span><span class="co">#&gt;             state InStrength Betweenness Diffusion</span></span>
+<span><span class="co">#&gt; low           low  0.3832538           0 1.0000000</span></span>
+<span><span class="co">#&gt; moderate moderate  0.5738366           0 0.7292556</span></span>
+<span><span class="co">#&gt; high         high  0.6003974           0 0.0000000</span></span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_centrality</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/centrality-plot-1.png" class="r-plt" alt="Centrality chart of the three states showing moderate with the highest in-strength and betweenness." width="100%" style="display: block; margin: auto;"></p>
-<p><code>moderate</code> is the hub: the highest in-strength (0.77) and
-the only state with nonzero betweenness. That is the staircase structure
-— traffic between <code>sedentary</code> and <code>active</code> routes
-through the middle.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_centrality</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/centrality-plot-1.png" class="r-plt" alt="Centrality chart of the three states showing high and moderate with similar in-strength and low well behind." width="100%" style="display: block; margin: auto;"></p>
+<p><code>high</code> and <code>moderate</code> receive similar
+between-state traffic (in-strengths of 0.60 and 0.57) while
+<code>low</code> receives markedly less (0.38); the betweenness column
+is uniformly zero because in a fully connected three-state network no
+state is an obligatory bridge.</p>
 <p><code><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> asks the same question of
 edges:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_betweenness</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_betweenness</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_betweenness</span></span>
+<span><span class="va">effort_betweenness</span></span>
 <span><span class="co">#&gt; Network (method: edge_betweenness) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [1.000, 2.000]  |  mean: 1.400</span></span>
+<span><span class="co">#&gt;   Weights: [1.000, 1.000]  |  mean: 1.000</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             sedentary moderate active</span></span>
-<span><span class="co">#&gt;   sedentary         0        1      1</span></span>
-<span><span class="co">#&gt;   moderate          2        0      1</span></span>
-<span><span class="co">#&gt;   active            0        2      0</span></span></code></pre></div>
+<span><span class="co">#&gt;            low moderate high</span></span>
+<span><span class="co">#&gt;   low        0        1    1</span></span>
+<span><span class="co">#&gt;   moderate   1        0    1</span></span>
+<span><span class="co">#&gt;   high       1        1    0</span></span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_betweenness</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/betweenness-plot-1.png" class="r-plt" alt="Edge-betweenness network view with the moderate-to-sedentary and active-to-moderate edges carrying the highest loads." width="100%" style="display: block; margin: auto;"></p>
-<p>The heaviest-loaded edges (betweenness 2) are
-<code>moderate → sedentary</code> and <code>active → moderate</code>:
-the descending staircase. Movement down the activity scale routes
-through the middle state.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_betweenness</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/betweenness-plot-1.png" class="r-plt" alt="Edge-betweenness network view in which every between-state edge carries the same unit load." width="100%" style="display: block; margin: auto;"></p>
+<p>Every between-state edge carries the same load of 1: each lies on
+exactly one shortest path, and none is a privileged route. That
+uniformity is itself a description — movement between effort states does
+not funnel through any single corridor.</p>
 </div>
 <div class="section level2">
 <h2 id="how-the-process-moves">How the process moves<a class="anchor" aria-label="anchor" href="#how-the-process-moves"></a>
@@ -261,28 +267,28 @@ through the middle state.</p>
 <p><code><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code> converts the transition matrix into
 expected travel times between states (Kemeny &amp; Snell, 1976).</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_passage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_passage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_passage</span></span>
+<span><span class="va">effort_passage</span></span>
 <span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;           sedentary moderate active</span></span>
-<span><span class="co">#&gt; sedentary       7.1      2.5    3.7</span></span>
-<span><span class="co">#&gt; moderate        9.1      2.4    3.1</span></span>
-<span><span class="co">#&gt; active         10.2      3.0    2.2</span></span>
+<span><span class="co">#&gt;          low moderate high</span></span>
+<span><span class="co">#&gt; low      4.1      3.4  3.4</span></span>
+<span><span class="co">#&gt; moderate 5.1      3.0  3.2</span></span>
+<span><span class="co">#&gt; high     5.5      3.7  2.4</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Stationary distribution:</span></span>
-<span><span class="co">#&gt; sedentary  moderate    active </span></span>
-<span><span class="co">#&gt;    0.1405    0.4123    0.4473</span></span></code></pre></div>
+<span><span class="co">#&gt;      low moderate     high </span></span>
+<span><span class="co">#&gt;   0.2440   0.3384   0.4176</span></span></code></pre></div>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_passage</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/passage-plot-1.png" class="r-plt" alt="Heatmap of mean first passage times between the three states, with long times into the sedentary state and short times into moderate and active." width="100%" style="display: block; margin: auto;"></p>
-<p>A <code>moderate</code> or <code>active</code> day is reached from
-anywhere within two to four days on average; a <code>sedentary</code>
-day takes seven to ten. Low activity is the state this panel visits
-reluctantly, not a basin it falls into. The stationary distribution —
-14% sedentary, 41% moderate, 45% active — is where the chain settles
-regardless of its start.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_passage</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/passage-plot-1.png" class="r-plt" alt="Heatmap of mean first passage times between the three states, with the longest times into the low state." width="100%" style="display: block; margin: auto;"></p>
+<p>A <code>moderate</code> or <code>high</code> day is reached from
+anywhere within about two to four days on average; a <code>low</code>
+day takes four to five and a half. Low effort is the state this panel
+visits reluctantly, not a basin it falls into. The stationary
+distribution — 24% low, 34% moderate, 42% high — is where the chain
+settles regardless of its start.</p>
 </div>
 <div class="section level3">
 <h3 id="persistence-return-and-sojourn">Persistence, return, and sojourn<a class="anchor" aria-label="anchor" href="#persistence-return-and-sojourn"></a>
@@ -292,24 +298,24 @@ one row: the self-transition probability, the stationary share, the mean
 recurrence time, and the mean sojourn (how long a visit lasts once
 entered).</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_spells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_stability.html" class="external-link">markov_stability</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_spells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_stability.html" class="external-link">markov_stability</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_spells</span></span>
+<span><span class="va">effort_spells</span></span>
 <span><span class="co">#&gt; Markov Stability Analysis</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;      state persistence stationary_prob return_time sojourn_time</span></span>
-<span><span class="co">#&gt;  sedentary      0.3528          0.1405        7.12         1.55</span></span>
-<span><span class="co">#&gt;   moderate      0.5013          0.4123        2.43         2.01</span></span>
-<span><span class="co">#&gt;     active      0.6185          0.4473        2.24         2.62</span></span>
+<span><span class="co">#&gt;     state persistence stationary_prob return_time sojourn_time</span></span>
+<span><span class="co">#&gt;       low      0.4148          0.2440        4.10         1.71</span></span>
+<span><span class="co">#&gt;  moderate      0.4528          0.3384        2.95         1.83</span></span>
+<span><span class="co">#&gt;      high      0.5749          0.4176        2.39         2.35</span></span>
 <span><span class="co">#&gt;  avg_time_to_others avg_time_from_others</span></span>
-<span><span class="co">#&gt;                3.10                 9.67</span></span>
-<span><span class="co">#&gt;                6.12                 2.76</span></span>
-<span><span class="co">#&gt;                6.64                 3.43</span></span></code></pre></div>
+<span><span class="co">#&gt;                3.42                 5.31</span></span>
+<span><span class="co">#&gt;                4.16                 3.55</span></span>
+<span><span class="co">#&gt;                4.58                 3.31</span></span></code></pre></div>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_spells</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_spells</span><span class="op">)</span></span></code></pre></div>
 <p><img src="nestimate-compatibility_files/figure-html/markov-stability-plot-1.png" class="r-plt" alt="Bar panels of persistence, stationary probability, return time, and sojourn time for the three states." width="100%" style="display: block; margin: auto;"></p>
-<p>An active spell lasts 2.6 days on average and recurs every 2.2; a
-sedentary spell lasts 1.6 days and recurs only every 7.1. Persistence
+<p>A high-effort spell lasts 2.4 days on average and recurs every 2.4; a
+low-effort spell lasts 1.7 days and recurs only every 4.1. Persistence
 and prevalence line up here, but they are logically distinct columns — a
 rare state can still be sticky.</p>
 </div>
@@ -320,23 +326,24 @@ rare state can still be sticky.</p>
 that other verbs quietly assume: irreducibility (every state reachable
 from every other), aperiodicity, and reversibility.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://saqr.me/Nestimate/reference/chain_structure.html" class="external-link">chain_structure</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://saqr.me/Nestimate/reference/chain_structure.html" class="external-link">chain_structure</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Chain structure summary  [3 states, 1 classes]</span></span>
 <span><span class="co">#&gt;   irreducible: TRUE   aperiodic: TRUE   regular: TRUE   reversible: FALSE</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;      state classification period persistence return_probability sojourn_steps</span></span>
-<span><span class="co">#&gt;  sedentary      recurrent      1      0.3528                  1          1.55</span></span>
-<span><span class="co">#&gt;   moderate      recurrent      1      0.5013                  1          2.01</span></span>
-<span><span class="co">#&gt;     active      recurrent      1      0.6185                  1          2.62</span></span>
+<span><span class="co">#&gt;     state classification period persistence return_probability sojourn_steps</span></span>
+<span><span class="co">#&gt;       low      recurrent      1      0.4148                  1          1.71</span></span>
+<span><span class="co">#&gt;  moderate      recurrent      1      0.4528                  1          1.83</span></span>
+<span><span class="co">#&gt;      high      recurrent      1      0.5749                  1          2.35</span></span>
 <span><span class="co">#&gt;  stationary_probability</span></span>
-<span><span class="co">#&gt;                  0.1405</span></span>
-<span><span class="co">#&gt;                  0.4123</span></span>
-<span><span class="co">#&gt;                  0.4473</span></span></code></pre></div>
+<span><span class="co">#&gt;                  0.2440</span></span>
+<span><span class="co">#&gt;                  0.3384</span></span>
+<span><span class="co">#&gt;                  0.4176</span></span></code></pre></div>
 <p>The chain is irreducible, aperiodic, and regular, so the stationary
 distribution above is well-defined and unique. It is <em>not</em>
 reversible: the forward process is statistically distinguishable from
-its time reversal, which is itself a substantive fact about behavior
-change — the routes up and the routes down are not mirror images.</p>
+its time reversal, which is itself a substantive fact about
+self-regulation — the routes up the effort scale and the routes down are
+not mirror images.</p>
 </div>
 </div>
 <div class="section level2">
@@ -346,59 +353,50 @@ change — the routes up and the routes down are not mirror images.</p>
 <code><a href="https://saqr.me/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes()</a></code> adds a posterior credible interval by
 placing a Dirichlet prior on each row.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Transition Entropy (3 states, bits; ceiling = 1.585)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                           raw            normalised</span></span>
-<span><span class="co">#&gt;   Entropy rate    h(P)  = 1.346 bits    0.849</span></span>
-<span><span class="co">#&gt;   Stationary    H(pi)  = 1.444 bits    0.911</span></span>
-<span><span class="co">#&gt;   Redundancy   H(pi)-h = 0.098 bits    0.068</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Normalised: h(P) and H(pi) are raw / log_2(n_states) (0 = deterministic, 1 = uniform);</span></span>
-<span><span class="co">#&gt;   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi), not raw / log_2(n_states).</span></span></code></pre></div>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="va">walk_entropy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<span><span class="va">effort_entropy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_entropy</span></span>
+<span><span class="va">effort_entropy</span></span>
 <span><span class="co">#&gt; Bayesian Transition Entropy (3 states, bits; Dirichlet prior 0.5, 4000 draws)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   entropy_rate:       1.346 [1.337, 1.355]</span></span>
-<span><span class="co">#&gt;    stationary_entropy: 1.444 [1.436, 1.452]</span></span>
-<span><span class="co">#&gt;    redundancy:         0.098 [0.092, 0.104]</span></span>
+<span><span class="co">#&gt;   entropy_rate:       1.478 [1.462, 1.493]</span></span>
+<span><span class="co">#&gt;    stationary_entropy: 1.551 [1.540, 1.561]</span></span>
+<span><span class="co">#&gt;    redundancy:         0.073 [0.061, 0.086]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Edges: 9 observed; 9 credible (share of h(P) credibly &gt; 1%).</span></span>
 <span><span class="co">#&gt; Use summary() for the edge table, plot() for the posterior, and</span></span>
 <span><span class="co">#&gt; $model for the pruned stable entropy network.</span></span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_entropy</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_entropy</span><span class="op">)</span></span></code></pre></div>
 <p><img src="nestimate-compatibility_files/figure-html/entropy-bayes-plot-1.png" class="r-plt" alt="Posterior distributions of the entropy rate, stationary entropy, and redundancy, each a narrow density around its point estimate." width="100%" style="display: block; margin: auto;"></p>
-<p>The entropy rate is 1.346 bits against a ceiling of
-<code>log2(3) = 1.585</code> — 0.849 on the normalised scale — with a
-credible interval two hundredths wide: with 30,000 transitions, the
+<p>The entropy rate is 1.478 bits against a ceiling of
+<code>log2(3) = 1.585</code> — 0.93 on the normalised scale — with a
+credible interval three hundredths wide: with 5,600 daily reports, the
 <em>uncertainty</em> about how unpredictable the process is, is itself
-tiny. The redundancy of 0.098 bits is the gap between the marginal
-entropy and the conditional one: knowing today’s state removes about 7%
-of tomorrow’s uncertainty.</p>
+small. The redundancy of 0.073 bits is the gap between the marginal
+entropy and the conditional one: knowing today’s effort removes under 5%
+of tomorrow’s uncertainty. Daily effort is mostly noise around a weak
+first-order signal, and every edge below should be read with that in
+mind.</p>
 <p><code><a href="https://saqr.me/Nestimate/reference/entropy_network.html" class="external-link">entropy_network()</a></code> maps the same quantity onto the edges
 — each entry is an edge’s contribution to the row’s unpredictability —
 and returns a network of the same class, so it can be plotted or pruned
 like any other:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/entropy_network.html" class="external-link">entropy_network</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/entropy_network.html" class="external-link">entropy_network</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network (method: entropy) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.065, 0.235]  |  mean: 0.150</span></span>
+<span><span class="co">#&gt;   Weights: [0.125, 0.211]  |  mean: 0.164</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             sedentary moderate active</span></span>
-<span><span class="co">#&gt;   sedentary     0.074    0.073  0.065</span></span>
-<span><span class="co">#&gt;   moderate      0.171    0.206  0.218</span></span>
-<span><span class="co">#&gt;   active        0.111    0.235  0.192 </span></span>
+<span><span class="co">#&gt;              low moderate  high</span></span>
+<span><span class="co">#&gt;   low      0.128    0.128 0.125</span></span>
+<span><span class="co">#&gt;   moderate 0.162    0.175 0.179</span></span>
+<span><span class="co">#&gt;   high     0.179    0.211 0.192 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   active        0.576  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   moderate      0.311  ██████████████████████</span></span>
-<span><span class="co">#&gt;   sedentary     0.113  ████████</span></span></code></pre></div>
+<span><span class="co">#&gt;   high          0.417  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   moderate      0.389  █████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   low           0.194  ███████████████████</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="does-history-beyond-one-step-matter">Does history beyond one step matter?<a class="anchor" aria-label="anchor" href="#does-history-beyond-one-step-matter"></a>
@@ -406,67 +404,67 @@ like any other:</p>
 <p>The model assumes the next state depends only on the current one.
 <code><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code> (Anderson &amp; Goodman, 1957) tests
 that assumption.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="va">walk_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<span><span class="va">effort_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_order</span></span>
+<span><span class="va">effort_order</span></span>
 <span><span class="co">#&gt; Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]</span></span>
-<span><span class="co">#&gt;   151 sequences / 31043 observations / 3 states</span></span>
+<span><span class="co">#&gt;   36 sequences / 5608 observations / 3 states</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Selected order  BIC: 3   AIC: 3   permutation-LRT: 3</span></span>
+<span><span class="co">#&gt;   Selected order  BIC: 2   AIC: 3   permutation-LRT: 3</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  order    loglik      AIC      BIC df      g2 p_permutation  p_asymptotic</span></span>
-<span><span class="co">#&gt;      0 -31051.63 62107.27 62123.95 NA      NA            NA            NA</span></span>
-<span><span class="co">#&gt;      1 -28961.91 57939.82 58006.57  4 4179.40   0.001996008  0.000000e+00</span></span>
-<span><span class="co">#&gt;      2 -28209.20 56470.40 56687.32 12 1505.37   0.001996008 2.624960e-315</span></span>
-<span><span class="co">#&gt;      3 -27901.81 55963.62 56631.07 36  614.68   0.001996008 1.933327e-106</span></span>
+<span><span class="co">#&gt;  order   loglik      AIC      BIC df     g2 p_permutation  p_asymptotic</span></span>
+<span><span class="co">#&gt;      0 -6031.21 12066.41 12079.67 NA     NA            NA            NA</span></span>
+<span><span class="co">#&gt;      1 -5750.23 11516.45 11569.51  4 561.95   0.001996008 2.653668e-120</span></span>
+<span><span class="co">#&gt;      2 -5606.12 11264.24 11436.67 12 288.17   0.001996008  1.422835e-54</span></span>
+<span><span class="co">#&gt;      3 -5494.72 11149.43 11679.99 36 222.75   0.001996008  8.841816e-29</span></span>
 <span><span class="co">#&gt;  significant</span></span>
 <span><span class="co">#&gt;           NA</span></span>
 <span><span class="co">#&gt;         TRUE</span></span>
 <span><span class="co">#&gt;         TRUE</span></span>
 <span><span class="co">#&gt;         TRUE</span></span></code></pre></div>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_order</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/markov-order-plot-1.png" class="r-plt" alt="Model-selection chart of log-likelihood, AIC, and BIC across Markov orders zero to three, all favouring orders above one." width="100%" style="display: block; margin: auto;"></p>
-<p>BIC, AIC, and the permutation LRT all select order 3: yesterday
-carries information about tomorrow beyond today.
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_order</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/markov-order-plot-1.png" class="r-plt" alt="Model-selection chart of log-likelihood, AIC, and BIC across Markov orders zero to three, favouring orders above one." width="100%" style="display: block; margin: auto;"></p>
+<p>AIC and the permutation LRT select order 3 and BIC selects order 2:
+yesterday carries information about tomorrow beyond today.
 <code><a href="https://saqr.me/Nestimate/reference/path_dependence.html" class="external-link">path_dependence()</a></code> says how much:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/path_dependence.html" class="external-link">path_dependence</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">effort_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/path_dependence.html" class="external-link">path_dependence</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_history</span></span>
+<span><span class="va">effort_history</span></span>
 <span><span class="co">#&gt; Path Dependence (order 2 vs order 1, bits)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Contexts: 9 (min_count = 5).  Modal-prediction flips: 2.</span></span>
-<span><span class="co">#&gt; Chain-level KL_weighted      = 0.035 bits</span></span>
-<span><span class="co">#&gt; Chain-level H_drop_weighted  = 0.035 bits</span></span>
+<span><span class="co">#&gt; Chain-level KL_weighted      = 0.038 bits</span></span>
+<span><span class="co">#&gt; Chain-level H_drop_weighted  = 0.037 bits</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Top 9 contexts by KL:</span></span>
-<span><span class="co">#&gt;                 context    n H_order1 H_orderk H_drop    KL   top_o1    top_ok</span></span>
-<span><span class="co">#&gt;     sedentary -&gt; active  870    1.202    1.486 -0.284 0.164   active    active</span></span>
-<span><span class="co">#&gt;   sedentary -&gt; moderate 1912    1.444    1.478 -0.033 0.100 moderate  moderate</span></span>
-<span><span class="co">#&gt;     active -&gt; sedentary  847    1.516    1.552 -0.036 0.080 moderate  moderate</span></span>
-<span><span class="co">#&gt;      active -&gt; moderate 4410    1.444    1.374  0.071 0.051 moderate    active</span></span>
-<span><span class="co">#&gt;  sedentary -&gt; sedentary 1509    1.516    1.439  0.078 0.041 moderate sedentary</span></span>
-<span><span class="co">#&gt;      moderate -&gt; active 4363    1.202    1.323 -0.121 0.038   active    active</span></span>
-<span><span class="co">#&gt;        active -&gt; active 8544    1.202    1.056  0.146 0.020   active    active</span></span>
-<span><span class="co">#&gt;    moderate -&gt; moderate 6348    1.444    1.411  0.033 0.008 moderate  moderate</span></span>
-<span><span class="co">#&gt;   moderate -&gt; sedentary 1938    1.516    1.486  0.030 0.006 moderate  moderate</span></span>
+<span><span class="co">#&gt;               context    n H_order1 H_orderk H_drop    KL   top_o1   top_ok</span></span>
+<span><span class="co">#&gt;           low -&gt; high  366    1.393    1.570 -0.177 0.114     high     high</span></span>
+<span><span class="co">#&gt;       low -&gt; moderate  424    1.525    1.572 -0.047 0.050 moderate moderate</span></span>
+<span><span class="co">#&gt;      moderate -&gt; high  617    1.393    1.505 -0.112 0.048     high     high</span></span>
+<span><span class="co">#&gt;      high -&gt; moderate  599    1.525    1.478  0.046 0.037 moderate     high</span></span>
+<span><span class="co">#&gt;          high -&gt; high 1326    1.393    1.204  0.189 0.035     high     high</span></span>
+<span><span class="co">#&gt;            low -&gt; low  562    1.562    1.473  0.089 0.034      low      low</span></span>
+<span><span class="co">#&gt;           high -&gt; low  381    1.562    1.581 -0.019 0.032      low     high</span></span>
+<span><span class="co">#&gt;  moderate -&gt; moderate  849    1.525    1.471  0.054 0.014 moderate moderate</span></span>
+<span><span class="co">#&gt;       moderate -&gt; low  412    1.562    1.580 -0.018 0.011      low      low</span></span>
 <span><span class="co">#&gt;  flips</span></span>
 <span><span class="co">#&gt;  FALSE</span></span>
 <span><span class="co">#&gt;  FALSE</span></span>
 <span><span class="co">#&gt;  FALSE</span></span>
 <span><span class="co">#&gt;   TRUE</span></span>
+<span><span class="co">#&gt;  FALSE</span></span>
+<span><span class="co">#&gt;  FALSE</span></span>
 <span><span class="co">#&gt;   TRUE</span></span>
 <span><span class="co">#&gt;  FALSE</span></span>
-<span><span class="co">#&gt;  FALSE</span></span>
-<span><span class="co">#&gt;  FALSE</span></span>
 <span><span class="co">#&gt;  FALSE</span></span></code></pre></div>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_history</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/path-dependence-plot-1.png" class="r-plt" alt="Bar chart of the KL divergence contributed by each two-step context, all values below 0.17 bits." width="100%" style="display: block; margin: auto;"></p>
-<p>The weighted divergence is 0.035 bits: history shifts the next-step
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_history</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/path-dependence-plot-1.png" class="r-plt" alt="Bar chart of the KL divergence contributed by each two-step context, all values below 0.12 bits." width="100%" style="display: block; margin: auto;"></p>
+<p>The weighted divergence is 0.038 bits: history shifts the next-step
 distribution by a few hundredths of a bit and flips the modal prediction
 in only two of nine contexts. This is the pair of numbers that
 reconciles a decisively significant order test with the continued use of
@@ -475,24 +473,24 @@ first-order network remains a fair one-step summary; it is not the full
 process.</p>
 <p><code><a href="https://saqr.me/Nestimate/reference/path_counts.html" class="external-link">path_counts()</a></code> is the raw material — every observed
 two-step path with its count:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/path_counts.html" class="external-link">path_counts</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                     path count proportion</span></span>
-<span><span class="co">#&gt; 1       active -&gt; active  8575     0.2776</span></span>
-<span><span class="co">#&gt; 2   moderate -&gt; moderate  6375     0.2064</span></span>
-<span><span class="co">#&gt; 3     active -&gt; moderate  4435     0.1436</span></span>
-<span><span class="co">#&gt; 4     moderate -&gt; active  4388     0.1420</span></span>
-<span><span class="co">#&gt; 5  moderate -&gt; sedentary  1954     0.0633</span></span>
-<span><span class="co">#&gt; 6  sedentary -&gt; moderate  1919     0.0621</span></span>
-<span><span class="co">#&gt; 7 sedentary -&gt; sedentary  1521     0.0492</span></span>
-<span><span class="co">#&gt; 8    sedentary -&gt; active   871     0.0282</span></span>
-<span><span class="co">#&gt; 9    active -&gt; sedentary   854     0.0276</span></span></code></pre></div>
-<p><code>active → active</code> alone is 27.8% of all transitions. And
-when the order test demands more than one step, <code><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon()</a></code>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/path_counts.html" class="external-link">path_counts</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                   path count proportion</span></span>
+<span><span class="co">#&gt; 1         high -&gt; high  1336     0.2398</span></span>
+<span><span class="co">#&gt; 2 moderate -&gt; moderate   854     0.1533</span></span>
+<span><span class="co">#&gt; 3     moderate -&gt; high   620     0.1113</span></span>
+<span><span class="co">#&gt; 4     high -&gt; moderate   605     0.1086</span></span>
+<span><span class="co">#&gt; 5           low -&gt; low   565     0.1014</span></span>
+<span><span class="co">#&gt; 6      low -&gt; moderate   427     0.0766</span></span>
+<span><span class="co">#&gt; 7      moderate -&gt; low   412     0.0739</span></span>
+<span><span class="co">#&gt; 8          high -&gt; low   383     0.0687</span></span>
+<span><span class="co">#&gt; 9          low -&gt; high   370     0.0664</span></span></code></pre></div>
+<p><code>high → high</code> alone is 24.0% of all transitions. And when
+the order test demands more than one step, <code><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon()</a></code>
 estimates a higher-order network under its own per-node promotion
 rule:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon</a></span><span class="op">(</span><span class="va">walk_model</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon</a></span><span class="op">(</span><span class="va">effort_model</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://saqr.me/Nestimate/reference/pathways.html" class="external-link">pathways</a></span><span class="op">(</span><span class="va">hon</span><span class="op">)</span></span>
 <span><span class="co">#&gt; character(0)</span></span></code></pre></div>
@@ -508,37 +506,41 @@ asks a stricter per-node question. Report both.</p>
 <p><code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code> removes weak edges and returns the same
 class; <code><a href="https://saqr.me/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details()</a></code> is the audit trail;
 <code><a href="https://saqr.me/Nestimate/reference/net_deprune.html" class="external-link">net_deprune()</a></code> undoes it.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pruned</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">walk_model</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pruned</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">effort_model</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details</a></span><span class="op">(</span><span class="va">pruned</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Pruning details</span></span>
 <span><span class="co">#&gt;   Method:  user-specified threshold (0.3)</span></span>
-<span><span class="co">#&gt;   Removed: 3 edges</span></span>
-<span><span class="co">#&gt;   Retained: 6 edges</span></span>
+<span><span class="co">#&gt;   Removed: 4 edges</span></span>
+<span><span class="co">#&gt;   Retained: 5 edges</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;       from        to     weight</span></span>
-<span><span class="co">#&gt;   moderate sedentary 0.15365259</span></span>
-<span><span class="co">#&gt;     active sedentary 0.06159838</span></span>
-<span><span class="co">#&gt;  sedentary    active 0.20204129</span></span></code></pre></div>
-<p>Three edges fall: the two routes <em>into</em> sedentary and the
-direct <code>sedentary → active</code> leap. Because pruning is recorded
-rather than destructive, the original model is one call away:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt;      from       to    weight</span></span>
+<span><span class="co">#&gt;  moderate      low 0.2184517</span></span>
+<span><span class="co">#&gt;      high      low 0.1648021</span></span>
+<span><span class="co">#&gt;      high moderate 0.2603270</span></span>
+<span><span class="co">#&gt;       low     high 0.2716593</span></span></code></pre></div>
+<p>Four edges fall, and they are a coherent four: every descending route
+(<code>moderate → low</code>, <code>high → low</code>,
+<code>high → moderate</code>) plus the direct <code>low → high</code>
+leap. What survives is the ascending ladder and the persistence loops.
+Because pruning is recorded rather than destructive, the original model
+is one call away:</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_deprune.html" class="external-link">net_deprune</a></span><span class="op">(</span><span class="va">pruned</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.062, 0.619]  |  mean: 0.333</span></span>
+<span><span class="co">#&gt;   Weights: [0.165, 0.575]  |  mean: 0.333</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             sedentary moderate active</span></span>
-<span><span class="co">#&gt;   sedentary     0.353    0.445  0.202</span></span>
-<span><span class="co">#&gt;   moderate      0.154    0.501  0.345</span></span>
-<span><span class="co">#&gt;   active        0.062    0.320  0.619 </span></span>
+<span><span class="co">#&gt;              low moderate  high</span></span>
+<span><span class="co">#&gt;   low      0.415    0.314 0.272</span></span>
+<span><span class="co">#&gt;   moderate 0.218    0.453 0.329</span></span>
+<span><span class="co">#&gt;   high     0.165    0.260 0.575 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   active        0.576  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   moderate      0.311  ██████████████████████</span></span>
-<span><span class="co">#&gt;   sedentary     0.113  ████████</span></span></code></pre></div>
+<span><span class="co">#&gt;   high          0.417  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   moderate      0.389  █████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   low           0.194  ███████████████████</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="how-sure-are-we-about-the-estimates">How sure are we about the estimates?<a class="anchor" aria-label="anchor" href="#how-sure-are-we-about-the-estimates"></a>
@@ -549,83 +551,88 @@ and a posterior.</p>
 <div class="section level3">
 <h3 id="sequence-bootstrap">Sequence bootstrap<a class="anchor" aria-label="anchor" href="#sequence-bootstrap"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code> resamples the 151 sequences and
+<p><code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code> resamples the 36 sequences and
 re-estimates.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">effort_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_boot</span></span>
+<span><span class="va">effort_boot</span></span>
 <span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
 <span><span class="co">#&gt;   -----------------------------------------------</span></span>
-<span><span class="co">#&gt;   active → active      0.617  [0.588, 0.645]  ** </span></span>
-<span><span class="co">#&gt;   moderate → moderate   0.502  [0.477, 0.523]  ** </span></span>
-<span><span class="co">#&gt;   sedentary → moderate   0.447  [0.420, 0.477]  ** </span></span>
-<span><span class="co">#&gt;   sedentary → sedentary   0.352  [0.317, 0.383]  ** </span></span>
-<span><span class="co">#&gt;   moderate → active    0.344  [0.317, 0.373]  ** </span></span>
-<span><span class="co">#&gt;   ... and 4 more significant edges</span></span>
+<span><span class="co">#&gt;   high → high          0.571  [0.458, 0.653]  *  </span></span>
+<span><span class="co">#&gt;   moderate → moderate   0.452  [0.392, 0.508]  ** </span></span>
+<span><span class="co">#&gt;   moderate → high      0.333  [0.284, 0.385]  ** </span></span>
+<span><span class="co">#&gt;   low → moderate       0.317  [0.258, 0.375]  *  </span></span>
+<span><span class="co">#&gt;   high → moderate      0.264  [0.211, 0.328]  *  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bootstrap Network  [Transition Network (relative) | directed]</span></span>
 <span><span class="co">#&gt;   Iterations : 200  |  Nodes : 3</span></span>
-<span><span class="co">#&gt;   Edges      : 9 significant / 9 total</span></span>
+<span><span class="co">#&gt;   Edges      : 5 significant / 9 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> is the tidy one-row-per-edge table:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">walk_boot</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        from        to    weight      mean         sd     p_value  sig  ci_lower</span></span>
-<span><span class="co">#&gt; 1 sedentary sedentary 0.3528184 0.3521126 0.01667936 0.004975124 TRUE 0.3174301</span></span>
-<span><span class="co">#&gt; 2 sedentary  moderate 0.4451403 0.4465563 0.01462708 0.004975124 TRUE 0.4196235</span></span>
-<span><span class="co">#&gt; 3 sedentary    active 0.2020413 0.2013311 0.01154200 0.004975124 TRUE 0.1790378</span></span>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">effort_boot</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   from       to    weight      mean         sd    p_value   sig  ci_lower</span></span>
+<span><span class="co">#&gt; 1  low      low 0.4148311 0.4015282 0.05284228 0.05970149 FALSE 0.3043293</span></span>
+<span><span class="co">#&gt; 2  low moderate 0.3135095 0.3166900 0.03084593 0.02487562  TRUE 0.2583890</span></span>
+<span><span class="co">#&gt; 3  low     high 0.2716593 0.2817819 0.03701263 0.08457711 FALSE 0.2172464</span></span>
 <span><span class="co">#&gt;    ci_upper  cr_lower  cr_upper</span></span>
-<span><span class="co">#&gt; 1 0.3829621 0.2646138 0.4410230</span></span>
-<span><span class="co">#&gt; 2 0.4771233 0.3338553 0.5564254</span></span>
-<span><span class="co">#&gt; 3 0.2253694 0.1515310 0.2525516</span></span></code></pre></div>
-<p>All nine edges survive, with confidence intervals a few hundredths
-wide — what 151 sequences buy.</p>
+<span><span class="co">#&gt; 1 0.5035205 0.3111233 0.5185389</span></span>
+<span><span class="co">#&gt; 2 0.3754918 0.2351322 0.3918869</span></span>
+<span><span class="co">#&gt; 3 0.3582807 0.2037445 0.3395742</span></span></code></pre></div>
+<p>Five of nine edges survive — the three persistence loops and the two
+ascending steps — while the descending routes move too much across
+resamples of 36 students to clear the stability criterion.</p>
 </div>
 <div class="section level3">
 <h3 id="bayesian-edge-certainty">Bayesian edge certainty<a class="anchor" aria-label="anchor" href="#bayesian-edge-certainty"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> reaches the same verdict from a Dirichlet
+<p><code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> reaches its verdict from a Dirichlet
 posterior on each row, with no resampling.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
 <span><span class="co">#&gt;   -----------------------------------------------</span></span>
-<span><span class="co">#&gt;   active → active      0.618  [0.610, 0.627]  ***</span></span>
-<span><span class="co">#&gt;   moderate → moderate   0.501  [0.493, 0.510]  ***</span></span>
-<span><span class="co">#&gt;   sedentary → moderate   0.445  [0.430, 0.460]  ***</span></span>
-<span><span class="co">#&gt;   sedentary → sedentary   0.353  [0.339, 0.367]  ***</span></span>
-<span><span class="co">#&gt;   moderate → active    0.345  [0.337, 0.353]  ***</span></span>
+<span><span class="co">#&gt;   high → high          0.575  [0.555, 0.595]  ***</span></span>
+<span><span class="co">#&gt;   moderate → moderate   0.453  [0.430, 0.475]  ***</span></span>
+<span><span class="co">#&gt;   low → low            0.415  [0.389, 0.441]  ***</span></span>
+<span><span class="co">#&gt;   moderate → high      0.329  [0.308, 0.350]  ***</span></span>
+<span><span class="co">#&gt;   low → moderate       0.314  [0.289, 0.338]  ***</span></span>
 <span><span class="co">#&gt;   ... and 4 more certain edges</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Certainty (Dirichlet)  [Transition Network (relative) | directed]</span></span>
 <span><span class="co">#&gt;   Prior      : Dirichlet(0.50)  |  Nodes : 3</span></span>
 <span><span class="co">#&gt;   Edges      : 9 certain / 9 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
-<p>All nine edges are certain. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns the
-per-edge table with posterior means, intervals, and flags.</p>
+<p>All nine edges are posterior-certain, with intervals a few hundredths
+wide. The two verbs disagree because they ask different questions:
+<code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> asks whether an edge’s posterior excludes
+instability given the pooled transitions, while the bootstrap asks
+whether the estimate survives swapping <em>students</em> in and out. An
+edge can be precisely estimated from the pooled data and still depend on
+who is in the panel — the four descending edges are exactly that
+kind.</p>
 </div>
 <div class="section level3">
 <h3 id="whole-network-statistics-the-vertex-bootstrap">Whole-network statistics: the vertex bootstrap<a class="anchor" aria-label="anchor" href="#whole-network-statistics-the-vertex-bootstrap"></a>
 </h3>
 <p><code><a href="https://saqr.me/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap()</a></code> implements the Snijders–Borgatti
 (1999) vertex bootstrap for network-level statistics.</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Vertex Bootstrap (Snijders &amp; Borgatti)</span></span>
 <span><span class="co">#&gt;   Nodes: 3 | Directed: TRUE | Replicates: 100</span></span>
 <span><span class="co">#&gt;   95% CIs (percentile method)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;       statistic observed boot_mean boot_sd   bias ci_lower ci_upper</span></span>
 <span><span class="co">#&gt;         density    1.000     1.000   0.000  0.000    1.000    1.000</span></span>
-<span><span class="co">#&gt;     mean_weight    0.255     0.265   0.050  0.011    0.147    0.353</span></span>
-<span><span class="co">#&gt;  centralization    0.291     0.185   0.112 -0.107    0.000    0.374</span></span>
-<span><span class="co">#&gt;     reciprocity    0.701     0.707   0.150  0.006    0.460    0.970</span></span></code></pre></div>
-<p>The mean edge weight carries a wide interval ([0.15, 0.35]) despite
-the huge sample, because the vertex bootstrap resamples <em>nodes</em>
-and there are only three — a deliberately conservative design for small
-node sets.</p>
+<span><span class="co">#&gt;     mean_weight    0.260     0.264   0.019  0.004    0.227    0.302</span></span>
+<span><span class="co">#&gt;  centralization    0.111     0.073   0.052 -0.038    0.000    0.183</span></span>
+<span><span class="co">#&gt;     reciprocity    0.826     0.852   0.045  0.026    0.773    0.935</span></span></code></pre></div>
+<p>The mean edge weight carries an interval of [0.23, 0.30] because the
+vertex bootstrap resamples <em>nodes</em> and there are only three — a
+deliberately conservative design for small node sets.</p>
 </div>
 <div class="section level3">
 <h3 id="case-dropping-in-two-flavours">Case dropping, in two flavours<a class="anchor" aria-label="anchor" href="#case-dropping-in-two-flavours"></a>
@@ -635,246 +642,201 @@ node sets.</p>
 <code><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code> tracks the edge weights themselves.
 Both report the CS-coefficient of Epskamp, Borsboom &amp; Fried
 (2018).</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Centrality Stability (100 iterations, threshold = 0.7)</span></span>
 <span><span class="co">#&gt;   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   CS-coefficients:</span></span>
-<span><span class="co">#&gt;     InStrength       0.90</span></span>
-<span><span class="co">#&gt;     OutStrength      0.90</span></span>
-<span><span class="co">#&gt;     Betweenness      0.90</span></span></code></pre></div>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_reliability</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>                                         seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     InStrength       0.60</span></span>
+<span><span class="co">#&gt;     OutStrength      0.40</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">effort_reliability</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>                                           seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_reliability</span></span>
+<span><span class="va">effort_reliability</span></span>
 <span><span class="co">#&gt; Edge-weight Case-dropping Stability</span></span>
-<span><span class="co">#&gt;   Cases (rows of $data) : 151</span></span>
+<span><span class="co">#&gt;   Cases (rows of $data) : 36</span></span>
 <span><span class="co">#&gt;   Edges assessed        : 6 (diagonal excluded)</span></span>
 <span><span class="co">#&gt;   Iterations / prop     : 100</span></span>
 <span><span class="co">#&gt;   Correlation method    : spearman</span></span>
-<span><span class="co">#&gt;   CS-coefficient (r)    : 0.90  (threshold=0.70, certainty=0.95)</span></span>
+<span><span class="co">#&gt;   CS-coefficient (r)    : 0.50  (threshold=0.70, certainty=0.95)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Model-level reliability across iterations (mean +/- sd per drop):</span></span>
 <span><span class="co">#&gt;   drop_prop      p=0.1        p=0.2        p=0.3        p=0.4        p=0.5        p=0.6        p=0.7        p=0.8        p=0.9      </span></span>
-<span><span class="co">#&gt;   mean|diff|      0.003+- 0.001   0.004+- 0.002   0.005+- 0.002   0.008+- 0.003   0.008+- 0.003   0.011+- 0.005   0.012+- 0.006   0.018+- 0.007   0.027+- 0.012</span></span>
-<span><span class="co">#&gt;   MAD             0.003+- 0.001   0.004+- 0.002   0.005+- 0.002   0.007+- 0.004   0.008+- 0.003   0.009+- 0.005   0.011+- 0.006   0.015+- 0.008   0.025+- 0.012</span></span>
-<span><span class="co">#&gt;   cor             1.000+- 0.000   0.999+- 0.006   0.997+- 0.013   0.993+- 0.019   0.993+- 0.019   0.990+- 0.022   0.989+- 0.027   0.977+- 0.034   0.957+- 0.042</span></span>
-<span><span class="co">#&gt;   max|diff|       0.006+- 0.002   0.009+- 0.004   0.012+- 0.005   0.016+- 0.006   0.017+- 0.006   0.023+- 0.009   0.026+- 0.012   0.040+- 0.017   0.055+- 0.021</span></span></code></pre></div>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_reliability</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/casedrop-plot-1.png" class="r-plt" alt="Case-dropping stability curve showing the correlation between full-sample and subsampled edge weights staying above 0.95 even when 90 percent of sequences are dropped." width="100%" style="display: block; margin: auto;"></p>
-<p>Both CS-coefficients are 0.90 — the orderings and the weights survive
-dropping 90% of the participants, far above the 0.7 bar for excellent.
-Even at a 90% drop the mean edge-weight correlation with the full model
-is 0.957.</p>
+<span><span class="co">#&gt;   mean|diff|      0.007+- 0.003   0.012+- 0.004   0.016+- 0.005   0.018+- 0.007   0.025+- 0.009   0.028+- 0.011   0.039+- 0.013   0.047+- 0.017   0.079+- 0.031</span></span>
+<span><span class="co">#&gt;   MAD             0.006+- 0.003   0.011+- 0.005   0.015+- 0.006   0.016+- 0.007   0.023+- 0.010   0.025+- 0.012   0.036+- 0.016   0.041+- 0.016   0.070+- 0.032</span></span>
+<span><span class="co">#&gt;   cor             0.981+- 0.035   0.951+- 0.053   0.939+- 0.067   0.926+- 0.103   0.891+- 0.111   0.838+- 0.178   0.757+- 0.243   0.648+- 0.338   0.425+- 0.496</span></span>
+<span><span class="co">#&gt;   max|diff|       0.015+- 0.006   0.025+- 0.009   0.031+- 0.012   0.038+- 0.016   0.049+- 0.019   0.060+- 0.024   0.080+- 0.030   0.097+- 0.039   0.160+- 0.072</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_reliability</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/casedrop-plot-1.png" class="r-plt" alt="Case-dropping stability curve showing the correlation between full-sample and subsampled edge weights declining as larger fractions of the 36 sequences are dropped." width="100%" style="display: block; margin: auto;"></p>
+<p>The verdicts are moderate across the board: the in-strength ordering
+holds to a 0.60 drop, the out-strength ordering only to 0.40, and the
+edge weights sit exactly at the 0.50 bar. This is what 36 sequences buy,
+and it is the sample-size counterweight to the posterior certainty
+above: report orderings and intervals, not bare point values.</p>
 </div>
 <div class="section level3">
 <h3 id="split-half-reliability">Split-half reliability<a class="anchor" aria-label="anchor" href="#split-half-reliability"></a>
 </h3>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/network_reliability.html" class="external-link">network_reliability</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/network_reliability.html" class="external-link">network_reliability</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Split-Half Reliability (1000 iterations, split = 50%)</span></span>
-<span><span class="co">#&gt;   Mean Abs. Diff.     mean = 0.0193  sd = 0.0073</span></span>
-<span><span class="co">#&gt;   Median Abs. Diff.   mean = 0.0172  sd = 0.0083</span></span>
-<span><span class="co">#&gt;   Pearson             mean = 0.9900  sd = 0.0079</span></span>
-<span><span class="co">#&gt;   Max Abs. Diff.      mean = 0.0422  sd = 0.0162</span></span></code></pre></div>
+<span><span class="co">#&gt;   Mean Abs. Diff.     mean = 0.0578  sd = 0.0220</span></span>
+<span><span class="co">#&gt;   Median Abs. Diff.   mean = 0.0516  sd = 0.0240</span></span>
+<span><span class="co">#&gt;   Pearson             mean = 0.8526  sd = 0.1147</span></span>
+<span><span class="co">#&gt;   Max Abs. Diff.      mean = 0.1290  sd = 0.0509</span></span></code></pre></div>
 <p>Randomly halving the panel 1,000 times yields two models that
-correlate at 0.99 with a mean absolute edge difference of 0.02. Every
-verb in this section agrees: with 151 sequences, this network is
-estimated about as precisely as a 3-state model can be.</p>
+correlate at 0.85 on average with a mean absolute edge difference of
+0.06 — real agreement, with real room for movement. All four verbs in
+this section tell the same story at different grain: the backbone of the
+model is solid, the weaker edges are not yet pinned down.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="comparing-two-models">Comparing two models<a class="anchor" aria-label="anchor" href="#comparing-two-models"></a>
 </h2>
 <p>Any two models on the same alphabet can be compared. The pair here
-splits the panel at the start of November — the warm and cold seasons —
-with the same fixed <code>breaks</code>, so both models sit on one
-alphabet.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cutoff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-11-01"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">early</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">walkers</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span> <span class="op">&lt;</span> <span class="va">cutoff</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>, id <span class="op">=</span> <span class="st">"id"</span>, time <span class="op">=</span> <span class="st">"day"</span>,</span>
-<span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+splits the panel at occasion 78 — the first and second halves of the
+course — with the same fixed <code>breaks</code>, so both models sit on
+one alphabet, and the same 36 students on both sides.</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">first_half</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">students</span>, <span class="va">day</span> <span class="op">&lt;=</span> <span class="fl">78</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>, id <span class="op">=</span> <span class="st">"name"</span>, time <span class="op">=</span> <span class="st">"day"</span>,</span>
+<span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">late</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">walkers</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="va">cutoff</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>, id <span class="op">=</span> <span class="st">"id"</span>, time <span class="op">=</span> <span class="st">"day"</span>,</span>
-<span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span><span class="va">second_half</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">students</span>, <span class="va">day</span> <span class="op">&gt;</span> <span class="fl">78</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>, id <span class="op">=</span> <span class="st">"name"</span>, time <span class="op">=</span> <span class="st">"day"</span>,</span>
+<span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="the-difference-itself">The difference itself<a class="anchor" aria-label="anchor" href="#the-difference-itself"></a>
 </h3>
 <p><code><a href="https://saqr.me/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks()</a></code> returns the edge-by-edge difference
 as an object cograph can draw:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">season_difference</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks</a></span><span class="op">(</span><span class="va">early</span>, <span class="va">late</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">half_difference</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">season_difference</span></span>
+<span><span class="va">half_difference</span></span>
 <span><span class="co">#&gt; Network difference (x - y): 3 nodes, 9 differing edges</span></span>
 <span><span class="co">#&gt; Plot: cograph::splot(d) or cograph::plot_difference(d)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;       from        to          x          y   difference</span></span>
-<span><span class="co">#&gt;     active    active 0.63855921 0.59645097  0.042108234</span></span>
-<span><span class="co">#&gt;     active  moderate 0.30333977 0.33761664 -0.034276870</span></span>
-<span><span class="co">#&gt;   moderate    active 0.35520800 0.33549884  0.019709158</span></span>
-<span><span class="co">#&gt;   moderate sedentary 0.14430829 0.16225831 -0.017950026</span></span>
-<span><span class="co">#&gt;     active sedentary 0.05810102 0.06593238 -0.007831364</span></span>
-<span><span class="co">#&gt;  sedentary sedentary 0.34985280 0.35525154 -0.005398748</span></span>
-<span><span class="co">#&gt;  sedentary    active 0.20412169 0.20079435  0.003327337</span></span>
-<span><span class="co">#&gt;  sedentary  moderate 0.44602552 0.44395410  0.002071411</span></span>
-<span><span class="co">#&gt;   moderate  moderate 0.50048371 0.50224285 -0.001759131</span></span></code></pre></div>
+<span><span class="co">#&gt;      from       to         x         y    difference</span></span>
+<span><span class="co">#&gt;       low moderate 0.3293592 0.2967836  0.0325755397</span></span>
+<span><span class="co">#&gt;       low     high 0.2563338 0.2880117 -0.0316778658</span></span>
+<span><span class="co">#&gt;      high moderate 0.2476273 0.2700348 -0.0224075783</span></span>
+<span><span class="co">#&gt;      high     high 0.5858499 0.5662021  0.0196477800</span></span>
+<span><span class="co">#&gt;  moderate      low 0.2134472 0.2230523 -0.0096051227</span></span>
+<span><span class="co">#&gt;  moderate     high 0.3308431 0.3255069  0.0053361793</span></span>
+<span><span class="co">#&gt;  moderate moderate 0.4557097 0.4514408  0.0042689434</span></span>
+<span><span class="co">#&gt;      high      low 0.1665229 0.1637631  0.0027597983</span></span>
+<span><span class="co">#&gt;       low      low 0.4143070 0.4152047 -0.0008976739</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">cograph</span><span class="fu">::</span><span class="fu"><a href="https://sonsoles.me/cograph/reference/plot_difference.html" class="external-link">plot_difference</a></span><span class="op">(</span><span class="va">half_difference</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/subtract-plot-1.png" class="r-plt" alt="Difference network of the two course halves, edges coloured by the sign of the change and all magnitudes small." width="100%" style="display: block; margin: auto;"></p>
+<p>The largest gap on any edge is 0.033
+(<code>low → moderate</code>).</p>
+</div>
+<div class="section level3">
+<h3 id="four-more-verdicts-on-the-same-pair">Four more verdicts on the same pair<a class="anchor" aria-label="anchor" href="#four-more-verdicts-on-the-same-pair"></a>
+</h3>
+<p><code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code> condenses the pair into a metric panel;
+<code><a href="https://saqr.me/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare()</a></code> asks whether each edge difference is
+credibly nonzero; <code><a href="https://saqr.me/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare()</a></code> tests the network-level
+statistics; and the workflow vignette’s <code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code> run
+supplies the sequence-level test.</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">cograph</span><span class="fu">::</span><span class="fu"><a href="https://sonsoles.me/cograph/reference/plot_difference.html" class="external-link">plot_difference</a></span><span class="op">(</span><span class="va">season_difference</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/subtract-plot-1.png" class="r-plt" alt="Difference network of the two seasonal models, edges coloured by the sign of the seasonal change and all magnitudes small." width="100%" style="display: block; margin: auto;"></p>
-<p>The largest seasonal gap on any edge is 0.042
-(<code>active → active</code>).</p>
-</div>
-<div class="section level3">
-<h3 id="the-permutation-test">The permutation test<a class="anchor" aria-label="anchor" href="#the-permutation-test"></a>
-</h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code> shuffles sequences between the two groups
-to build a null distribution per edge.</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">season_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation</a></span><span class="op">(</span><span class="va">early</span>, <span class="va">late</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">half_panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">season_test</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        from        to   weight_x   weight_y         diff effect_size    p_value</span></span>
-<span><span class="co">#&gt; 1 sedentary sedentary 0.34985280 0.35525154 -0.005398748 -0.17995637 0.86013986</span></span>
-<span><span class="co">#&gt; 2 sedentary  moderate 0.44602552 0.44395410  0.002071411  0.08197479 0.92607393</span></span>
-<span><span class="co">#&gt; 3 sedentary    active 0.20412169 0.20079435  0.003327337  0.16242006 0.86213786</span></span>
-<span><span class="co">#&gt; 4  moderate sedentary 0.14430829 0.16225831 -0.017950026 -1.22971823 0.22977023</span></span>
-<span><span class="co">#&gt; 5  moderate  moderate 0.50048371 0.50224285 -0.001759131 -0.09268364 0.93106893</span></span>
-<span><span class="co">#&gt; 6  moderate    active 0.35520800 0.33549884  0.019709158  0.85773223 0.39460539</span></span>
-<span><span class="co">#&gt; 7    active sedentary 0.05810102 0.06593238 -0.007831364 -0.93677408 0.34165834</span></span>
-<span><span class="co">#&gt; 8    active  moderate 0.30333977 0.33761664 -0.034276870 -1.76872460 0.07092907</span></span>
-<span><span class="co">#&gt; 9    active    active 0.63855921 0.59645097  0.042108234  1.75754195 0.08491508</span></span>
-<span><span class="co">#&gt;     sig</span></span>
-<span><span class="co">#&gt; 1 FALSE</span></span>
-<span><span class="co">#&gt; 2 FALSE</span></span>
-<span><span class="co">#&gt; 3 FALSE</span></span>
-<span><span class="co">#&gt; 4 FALSE</span></span>
-<span><span class="co">#&gt; 5 FALSE</span></span>
-<span><span class="co">#&gt; 6 FALSE</span></span>
-<span><span class="co">#&gt; 7 FALSE</span></span>
-<span><span class="co">#&gt; 8 FALSE</span></span>
-<span><span class="co">#&gt; 9 FALSE</span></span></code></pre></div>
-<p>No edge reaches significance; the smallest p-value is 0.07
-(<code>active → moderate</code>). The seasons differ in
-<em>composition</em> (the workflow vignette shows active days falling
-from 46.9% to 42.8%) while no evidence places the difference in the
-<em>dynamics</em>.</p>
-</div>
-<div class="section level3">
-<h3 id="the-metric-panel">The metric panel<a class="anchor" aria-label="anchor" href="#the-metric-panel"></a>
-</h3>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">season_panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">early</span>, <span class="va">late</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">season_panel</span></span>
+<span><span class="va">half_panel</span></span>
 <span><span class="co">#&gt; Network comparison</span></span>
 <span><span class="co">#&gt; ==================</span></span>
 <span><span class="co">#&gt; Summary metrics:</span></span>
 <span><span class="co">#&gt;              category               metric    value</span></span>
-<span><span class="co">#&gt;     Weight Deviations      Mean Abs. Diff.  0.01494</span></span>
-<span><span class="co">#&gt;     Weight Deviations    Median Abs. Diff. 0.007831</span></span>
-<span><span class="co">#&gt;     Weight Deviations            RMS Diff.  0.02046</span></span>
-<span><span class="co">#&gt;     Weight Deviations       Max Abs. Diff.  0.04211</span></span>
-<span><span class="co">#&gt;     Weight Deviations Rel. Mean Abs. Diff.  0.04481</span></span>
-<span><span class="co">#&gt;     Weight Deviations             CV Ratio    1.073</span></span>
-<span><span class="co">#&gt;          Correlations              Pearson   0.9948</span></span>
-<span><span class="co">#&gt;          Correlations             Spearman     0.95</span></span>
-<span><span class="co">#&gt;          Correlations              Kendall   0.8889</span></span>
-<span><span class="co">#&gt;          Correlations             Distance   0.9867</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Euclidean  0.06138</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Manhattan   0.1344</span></span>
-<span><span class="co">#&gt;       Dissimilarities             Canberra   0.2578</span></span>
-<span><span class="co">#&gt;       Dissimilarities          Bray-Curtis  0.02241</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Frobenius  0.05012</span></span>
-<span><span class="co">#&gt;          Similarities               Cosine   0.9986</span></span>
-<span><span class="co">#&gt;          Similarities              Jaccard   0.9562</span></span>
-<span><span class="co">#&gt;          Similarities                 Dice   0.9776</span></span>
-<span><span class="co">#&gt;          Similarities              Overlap   0.9776</span></span>
-<span><span class="co">#&gt;          Similarities                   RV   0.9999</span></span>
+<span><span class="co">#&gt;     Weight Deviations      Mean Abs. Diff.  0.01435</span></span>
+<span><span class="co">#&gt;     Weight Deviations    Median Abs. Diff. 0.009605</span></span>
+<span><span class="co">#&gt;     Weight Deviations            RMS Diff.  0.01856</span></span>
+<span><span class="co">#&gt;     Weight Deviations       Max Abs. Diff.  0.03258</span></span>
+<span><span class="co">#&gt;     Weight Deviations Rel. Mean Abs. Diff.  0.04306</span></span>
+<span><span class="co">#&gt;     Weight Deviations             CV Ratio    1.069</span></span>
+<span><span class="co">#&gt;          Correlations              Pearson   0.9904</span></span>
+<span><span class="co">#&gt;          Correlations             Spearman        1</span></span>
+<span><span class="co">#&gt;          Correlations              Kendall        1</span></span>
+<span><span class="co">#&gt;          Correlations             Distance   0.9675</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Euclidean  0.05568</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Manhattan   0.1292</span></span>
+<span><span class="co">#&gt;       Dissimilarities             Canberra   0.2148</span></span>
+<span><span class="co">#&gt;       Dissimilarities          Bray-Curtis  0.02153</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Frobenius  0.04546</span></span>
+<span><span class="co">#&gt;          Similarities               Cosine   0.9987</span></span>
+<span><span class="co">#&gt;          Similarities              Jaccard   0.9578</span></span>
+<span><span class="co">#&gt;          Similarities                 Dice   0.9785</span></span>
+<span><span class="co">#&gt;          Similarities              Overlap   0.9785</span></span>
+<span><span class="co">#&gt;          Similarities                   RV   0.9962</span></span>
 <span><span class="co">#&gt;  Pattern Similarities       Rank Agreement        1</span></span>
 <span><span class="co">#&gt;  Pattern Similarities       Sign Agreement        1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Network metrics (x vs y):</span></span>
-<span><span class="co">#&gt;                       metric        x      y</span></span>
-<span><span class="co">#&gt;                   Node Count        3      3</span></span>
-<span><span class="co">#&gt;                   Edge Count        9      9</span></span>
-<span><span class="co">#&gt;              Network Density        1      1</span></span>
-<span><span class="co">#&gt;                Mean Distance   0.2507 0.2577</span></span>
-<span><span class="co">#&gt;            Mean Out-Strength        1      1</span></span>
-<span><span class="co">#&gt;              SD Out-Strength   0.3886 0.3686</span></span>
-<span><span class="co">#&gt;             Mean In-Strength        1      1</span></span>
-<span><span class="co">#&gt;               SD In-Strength 7.85e-17      0</span></span>
-<span><span class="co">#&gt;              Mean Out-Degree        3      3</span></span>
-<span><span class="co">#&gt;                SD Out-Degree        0      0</span></span>
-<span><span class="co">#&gt;  Centralization (Out-Degree)        0      0</span></span>
-<span><span class="co">#&gt;   Centralization (In-Degree)        0      0</span></span>
-<span><span class="co">#&gt;                  Reciprocity        1      1</span></span></code></pre></div>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">season_panel</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/compare-plot-1.png" class="r-plt" alt="Comparison panel chart of the two seasonal models across weight-deviation, correlation, and similarity metrics, all indicating near-identity." width="100%" style="display: block; margin: auto;"></p>
-<p>A Pearson correlation of 0.995 between the two matrices: the seasons
-share their dynamics almost entirely.</p>
-</div>
-<div class="section level3">
-<h3 id="the-instructive-disagreement">The instructive disagreement<a class="anchor" aria-label="anchor" href="#the-instructive-disagreement"></a>
-</h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare()</a></code> asks whether each edge difference is
-<em>credibly nonzero</em>:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt;                       metric      x      y</span></span>
+<span><span class="co">#&gt;                   Node Count      3      3</span></span>
+<span><span class="co">#&gt;                   Edge Count      9      9</span></span>
+<span><span class="co">#&gt;              Network Density      1      1</span></span>
+<span><span class="co">#&gt;                Mean Distance 0.2574 0.2612</span></span>
+<span><span class="co">#&gt;            Mean Out-Strength      1      1</span></span>
+<span><span class="co">#&gt;              SD Out-Strength 0.1915 0.1895</span></span>
+<span><span class="co">#&gt;             Mean In-Strength      1      1</span></span>
+<span><span class="co">#&gt;               SD In-Strength      0      0</span></span>
+<span><span class="co">#&gt;              Mean Out-Degree      3      3</span></span>
+<span><span class="co">#&gt;                SD Out-Degree      0      0</span></span>
+<span><span class="co">#&gt;  Centralization (Out-Degree)      0      0</span></span>
+<span><span class="co">#&gt;   Centralization (In-Degree)      0      0</span></span>
+<span><span class="co">#&gt;                  Reciprocity      1      1</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">half_panel</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-compatibility_files/figure-html/compare-plot-1.png" class="r-plt" alt="Comparison panel chart of the two half-course models across weight-deviation, correlation, and similarity metrics, all indicating near-identity." width="100%" style="display: block; margin: auto;"></p>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="va">season_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare</a></span><span class="op">(</span><span class="va">early</span>, <span class="va">late</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">season_bayes</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bayesian Dirichlet-Multinomial Comparison: Transition Network (relative probabilities) </span></span>
 <span><span class="co">#&gt;   Prior: Dirichlet(0.50)  |  Draws: 10000  |  CI: 95%</span></span>
 <span><span class="co">#&gt;   Thresholds: |mean diff| &gt; 0.010, nearest CI bound &gt; 0.001</span></span>
-<span><span class="co">#&gt;   Nodes: 3  |  Edges compared: 9  |  Credibly different: 4</span></span></code></pre></div>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">season_bayes</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-compatibility_files/figure-html/bayes-compare-plot-1.png" class="r-plt" alt="Posterior difference intervals for the nine edges, four of which exclude zero while all magnitudes stay below 0.05." width="100%" style="display: block; margin: auto;"></p>
-<p>Four of nine edges are credibly different, while the permutation test
-above found none significant. Both are right, about different questions.
-With roughly 30,000 transitions, differences of two to four hundredths
-are estimated precisely enough for the posterior to exclude zero (the
-credible-difference threshold here is 0.01) — but the sequence-level
-permutation null, which respects the fact that days are nested in
-people, absorbs them. Precision detects that the difference exists; it
-does not make 0.04 large. Report the magnitude next to whichever test is
-used.</p>
-<p><code><a href="https://saqr.me/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare()</a></code> runs the node-resampling comparison at
-the level of whole-network statistics and, consistent with all of the
-above, finds nothing (all p ≥ 0.78):</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare</a></span><span class="op">(</span><span class="va">early</span>, <span class="va">late</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Nodes: 3  |  Edges compared: 9  |  Credibly different: 0</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Two-Network Vertex Bootstrap Comparison (Snijders &amp; Borgatti)</span></span>
 <span><span class="co">#&gt;   x (3 nodes) vs y (3 nodes) | 200 replicates each</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;       statistic observed_x observed_y   diff se_diff      z p_value ci_lower</span></span>
 <span><span class="co">#&gt;         density      1.000      1.000  0.000   0.000     NA      NA    0.000</span></span>
-<span><span class="co">#&gt;     mean_weight      0.252      0.258 -0.006   0.076 -0.077   0.939   -0.155</span></span>
-<span><span class="co">#&gt;  centralization      0.290      0.292 -0.001   0.149 -0.010   0.992   -0.293</span></span>
-<span><span class="co">#&gt;     reciprocity      0.669      0.729 -0.060   0.211 -0.283   0.777   -0.474</span></span>
+<span><span class="co">#&gt;     mean_weight      0.257      0.261 -0.004   0.028 -0.135   0.893   -0.060</span></span>
+<span><span class="co">#&gt;  centralization      0.123      0.095  0.028   0.066  0.423   0.672   -0.101</span></span>
+<span><span class="co">#&gt;     reciprocity      0.813      0.838 -0.025   0.070 -0.363   0.717   -0.163</span></span>
 <span><span class="co">#&gt;  ci_upper sig</span></span>
 <span><span class="co">#&gt;     0.000    </span></span>
-<span><span class="co">#&gt;     0.143    </span></span>
-<span><span class="co">#&gt;     0.290    </span></span>
-<span><span class="co">#&gt;     0.354    </span></span>
+<span><span class="co">#&gt;     0.052    </span></span>
+<span><span class="co">#&gt;     0.157    </span></span>
+<span><span class="co">#&gt;     0.112    </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: *** p&lt;0.001, ** p&lt;0.01, * p&lt;0.05</span></span></code></pre></div>
+<p>Five verbs, one verdict. The matrices correlate at 0.990 with rank
+and sign agreement of 1; the posterior finds zero of nine edges credibly
+different; the vertex comparison finds no network-level statistic moved
+(all p ≥ 0.67); and the permutation test in the workflow vignette finds
+nothing at the sequence level either. The course’s second half
+reproduces its first, in level and in dynamics. When the verbs
+<em>disagree</em> — a posterior flagging tiny-but-credible differences
+that a sequence-level permutation absorbs — report the magnitude next to
+whichever test is used; the grouped weekday/weekend comparison in
+<code><a href="../articles/group-models.html">vignette("group-models", package = "tsn")</a></code> shows what a
+real, localized difference looks like on these same students.</p>
 </div>
 </div>
 <div class="section level2">
@@ -882,8 +844,8 @@ above, finds nothing (all p ≥ 0.78):</p>
 </h2>
 <p><code><a href="https://saqr.me/Nestimate/reference/predict_links.html" class="external-link">predict_links()</a></code> scores unobserved dyads by six
 structural predictors:</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/predict_links.html" class="external-link">predict_links</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/predict_links.html" class="external-link">predict_links</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Link Prediction  [directed | weighted | 3 nodes | 6 existing edges]</span></span>
 <span><span class="co">#&gt;   Methods: common_neighbors, resource_allocation, adamic_adar, jaccard, preferential_attachment, katz</span></span></code></pre></div>
 <p>It runs, but a three-state transition network is fully connected
@@ -909,7 +871,7 @@ per-group tables, and <code><a href="https://rdrr.io/r/graphics/plot.default.htm
 <code><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> also runs, but its result drops back
 to a plain <code>netobject_group</code>. The dedicated vignette
 <code><a href="../articles/group-models.html">vignette("group-models", package = "tsn")</a></code> works through all
-of it.</p>
+of it on the <code>esm_srl</code> weekday/weekend split.</p>
 </div>
 <div class="section level2">
 <h2 id="what-does-not-apply-and-why">What does not apply, and why<a class="anchor" aria-label="anchor" href="#what-does-not-apply-and-why"></a>
@@ -1079,7 +1041,7 @@ needs no conversion, which is the point of this vignette.</li>
 </td>
 <td><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code></td>
 <td>—</td>
-<td>resampling vs Bayesian</td>
+<td>resampling vs Bayesian; they can disagree</td>
 </tr>
 <tr class="odd">
 <td>Network-level uncertainty</td>

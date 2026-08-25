@@ -33,13 +33,19 @@ single sample: there is nothing to resample. The dividing line is the
 unit of analysis, and knowing where it falls is what keeps a transition
 model from being read for more than it can support.
 
+Two bundled data sets carry the analysis. `esm_srl` is an
+experience-sampling study in which 41 students rated momentary
+self-regulation, motivation, and anxiety on 0-100 scales; `srl` is a
+balanced daily panel in which 36 students reported nine
+self-regulated-learning indicators for 156 occasions each.
+
 ``` r
 
 library(tsn)
 library(Nestimate)
 
-data(motivation)
-data(steps)
+data(esm_srl)
+data(srl)
 ```
 
 ## From measurements to a model
@@ -47,41 +53,42 @@ data(steps)
 [`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md) takes a
 data frame and the name of one numeric column, cuts that column into
 states, and estimates the transition network in one call. Here it runs
-on the first 200 observations of the `pleasure` rating from the
-`motivation` study, an intensive-longitudinal record of momentary
-experience.
+on the 79 momentary `anxiety` reports of one student, Jamal, from the
+`esm_srl` study.
 
 ``` r
 
-pleasure <- head(motivation, 200)
+jamal <- subset(esm_srl, name == "Jamal")
 
 model <- ts_tna(
-  pleasure,
-  series = "pleasure",
+  jamal,
+  series = "anxiety",
   labels = c("low", "mid", "high")
 )
 
 model
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.278, 0.417]  |  mean: 0.333
+#>   Weights: [0.231, 0.423]  |  mean: 0.333
 #> 
 #>   Weight matrix:
 #>          low   mid  high
-#>   low  0.403 0.313 0.284
-#>   mid  0.278 0.417 0.306
-#>   high 0.333 0.367 0.300 
+#>   low  0.370 0.370 0.259
+#>   mid  0.240 0.360 0.400
+#>   high 0.423 0.231 0.346 
 #> 
 #>   Initial probabilities:
-#>   high          1.000  ████████████████████████████████████████
-#>   low           0.000  
-#>   mid           0.000
+#>   low           1.000  ████████████████████████████████████████
+#>   mid           0.000  
+#>   high          0.000
 ```
 
 The printed object is the complete model: a row-stochastic weight matrix
 whose entry *(i, j)* is the probability of moving to state *j* given
 that the system is currently in state *i*, together with the
 initial-state distribution. Each row sums to one because from any state
-the process must go somewhere.
+the process must go somewhere. One entry already rewards reading: after
+a high-anxiety report, the most likely next state is `low` (0.423) — for
+this student, high anxiety resolves sharply rather than escalating.
 
 ### The bridge: this object *is* a Nestimate model
 
@@ -118,20 +125,20 @@ edge definition means changing only the constructor.
 
 ``` r
 
-ts_ftna(pleasure, series = "pleasure", labels = c("low", "mid", "high"))
+ts_ftna(jamal, series = "anxiety", labels = c("low", "mid", "high"))
 #> Transition Network (frequency counts) [directed]
-#>   Weights: [18.000, 30.000]  |  mean: 22.111
+#>   Weights: [6.000, 11.000]  |  mean: 8.667
 #> 
 #>   Weight matrix:
 #>        low mid high
-#>   low   27  21   19
-#>   mid   20  30   22
-#>   high  20  22   18 
+#>   low   10  10    7
+#>   mid    6   9   10
+#>   high  11   6    9 
 #> 
 #>   Initial probabilities:
-#>   high          1.000  ████████████████████████████████████████
-#>   low           0.000  
-#>   mid           0.000
+#>   low           1.000  ████████████████████████████████████████
+#>   mid           0.000  
+#>   high          0.000
 ```
 
 The remainder of the vignette uses
@@ -159,60 +166,60 @@ unit by cutting the series into shorter blocks, each treated as its own
 sequence. This is the block bootstrap, and tsn provides its two standard
 forms.
 
-The series below is one participant’s 299 daily step counts. Two
-features of the call matter before the segmenting itself. States are cut
-at 5,000 and 10,000 steps with `discretization = "threshold"` rather
-than at the default tertiles, so the states mean the same thing outside
-this sample; the next section returns to why that matters. And
-segmentation is applied *after* discretization, so every block inherits
-the same cut points and no block is ever discretized against itself.
+The series below is one student’s 156 daily `effort` reports from the
+`srl` panel. Two features of the call matter before the segmenting
+itself. States are cut at 40 and 70 on the 0-100 scale with
+`discretization = "threshold"` rather than at the default tertiles, so
+the states mean the same thing outside this sample; the next section
+returns to why that matters. And segmentation is applied *after*
+discretization, so every block inherits the same cut points and no block
+is ever discretized against itself.
 
 ``` r
 
-walkers <- subset(steps, !is.na(steps))
-one_walker <- subset(walkers, id == 193)
+students <- subset(srl, !is.na(effort))
+erik <- subset(students, name == "Erik")
 
 whole <- ts_tna(
-  one_walker,
-  value = "steps",
+  erik,
+  value = "effort",
   time = "day",
   discretization = "threshold",
-  breaks = c(5000, 10000),
-  labels = c("sedentary", "moderate", "active")
+  breaks = c(40, 70),
+  labels = c("low", "moderate", "high")
 )
 ```
 
-Partitioning cuts the 299 observations into consecutive, non-overlapping
-blocks. At `segment = 10` there are thirty of them.
+Partitioning cuts the 156 observations into consecutive, non-overlapping
+blocks. At `segment = 10` there are sixteen of them.
 
 ``` r
 
 blocks <- ts_tna(
-  one_walker,
-  value = "steps",
+  erik,
+  value = "effort",
   time = "day",
   segment = 10,
   discretization = "threshold",
-  breaks = c(5000, 10000),
-  labels = c("sedentary", "moderate", "active")
+  breaks = c(40, 70),
+  labels = c("low", "moderate", "high")
 )
 
-bootstrap_network(blocks, iter = 500, seed = 2024)
+bootstrap_network(blocks, iter = 500, seed = 2026)
 #>   Edge                   Mean     95% CI          p
 #>   -----------------------------------------------
-#>   active → moderate    0.558  [0.457, 0.653]  ** 
-#>   moderate → moderate   0.437  [0.336, 0.525]  *  
+#>   low → low            0.451  [0.358, 0.547]  *  
 #> 
 #> Bootstrap Network  [Transition Network (relative) | directed]
 #>   Iterations : 500  |  Nodes : 3
-#>   Edges      : 2 significant / 9 total
+#>   Edges      : 1 significant / 9 total
 #>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 ```
 
-Thirty sequences, and the bootstrap now runs. Partitioning is not free:
-every cut destroys the transition that straddles it, so thirty blocks
-cost roughly thirty of the 298 transitions and the estimate shifts
-slightly.
+Sixteen sequences, and the bootstrap now runs. Partitioning is not free:
+every cut destroys the transition that straddles it, so sixteen blocks
+cost fifteen of the 155 transitions — about ten percent — and the
+estimate shifts slightly.
 
 Sliding the window instead of partitioning keeps all of them. At
 `segment = 2, overlap = TRUE` the blocks are the consecutive lag-1
@@ -222,14 +229,14 @@ pairs, so every transition appears exactly once and the network is
 ``` r
 
 lag_one <- ts_tna(
-  one_walker,
-  value = "steps",
+  erik,
+  value = "effort",
   time = "day",
   segment = 2,
   overlap = TRUE,
   discretization = "threshold",
-  breaks = c(5000, 10000),
-  labels = c("sedentary", "moderate", "active")
+  breaks = c(40, 70),
+  labels = c("low", "moderate", "high")
 )
 
 all.equal(as.matrix(lag_one), as.matrix(whole))
@@ -238,81 +245,74 @@ all.equal(as.matrix(lag_one), as.matrix(whole))
 
 ``` r
 
-bootstrap_network(lag_one, iter = 500, seed = 2024)
-#>   Edge                   Mean     95% CI          p
-#>   -----------------------------------------------
-#>   active → moderate    0.559  [0.459, 0.659]  ** 
-#>   moderate → moderate   0.426  [0.344, 0.504]  ** 
-#>   moderate → active    0.359  [0.285, 0.439]  *  
-#> 
+bootstrap_network(lag_one, iter = 500, seed = 2026)
 #> Bootstrap Network  [Transition Network (relative) | directed]
 #>   Iterations : 500  |  Nodes : 3
-#>   Edges      : 3 significant / 9 total
+#>   Edges      : 0 significant / 9 total
 #>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 ```
 
-The two schemes trade precision against independence. Sliding blocks
-preserve the point estimate exactly, yield the most units, and tend to
-give narrower intervals: a mean width of 0.18 here against 0.21 for the
-partitioned blocks, narrow enough to call a third edge significant where
-partitioning calls two. The tendency is not a guarantee, since two of
-the nine edges come out wider. And the narrowness carries a cost.
-Overlapping blocks share observations, so they are not independent, and
-resampling lag-1 pairs assumes exactly the first-order Markov property
-the model itself assumes. That is the assumption the Markov-order test
-below rejects for these data, which makes those intervals optimistic.
-
-Partitioned blocks are the more conservative choice. A block preserves
-whatever dependence exists inside it, so structure beyond one lag
-survives resampling, at the price of the boundary transitions lost to
-the cuts. Blocks of 10 to 30 retain 90% to 97% of the transitions, which
-is usually the right trade; blocks of 2 retain only half and are better
-avoided.
+The two schemes trade the point estimate against independence. Sliding
+blocks preserve the estimate exactly and yield the most units;
+partitioned blocks respect whatever dependence exists inside a block, at
+the price of the boundary transitions lost to the cuts. On this series
+the two run neck and neck — mean interval widths of 0.253 for the
+partitioned blocks against 0.254 for the lag-1 pairs, with a single edge
+crossing the stability criterion under partitioning and none under
+sliding. That is the real lesson of the exercise: 156 volatile
+observations of one person yield intervals a quarter of a probability
+unit wide however they are resampled. Where the two schemes do differ,
+prefer partitioning, because resampling lag-1 pairs assumes exactly the
+first-order Markov property the model itself assumes — an assumption the
+Markov-order test below rejects for these data. Blocks of 10 to 30
+retain roughly 90% to 97% of the transitions, which is usually the right
+trade; blocks of 2 retain only half and are better avoided.
 
 None of this manufactures information. Segmenting a single series asks
 how stable one person’s own dynamics are, and says nothing about anyone
 else. A claim about people in general needs people in general, so the
-rest of the vignette uses all 151 of them.
+rest of the vignette uses all 36 of them.
 
 ### Choosing states that mean something
 
 The default `discretization = "quantile"` cuts at the tertiles, forcing
 each of the three states to hold a third of the observations, so the
 state sizes carry no information, by construction. That is why every
-model built from the `steps` data uses fixed thresholds of 5,000 and
-10,000 steps instead. Fixed breaks make the states interpretable outside
-the sample, and they give every model one shared alphabet, which is what
-makes the period comparison below legitimate. (The grouped `pleasure`
+model built from the `srl` panel uses fixed thresholds of 40 and 70 on
+the 0-100 effort scale instead. Fixed breaks make the states
+interpretable outside the sample — below 40 is low effort wherever it
+occurs — and they give every model one shared alphabet, which is what
+makes the period comparison below legitimate. (The grouped `esm_srl`
 model at the end keeps the quantile default; grouping pools the series
 before cutting it, so its groups share an alphabet without breaks being
 named.)
 
 ``` r
 
-walk_model <- ts_tna(
-  walkers,
-  value = "steps",
-  id = "id",
+effort_model <- ts_tna(
+  students,
+  value = "effort",
+  id = "name",
   time = "day",
   discretization = "threshold",
-  breaks = c(5000, 10000),
-  labels = c("sedentary", "moderate", "active")
+  breaks = c(40, 70),
+  labels = c("low", "moderate", "high")
 )
 
-walk_model
+effort_model
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.062, 0.619]  |  mean: 0.333
+#>   Weights: [0.165, 0.575]  |  mean: 0.333
 #> 
 #>   Weight matrix:
-#>             sedentary moderate active
-#>   sedentary     0.353    0.445  0.202
-#>   moderate      0.154    0.501  0.345
-#>   active        0.062    0.320  0.619 
+#>              low moderate  high
+#>   low      0.415    0.314 0.272
+#>   moderate 0.218    0.453 0.329
+#>   high     0.165    0.260 0.575 
 #> 
 #>   Initial probabilities:
-#>   active        0.576  ████████████████████████████████████████
-#>   moderate      0.311  ██████████████████████
-#>   sedentary     0.113  ████████
+#>   high          0.417  ████████████████████████████████████████
+#>   moderate      0.389  █████████████████████████████████████
+#>   low           0.194  ███████████████████
 ```
 
 The states now mean something outside the data, the same cut points
@@ -321,43 +321,48 @@ worth reading.
 
 ``` r
 
-state_distribution(walk_model)
-#>   group     state count proportion
-#> 1   all    active 13921  0.4484425
-#> 2   all  moderate 12776  0.4115582
-#> 3   all sedentary  4346  0.1399994
+state_distribution(effort_model)
+#>   group    state count proportion
+#> 1   all     high  2341  0.4174394
+#> 2   all moderate  1900  0.3388017
+#> 3   all      low  1367  0.2437589
 ```
 
-Every state is strongly self-preferring, and an active day is the most
-persistent of all at 0.62: activity, once reached, tends to continue.
-Step counts show marked day-to-day inertia.
+High effort is the panel’s most common state at 41.7% of the days, and
+it is also the most persistent: the `high -> high` probability of 0.575
+is the largest entry in the matrix. Effort, once high, tends to continue
+— and the asymmetry runs one way, since a low-effort day returns to
+`low` at only 0.415.
 
 ### One network per person
 
 The pooled model estimates a single network across everyone.
 [`series_networks()`](https://pak.dynasite.org/tsn/reference/series_networks.md)
-splits it into one complete model per participant, each rebuilt on the
-same alphabet so node sets stay aligned and comparable.
+splits it into one complete model per student, each rebuilt on the same
+alphabet so node sets stay aligned and comparable.
 
 ``` r
 
-per_person <- series_networks(walk_model)
+per_person <- series_networks(effort_model)
 
 head(summary(per_person))
 #>   series type observations states edges
-#> 1     35  tna          295      3     6
-#> 2     37  tna          278      3     9
-#> 3     47  tna          297      3     9
-#> 4     57  tna          239      3     9
-#> 5     58  tna          176      3     9
-#> 6     70  tna          257      3     9
+#> 1  Aisha  tna          156      3     9
+#> 2  Alice  tna          156      3     9
+#> 3  Anika  tna          156      3     9
+#> 4 Astrid  tna          156      3     7
+#> 5  Bjorn  tna          156      3     9
+#> 6    Bob  tna          156      3     9
 ```
 
 Each row indexes a full `ts_tna` model that prints and plots on its own:
 the models are the list elements, and this is the tidy index over them.
-Because the cut points are fixed step counts rather than sample
-quantiles, a participant’s personal network describes their own
-activity, not their rank within the sample.
+Because the cut points are fixed scale positions rather than sample
+quantiles, a student’s personal network describes their own effort, not
+their rank within the panel. The index already shows individual
+structure: one of the first six students never makes two of the nine
+transitions at all, so their network carries seven edges rather than
+nine.
 
 ## Describing the model
 
@@ -365,12 +370,12 @@ activity, not their rank within the sample.
 
 ``` r
 
-net_centrality(walk_model)
+net_centrality(effort_model)
 #> centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
-#>               state InStrength Betweenness Diffusion
-#> sedentary sedentary  0.2152510           0 1.0000000
-#> moderate   moderate  0.7650336           1 0.4116171
-#> active       active  0.5470912           0 0.0000000
+#>             state InStrength Betweenness Diffusion
+#> low           low  0.3832538           0 1.0000000
+#> moderate moderate  0.5738366           0 0.7292556
+#> high         high  0.6003974           0 0.0000000
 ```
 
 The message notes that centralities exclude self-transitions by default,
@@ -378,19 +383,23 @@ which matters for a transition network: the diagonal is usually the
 largest entry, so a state can be highly persistent while receiving
 little traffic from elsewhere. Excluding the diagonal measures how
 central a state is to *movement* between states rather than to staying
-put. Passing `loops = TRUE` includes it.
+put. Here `high` and `moderate` receive similar between-state traffic
+(in-strengths of 0.60 and 0.57) while `low` receives markedly less
+(0.38); the betweenness column is uniformly zero because in a fully
+connected three-state network no state is an obligatory bridge. Passing
+`loops = TRUE` includes the diagonal.
 
 ### How much of the sequence is structure, and how much is noise
 
 ``` r
 
-transition_entropy(walk_model)
+transition_entropy(effort_model)
 #> Transition Entropy (3 states, bits; ceiling = 1.585)
 #> 
 #>                           raw            normalised
-#>   Entropy rate    h(P)  = 1.346 bits    0.849
-#>   Stationary    H(pi)  = 1.444 bits    0.911
-#>   Redundancy   H(pi)-h = 0.098 bits    0.068
+#>   Entropy rate    h(P)  = 1.479 bits    0.933
+#>   Stationary    H(pi)  = 1.552 bits    0.979
+#>   Redundancy   H(pi)-h = 0.073 bits    0.047
 #> 
 #> Normalised: h(P) and H(pi) are raw / log_2(n_states) (0 = deterministic, 1 = uniform);
 #>   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi), not raw / log_2(n_states).
@@ -401,9 +410,11 @@ perfectly deterministic process and 1 means every next state is equally
 likely from wherever the process currently sits. A value of 1 requires
 more than an uninformative current state: a lopsided but
 state-independent process still scores well below it. Cut at the
-tertiles, these same step counts score 0.93; cut at 5,000 and 10,000
-they score 0.85. The cut points are not cosmetic: they decide how much
-structure is left to find.
+tertiles, these same effort reports score 0.96; cut at 40 and 70 they
+score 0.93. The fixed thresholds recover slightly more structure, and
+either way the message is sobering: day-to-day effort is mostly noise
+around a weak first-order signal, which is worth knowing before any edge
+is over-interpreted.
 
 ## Pruning
 
@@ -414,27 +425,28 @@ flows straight back into any verb above.
 
 ``` r
 
-net_prune(walk_model, method = "threshold", threshold = 0.3)
+net_prune(effort_model, method = "threshold", threshold = 0.3)
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.320, 0.619]  |  mean: 0.430
+#>   Weights: [0.314, 0.575]  |  mean: 0.417
 #> 
 #>   Weight matrix:
-#>             sedentary moderate active
-#>   sedentary     0.353    0.445  0.000
-#>   moderate      0.000    0.501  0.345
-#>   active        0.000    0.320  0.619 
+#>              low moderate  high
+#>   low      0.415    0.314 0.000
+#>   moderate 0.000    0.453 0.329
+#>   high     0.000    0.000 0.575 
 #> 
 #>   Initial probabilities:
-#>   active        0.576  ████████████████████████████████████████
-#>   moderate      0.311  ██████████████████████
-#>   sedentary     0.113  ████████
+#>   high          0.417  ████████████████████████████████████████
+#>   moderate      0.389  █████████████████████████████████████
+#>   low           0.194  ███████████████████
 ```
 
-Three edges fall below the threshold: every route *into* sedentary from
-a higher state, together with the direct leap from sedentary to active.
-What survives says that a sedentary day is harder to fall into than to
-climb out of. The `sedentary -> moderate` edge is a strong 0.445, while
-nothing descends into sedentary above 0.3.
+Four edges fall below the threshold, and they are not a random four:
+every *descending* route (`moderate -> low`, `high -> low`,
+`high -> moderate`) disappears, together with the direct `low -> high`
+leap. What survives is the ascending ladder — `low -> moderate` at
+0.314, `moderate -> high` at 0.329 — and the three persistence loops.
+Effort climbs stepwise and decays only weakly.
 
 Prune after testing rather than before, however. A threshold ranks edges
 by size, and size is not the same as interest: a small but reliably
@@ -448,21 +460,20 @@ each resample, and reports a confidence interval for every edge.
 
 ``` r
 
-boot <- bootstrap_network(walk_model, iter = 200, seed = 2024)
+boot <- bootstrap_network(effort_model, iter = 200, seed = 2026)
 
 boot
 #>   Edge                   Mean     95% CI          p
 #>   -----------------------------------------------
-#>   active → active      0.618  [0.585, 0.648]  ** 
-#>   moderate → moderate   0.500  [0.478, 0.523]  ** 
-#>   sedentary → moderate   0.444  [0.419, 0.469]  ** 
-#>   sedentary → sedentary   0.353  [0.323, 0.386]  ** 
-#>   moderate → active    0.346  [0.318, 0.373]  ** 
-#>   ... and 4 more significant edges
+#>   high → high          0.571  [0.458, 0.653]  *  
+#>   moderate → moderate   0.452  [0.392, 0.508]  ** 
+#>   moderate → high      0.333  [0.284, 0.385]  ** 
+#>   low → moderate       0.317  [0.258, 0.375]  *  
+#>   high → moderate      0.264  [0.211, 0.328]  *  
 #> 
 #> Bootstrap Network  [Transition Network (relative) | directed]
 #>   Iterations : 200  |  Nodes : 3
-#>   Edges      : 9 significant / 9 total
+#>   Edges      : 5 significant / 9 total
 #>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 ```
 
@@ -472,32 +483,35 @@ one-row-per-edge table.
 ``` r
 
 summary(boot)
-#>        from        to     weight       mean          sd     p_value  sig
-#> 1 sedentary sedentary 0.35281837 0.35345581 0.016363187 0.004975124 TRUE
-#> 2 sedentary  moderate 0.44514034 0.44378997 0.012517516 0.004975124 TRUE
-#> 3 sedentary    active 0.20204129 0.20275421 0.012723224 0.004975124 TRUE
-#> 4  moderate sedentary 0.15365259 0.15382362 0.008219952 0.004975124 TRUE
-#> 5  moderate  moderate 0.50129748 0.50036003 0.011436886 0.004975124 TRUE
-#> 6  moderate    active 0.34504993 0.34581635 0.014524197 0.004975124 TRUE
-#> 7    active sedentary 0.06159838 0.06212676 0.005251614 0.014925373 TRUE
-#> 8    active  moderate 0.31989325 0.31996300 0.011000596 0.004975124 TRUE
-#> 9    active    active 0.61850837 0.61791024 0.014531904 0.004975124 TRUE
-#>     ci_lower  ci_upper   cr_lower   cr_upper
-#> 1 0.32318763 0.3856584 0.26461378 0.44102296
-#> 2 0.41903064 0.4688517 0.33385525 0.55642542
-#> 3 0.17664549 0.2244967 0.15153097 0.25255161
-#> 4 0.13841919 0.1697292 0.11523944 0.19206574
-#> 5 0.47778672 0.5230883 0.37597311 0.62662184
-#> 6 0.31847498 0.3727507 0.25878745 0.43131242
-#> 7 0.05314263 0.0738917 0.04619879 0.07699798
-#> 8 0.29783560 0.3433023 0.23991994 0.39986656
-#> 9 0.58489465 0.6482990 0.46388128 0.77313546
+#>       from       to    weight      mean         sd     p_value   sig  ci_lower
+#> 1      low      low 0.4148311 0.4015282 0.05284228 0.059701493 FALSE 0.3043293
+#> 2      low moderate 0.3135095 0.3166900 0.03084593 0.024875622  TRUE 0.2583890
+#> 3      low     high 0.2716593 0.2817819 0.03701263 0.084577114 FALSE 0.2172464
+#> 4 moderate      low 0.2184517 0.2151464 0.02620083 0.059701493 FALSE 0.1630474
+#> 5 moderate moderate 0.4528102 0.4519208 0.02976832 0.004975124  TRUE 0.3920565
+#> 6 moderate     high 0.3287381 0.3329328 0.02742877 0.004975124  TRUE 0.2840620
+#> 7     high      low 0.1648021 0.1654507 0.02913549 0.154228856 FALSE 0.1105726
+#> 8     high moderate 0.2603270 0.2636688 0.03085939 0.044776119  TRUE 0.2111482
+#> 9     high     high 0.5748709 0.5708806 0.05172929 0.014925373  TRUE 0.4581270
+#>    ci_upper  cr_lower  cr_upper
+#> 1 0.5035205 0.3111233 0.5185389
+#> 2 0.3754918 0.2351322 0.3918869
+#> 3 0.3582807 0.2037445 0.3395742
+#> 4 0.2667262 0.1638388 0.2730647
+#> 5 0.5079602 0.3396076 0.5660127
+#> 6 0.3851077 0.2465536 0.4109226
+#> 7 0.2260268 0.1236015 0.2060026
+#> 8 0.3284161 0.1952453 0.3254088
+#> 9 0.6534180 0.4311532 0.7185886
 ```
 
-With 151 sequences behind it, every edge is estimated precisely and all
-nine survive resampling. Confidence intervals a few hundredths wide are
-what a large sample buys, and they are the ground on which the
-descriptive reading above can be reported rather than merely observed.
+Five of the nine edges survive resampling — the three persistence loops
+and the two ascending steps, precisely the edges pruning kept. The other
+four, all descending routes or the `low -> high` leap, move too much
+across resamples of the 36 students to clear the stability criterion.
+This is what a moderate panel buys: the backbone is firm, the weaker
+cross-currents are not, and the two verdicts (pruning by size, bootstrap
+by stability) agreeing on the same five edges is itself informative.
 
 ## Stability: would the same states rank first in a smaller study?
 
@@ -509,21 +523,23 @@ coefficient.
 
 ``` r
 
-centrality_stability(walk_model, iter = 100)
+set.seed(2026)
+centrality_stability(effort_model, iter = 100)
 #> Centrality Stability (100 iterations, threshold = 0.7)
 #>   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 #> 
 #>   CS-coefficients:
-#>     InStrength       0.90
-#>     OutStrength      0.90
-#>     Betweenness      0.90
+#>     InStrength       0.60
+#>     OutStrength      0.40
 ```
 
-All three coefficients reach 0.90, against conventional bars of 0.5 for
-acceptable and 0.7 for excellent. That measures how stable the
-*ordering* is under resampling; it does not speak to whether the
-ordering is substantively meaningful, only to whether a smaller study
-would have recovered it.
+The in-strength ordering holds to a 0.60 drop — acceptable, against
+conventional bars of 0.5 for acceptable and 0.7 for excellent — but the
+out-strength ordering fails the bar at 0.40. With 36 sequences, claims
+about which state *sends* the most between-state traffic should not be
+made from this panel; claims about which state receives it are on firmer
+ground. This is the stability check doing its job, and the honest report
+includes the number that failed.
 
 ## Markov order: is a first-order model enough?
 
@@ -533,17 +549,18 @@ testable, by comparing the fit of models of increasing order.
 
 ``` r
 
-markov_order_test(walk_model)
+set.seed(2026)
+markov_order_test(effort_model)
 #> Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]
-#>   151 sequences / 31043 observations / 3 states
+#>   36 sequences / 5608 observations / 3 states
 #> 
-#>   Selected order  BIC: 3   AIC: 3   permutation-LRT: 3
+#>   Selected order  BIC: 2   AIC: 3   permutation-LRT: 3
 #> 
-#>  order    loglik      AIC      BIC df      g2 p_permutation  p_asymptotic
-#>      0 -31051.63 62107.27 62123.95 NA      NA            NA            NA
-#>      1 -28961.91 57939.82 58006.57  4 4179.40   0.001996008  0.000000e+00
-#>      2 -28209.20 56470.40 56687.32 12 1505.37   0.001996008 2.624960e-315
-#>      3 -27901.81 55963.62 56631.07 36  614.68   0.001996008 1.933327e-106
+#>  order   loglik      AIC      BIC df     g2 p_permutation  p_asymptotic
+#>      0 -6031.21 12066.41 12079.67 NA     NA            NA            NA
+#>      1 -5750.23 11516.45 11569.51  4 561.95   0.001996008 2.653668e-120
+#>      2 -5606.12 11264.24 11436.67 12 288.17   0.001996008  1.422835e-54
+#>      3 -5494.72 11149.43 11679.99 36 222.75   0.001996008  8.841816e-29
 #>  significant
 #>           NA
 #>         TRUE
@@ -551,24 +568,24 @@ markov_order_test(walk_model)
 #>         TRUE
 ```
 
-The test disagrees with the first-order model. AIC, BIC, and the
-permutation likelihood-ratio test all prefer a higher order, meaning
-yesterday carries information about tomorrow beyond what today already
-conveys. This does not invalidate the first-order network, but it bounds
-the claim: the network is a summary of one-step behaviour, not a full
+The test disagrees with the first-order model. AIC and the permutation
+likelihood-ratio test prefer order 3 and BIC order 2, meaning yesterday
+carries information about tomorrow beyond what today already conveys.
+This does not invalidate the first-order network, but it bounds the
+claim: the network is a summary of one-step behaviour, not a full
 description of the process.
 
 The natural follow-up is a higher-order network.
 
 ``` r
 
-build_hon(walk_model, max_order = 2)
+build_hon(effort_model, max_order = 2)
 #> Higher-Order Network (HON)
 #>   Nodes:        3 (3 first-order states)
 #>   Edges:        9
 #>   Max order:    1 (requested 2)
 #>   Min freq:     1
-#>   Trajectories: 151
+#>   Trajectories: 36
 ```
 
 The higher-order construction keeps every node at order 1: it finds no
@@ -585,10 +602,9 @@ localized in any single state.
 The tests so far describe one network.
 [`permutation()`](https://saqr.me/Nestimate/reference/permutation.html)
 compares two, shuffling the group labels to build a null distribution
-for every edge. The `steps` series runs from April 2019 to March 2020;
-splitting at the start of November contrasts the warmer months with the
-colder ones. The two spans are unequal in length, roughly six and a half
-months against four.
+for every edge. The `srl` panel covers 156 occasions per student;
+splitting at occasion 78 contrasts the first half of the course with the
+second, with the same 36 students on both sides.
 
 Both models are built with the same fixed `breaks`, which matters more
 than it appears: had each period been discretized on its own quantiles,
@@ -597,29 +613,27 @@ between them could reflect the thresholds rather than behaviour.
 
 ``` r
 
-cutoff <- as.Date("2019-11-01")
-
-early <- ts_tna(
-  subset(walkers, as.Date(day) < cutoff),
-  value = "steps",
-  id = "id",
+first_half <- ts_tna(
+  subset(students, day <= 78),
+  value = "effort",
+  id = "name",
   time = "day",
   discretization = "threshold",
-  breaks = c(5000, 10000),
-  labels = c("sedentary", "moderate", "active")
+  breaks = c(40, 70),
+  labels = c("low", "moderate", "high")
 )
 
-late <- ts_tna(
-  subset(walkers, as.Date(day) >= cutoff),
-  value = "steps",
-  id = "id",
+second_half <- ts_tna(
+  subset(students, day > 78),
+  value = "effort",
+  id = "name",
   time = "day",
   discretization = "threshold",
-  breaks = c(5000, 10000),
-  labels = c("sedentary", "moderate", "active")
+  breaks = c(40, 70),
+  labels = c("low", "moderate", "high")
 )
 
-comparison <- permutation(early, late, iter = 2000, seed = 2024)
+comparison <- permutation(first_half, second_half, iter = 2000, seed = 2026)
 
 comparison
 #> Permutation Test:Transition Network (relative probabilities) [directed]
@@ -630,16 +644,16 @@ comparison
 ``` r
 
 summary(comparison)
-#>        from        to   weight_x   weight_y         diff effect_size    p_value
-#> 1 sedentary sedentary 0.34985280 0.35525154 -0.005398748 -0.18420352 0.86406797
-#> 2 sedentary  moderate 0.44602552 0.44395410  0.002071411  0.08267605 0.93753123
-#> 3 sedentary    active 0.20412169 0.20079435  0.003327337  0.15848152 0.88655672
-#> 4  moderate sedentary 0.14430829 0.16225831 -0.017950026 -1.26222133 0.20589705
-#> 5  moderate  moderate 0.50048371 0.50224285 -0.001759131 -0.09494720 0.91554223
-#> 6  moderate    active 0.35520800 0.33549884  0.019709158  0.87706971 0.38030985
-#> 7    active sedentary 0.05810102 0.06593238 -0.007831364 -0.93700923 0.35282359
-#> 8    active  moderate 0.30333977 0.33761664 -0.034276870 -1.78233216 0.07196402
-#> 9    active    active 0.63855921 0.59645097  0.042108234  1.75491892 0.07946027
+#>       from       to  weight_x  weight_y          diff effect_size   p_value
+#> 1      low      low 0.4143070 0.4152047 -0.0008976739 -0.01176955 0.9905047
+#> 2      low moderate 0.3293592 0.2967836  0.0325755397  0.68417855 0.4937531
+#> 3      low     high 0.2563338 0.2880117 -0.0316778658 -0.61092234 0.5532234
+#> 4 moderate      low 0.2134472 0.2230523 -0.0096051227 -0.23379724 0.8345827
+#> 5 moderate moderate 0.4557097 0.4514408  0.0042689434  0.08454169 0.9385307
+#> 6 moderate     high 0.3308431 0.3255069  0.0053361793  0.12210174 0.9010495
+#> 7     high      low 0.1665229 0.1637631  0.0027597983  0.07267935 0.9480260
+#> 8     high moderate 0.2476273 0.2700348 -0.0224075783 -0.50254694 0.6276862
+#> 9     high     high 0.5858499 0.5662021  0.0196477800  0.29315994 0.7611194
 #>     sig
 #> 1 FALSE
 #> 2 FALSE
@@ -652,76 +666,70 @@ summary(comparison)
 #> 9 FALSE
 ```
 
-None of the nine edge comparisons reaches significance; the smallest
-p-value is 0.07. The estimates are not identical, but no difference
-survives the permutation null. That is a more informative result than a
-scattering of small p-values would have been, because the two periods
-differ in how much people walked in the first place:
+Nothing separates the halves: no edge comparison comes near significance
+(the smallest p-value is 0.49) and the largest estimated difference on
+any edge is 0.033. The compositions agree just as closely:
 
 ``` r
 
-state_distribution(early)
-#>   group     state count proportion
-#> 1   all    active  7328  0.4689620
-#> 2   all  moderate  6253  0.4001664
-#> 3   all sedentary  2045  0.1308716
+state_distribution(first_half)
+#>   group    state count proportion
+#> 1   all     high  1176  0.4195505
+#> 2   all moderate   949  0.3385658
+#> 3   all      low   678  0.2418837
 
-state_distribution(late)
-#>   group     state count proportion
-#> 1   all    active  6593  0.4276448
-#> 2   all  moderate  6523  0.4231044
-#> 3   all sedentary  2301  0.1492508
+state_distribution(second_half)
+#>   group    state count proportion
+#> 1   all     high  1165  0.4153298
+#> 2   all moderate   951  0.3390374
+#> 3   all      low   689  0.2456328
 ```
 
-Active days fall from 46.9% before November to 42.8% after it, and
-sedentary days rise. The seasonal shift is therefore plain in the
-*composition* of the states while no comparison of the *transitions*
-between them reaches significance. The estimated sedentary-to-moderate
-probability, for instance, is 0.446 before November and 0.444 after,
-with a permutation p-value of 0.94.
+High-effort days make up 42.0% of the first half and 41.5% of the
+second; every proportion moves by less than a percentage point. Level
+and dynamics are both stationary across the course: whatever effort
+habits these students have, they are set before the midpoint and do not
+drift. A null this uniform is a finding — it licenses pooling the whole
+course into the single model above, which a real first-to-second-half
+shift would have forbidden.
 
 Two cautions bound how far that carries. Failing to reject nine tests is
-not the same as showing the dynamics are identical, and the two models
-do not rest on quite the same people: 140 participants contribute before
-November and 149 after, with 138 in both.
+not the same as proving the dynamics identical, and the balanced design
+helps the comparison: the same 36 students stand on both sides of the
+cut, so the null is not an artefact of different people in different
+periods.
 
-That distinction is the reason to build a transition network at all. A
-comparison of means or of state proportions finds the seasonal
-difference and stops there; the transition model asks a further question
-of the same population, whether the *dynamics* moved with the season,
-and finds no evidence that they did.
-
-## More than two groups: one model per context
+## More than two groups: one model per condition
 
 Building two models by hand is manageable when there are two. When the
 variable that separates the groups is already a column in the data, the
 `group` argument builds one network per level in a single call, and it
 scales past two, which the pairwise form does not.
 
-The `motivation` study records where each measurement was taken in
-`task_context_type`, so the pleasure ratings can be split by context.
+The `esm_srl` study carries a `day_type` column marking weekday and
+weekend reports, so momentary effort can be split by day type.
 
 ``` r
 
-by_context <- ts_tna(
-  motivation,
-  series = "pleasure",
-  group = "task_context_type",
+by_day <- ts_tna(
+  subset(esm_srl, !is.na(effort)),
+  value = "effort",
+  id = "name",
+  time = "occasion",
+  group = "day_type",
   labels = c("low", "mid", "high")
 )
 
-by_context
-#> Group Networks (4 groups, group_col: task_context_type)
+by_day
+#> Group Networks (2 groups, group_col: day_type)
 #> 
-#>   Group     Nodes  Edges  Weights
-#>   Home      3      9      [0.040, 0.762]
-#>   Other     3      1      [1.000, 1.000]
-#>   Personal  3      9      [0.065, 0.664]
-#>   Work      3      9      [0.156, 0.518]
+#>   Group    Nodes  Edges  Weights
+#>   weekday  3      9      [0.098, 0.631]
+#>   weekend  3      9      [0.085, 0.633]
 ```
 
 Two things happen here that would be tedious to arrange by hand. The
-states are cut from the *pooled* series before the split, so all four
+states are cut from the *pooled* series before the split, so both
 networks rest on one set of thresholds and share a node set, the same
 discipline the fixed `breaks` enforced earlier, applied automatically.
 And the result is a Nestimate `netobject_group`, so the compatible
@@ -732,169 +740,195 @@ grouped verbs take it directly:
 [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html),
 [`permutation()`](https://saqr.me/Nestimate/reference/permutation.html),
 [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html),
-and their neighbours. Not every verb applies: those needing a precision
-matrix or a clustering attribute reject a transition model, and there is
-no grouped [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-method, so networks are plotted one at a time.
+and their neighbours, while
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) with a `group`
+argument draws one selected network. Not every verb applies: those
+needing a precision matrix or a clustering attribute reject a transition
+model.
 
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) gives the
 tidy view of how much data stands behind each network:
 
 ``` r
 
-as.data.frame(by_context, what = "groups")
-#>      group type sequences observations states edges
-#> 1     Home  tna       832         1324      3     9
-#> 2    Other  tna         2            3      3     1
-#> 3 Personal  tna       822         1309      3     9
-#> 4     Work  tna       976         2235      3     9
+as.data.frame(by_day, what = "groups")
+#>     group type sequences observations states edges
+#> 1 weekday  tna       238         2033      3     9
+#> 2 weekend  tna       233          783      3     9
 ```
 
-The sequence counts repay a second look: `Home` has 1,324 observations
-but 832 sequences. That is not padding. A run is cut at every change of
-series *and* at every change of group, and the two cuts are not the
-same. A change of series separates measurements that were never
-consecutive; a change of context falls between two genuinely adjacent
-measurements, and the transition across it is excluded from both
-networks because it belongs to neither context. This study alternates
-context from one measurement to the next (4,871 observations form 2,632
-contiguous runs), so each unbroken stretch within a context becomes its
-own sequence, and a pair of measurements separated by an intervening
-visit to a different context is never counted as a transition, because
-it never was one.
-
-That rule costs nothing when a group is constant within a series, which
-is the usual case for a condition or a cohort: each series then
-contributes one sequence and keeps its own ID.
+The sequence counts repay a second look: the weekday network holds 2,033
+observations in 238 sequences, the weekend network 783 in 233. That is
+not padding. A run is cut at every change of student *and* at every
+change of day type, and the two cuts are not the same. A change of
+student separates measurements that were never consecutive; a change of
+day type falls between two genuinely adjacent measurements, and the
+transition across it is excluded from both networks because it belongs
+to neither day type. A working week of roughly two reports a day
+therefore forms one sequence of eight to ten observations, a weekend one
+of three to four, and the Friday-to-Saturday transition is counted in
+neither.
 
 ``` r
 
-state_distribution(by_context)
-#>       group state count proportion
-#> 1      Home   low   827 0.62462236
-#> 2      Home   mid   409 0.30891239
-#> 3      Home  high    88 0.06646526
-#> 4     Other  high     1 0.33333333
-#> 5     Other   low     1 0.33333333
-#> 6     Other   mid     1 0.33333333
-#> 7  Personal  high   597 0.45607334
-#> 8  Personal   mid   459 0.35064935
-#> 9  Personal   low   253 0.19327731
-#> 10     Work  high   938 0.41968680
-#> 11     Work   mid   749 0.33512304
-#> 12     Work   low   548 0.24519016
+state_distribution(by_day)
+#>     group state count proportion
+#> 1 weekday   low   694  0.3413674
+#> 2 weekday  high   676  0.3325135
+#> 3 weekday   mid   663  0.3261190
+#> 4 weekend   mid   268  0.3422733
+#> 5 weekend  high   262  0.3346105
+#> 6 weekend   low   253  0.3231162
 ```
 
-The contexts are not alike. Pleasure is low on 62.5% of measurements
-taken at home and high on only 6.6% of them; personal time reverses that
-ordering: high on 45.6%, low on 19.3%. Work sits between the two on all
-three states. A mosaic plot shows the same contrast in the transition
-structure at a glance, one panel per context:
+The compositions are nearly identical — each state holds close to a
+third of the reports on both day types, as pooled quantile cutting
+guarantees for the whole panel though not for each group. Whatever
+distinguishes weekends, it is not how much high-effort time they
+contain. The difference, if any, must live in the dynamics, and the
+shared alphabet is what makes that question answerable:
 
 ``` r
 
-mosaic_plot(by_context)
+day_comparison <- permutation(by_day, iter = 1000, seed = 2026)
+
+summary(day_comparison)
+#>                group from   to   weight_x   weight_y          diff  effect_size
+#> 1 weekday vs weekend  low  low 0.61990212 0.63276836 -0.0128662409 -0.289921277
+#> 2 weekday vs weekend  low  mid 0.28221860 0.28248588 -0.0002672786 -0.006925447
+#> 3 weekday vs weekend  low high 0.09787928 0.08474576  0.0131335195  0.584487518
+#> 4 weekday vs weekend  mid  low 0.29441624 0.26111111  0.0333051325  0.900900323
+#> 5 weekday vs weekend  mid  mid 0.42978003 0.46666667 -0.0368866328 -0.878891544
+#> 6 weekday vs weekend  mid high 0.27580372 0.27222222  0.0035815003  0.093352074
+#> 7 weekday vs weekend high  low 0.11505922 0.12435233 -0.0092931099 -0.329460065
+#> 8 weekday vs weekend high  mid 0.25380711 0.34196891 -0.0881618053 -2.327154276
+#> 9 weekday vs weekend high high 0.63113367 0.53367876  0.0974549153  2.092734296
+#>      p_value   sig
+#> 1 0.77722278 FALSE
+#> 2 0.99500500 FALSE
+#> 3 0.56143856 FALSE
+#> 4 0.38061938 FALSE
+#> 5 0.37662338 FALSE
+#> 6 0.92007992 FALSE
+#> 7 0.77822178 FALSE
+#> 8 0.02297702  TRUE
+#> 9 0.04595405  TRUE
 ```
 
-![Mosaic panels of the four context-specific transition networks, in
-which tile area encodes transition probability from each current state
-to each next state, showing the home context concentrated in the
-low-to-low cell and personal time in the high-to-high
-cell.](nestimate-workflow_files/figure-html/grouped-mosaic-1.png)
+One robust difference emerges: `high -> mid` runs at 0.254 on weekdays
+and 0.342 on weekends (p = 0.023). Its mirror image, weekend
+`high -> high` retention falling to 0.534 from 0.631, sits exactly on
+the boundary (p = 0.046) and should be read as suggestive rather than
+established. Read together, the pattern is coherent: on weekends a
+high-effort spell is more likely to soften into the mid range and less
+likely to hold. This is the reverse of the seasonal result above —
+there, composition was free to move and nothing moved; here, composition
+is pinned by construction and the dynamics carry the difference.
 
-Tile area encodes the transition probability from a current state (rows)
-to a next state (columns). The home panel is dominated by its low-to-low
-cell and the personal panel by its high-to-high cell, so the difference
-in *level* between the contexts reappears as a difference in
-*persistence*: wherever pleasure tends to be, it tends to stay.
-
-Because every network shares an alphabet, two of them can be set side by
-side and selected by name:
+A mosaic plot shows both transition structures at a glance, one panel
+per day type:
 
 ``` r
 
-compare_model(by_context, i = "Home", j = "Work")
+mosaic_plot(by_day)
+```
+
+![Mosaic panels of the weekday and weekend transition networks, in which
+tile area encodes transition probability, showing the weekend
+high-to-mid cell visibly larger than its weekday
+counterpart.](nestimate-workflow_files/figure-html/grouped-mosaic-1.png)
+
+Because both networks share an alphabet, the pair can also be set side
+by side and compared as matrices:
+
+``` r
+
+compare_model(by_day, i = "weekday", j = "weekend")
 #> Network comparison
 #> ==================
 #> Summary metrics:
 #>              category               metric   value
-#>     Weight Deviations      Mean Abs. Diff.  0.2318
-#>     Weight Deviations    Median Abs. Diff.  0.2503
-#>     Weight Deviations            RMS Diff.  0.2581
-#>     Weight Deviations       Max Abs. Diff.  0.3699
-#>     Weight Deviations Rel. Mean Abs. Diff.  0.6953
-#>     Weight Deviations             CV Ratio   2.268
-#>          Correlations              Pearson -0.2137
-#>          Correlations             Spearman -0.2167
-#>          Correlations              Kendall -0.1111
-#>          Correlations             Distance  0.2513
-#>       Dissimilarities            Euclidean  0.7743
-#>       Dissimilarities            Manhattan   2.086
-#>       Dissimilarities             Canberra   3.477
-#>       Dissimilarities          Bray-Curtis  0.3477
-#>       Dissimilarities            Frobenius  0.6322
-#>          Similarities               Cosine  0.7693
-#>          Similarities              Jaccard  0.4841
-#>          Similarities                 Dice  0.6523
-#>          Similarities              Overlap  0.6523
-#>          Similarities                   RV  0.6594
-#>  Pattern Similarities       Rank Agreement  0.8333
+#>     Weight Deviations      Mean Abs. Diff. 0.03277
+#>     Weight Deviations    Median Abs. Diff. 0.01313
+#>     Weight Deviations            RMS Diff. 0.04735
+#>     Weight Deviations       Max Abs. Diff. 0.09745
+#>     Weight Deviations Rel. Mean Abs. Diff. 0.09832
+#>     Weight Deviations             CV Ratio   1.059
+#>          Correlations              Pearson  0.9657
+#>          Correlations             Spearman  0.8333
+#>          Correlations              Kendall  0.6667
+#>          Correlations             Distance  0.9357
+#>       Dissimilarities            Euclidean   0.142
+#>       Dissimilarities            Manhattan   0.295
+#>       Dissimilarities             Canberra  0.4608
+#>       Dissimilarities          Bray-Curtis 0.04916
+#>       Dissimilarities            Frobenius   0.116
+#>          Similarities               Cosine  0.9922
+#>          Similarities              Jaccard  0.9063
+#>          Similarities                 Dice  0.9508
+#>          Similarities              Overlap  0.9508
+#>          Similarities                   RV  0.9744
+#>  Pattern Similarities       Rank Agreement       1
 #>  Pattern Similarities       Sign Agreement       1
 #> 
 #> Network metrics (x vs y):
-#>                       metric      x      y
-#>                   Node Count      3      3
-#>                   Edge Count      9      9
-#>              Network Density      1      1
-#>                Mean Distance 0.2697 0.2882
-#>            Mean Out-Strength      1      1
-#>              SD Out-Strength 0.7008 0.2058
-#>             Mean In-Strength      1      1
-#>               SD In-Strength      0      0
-#>              Mean Out-Degree      3      3
-#>                SD Out-Degree      0      0
-#>  Centralization (Out-Degree)      0      0
-#>   Centralization (In-Degree)      0      0
-#>                  Reciprocity      1      1
+#>                       metric       x      y
+#>                   Node Count       3      3
+#>                   Edge Count       9      9
+#>              Network Density       1      1
+#>                Mean Distance  0.2199 0.2278
+#>            Mean Out-Strength       1      1
+#>              SD Out-Strength 0.03206 0.1015
+#>             Mean In-Strength       1      1
+#>               SD In-Strength       0      0
+#>              Mean Out-Degree       3      3
+#>                SD Out-Degree       0      0
+#>  Centralization (Out-Degree)       0      0
+#>   Centralization (In-Degree)       0      0
+#>                  Reciprocity       1      1
 ```
+
+A Pearson correlation of 0.966 with a maximum absolute difference of
+0.097 — the `high -> high` retention gap — confirms the same reading:
+the two networks are close, and where they part is in how long high
+effort lasts.
 
 Pruning applies group-wise and returns a grouped model, so the
 collection can be carried through a workflow without being taken apart:
 
 ``` r
 
-net_prune(by_context, method = "threshold", threshold = 0.3)
-#> Group Networks (4 groups)
+net_prune(by_day, method = "threshold", threshold = 0.3)
+#> Group Networks (2 groups)
 #> 
-#>   Group     Nodes  Edges  Weights
-#>   Home      3      6      [0.148, 0.762]
-#>   Other     3      1      [1.000, 1.000]
-#>   Personal  3      6      [0.286, 0.664]
-#>   Work      3      6      [0.315, 0.518]
+#>   Group    Nodes  Edges  Weights
+#>   weekday  3      5      [0.098, 0.631]
+#>   weekend  3      5      [0.085, 0.633]
 ```
 
-The index table states one caution plainly rather than hiding it:
-`Other` holds three observations and two sequences. It is a level of the
-column, so it gets a network, but a network estimated from a single
-transition is not a result. Read the `sequences` and `observations`
-columns before reading the edges.
+One caution generalizes beyond this example. Every level of the grouping
+column gets a network, however little data stands behind it, so read the
+`sequences` and `observations` columns of the index before reading any
+edges. A network estimated from a handful of transitions is a level of a
+column, not a result.
 
-## Plotting a single model
+## Plotting a model
 
-A grouped model has no
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method, but any
-single network does, including the pooled step model. The plot draws the
-three states as nodes and the transition probabilities as directed
-edges, with self-loops for persistence.
+Any single network has a
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method, and a
+grouped model draws one selected group at a time via its `group`
+argument. Here is the pooled effort model: three states as nodes,
+transition probabilities as directed edges, and self-loops for
+persistence.
 
 ``` r
 
-plot(walk_model)
+plot(effort_model)
 ```
 
-![Transition network of daily step-count states, with sedentary,
-moderate, and active nodes joined by directed edges whose thickness
-reflects transition probability and self-loops that mark each state's
+![Transition network of daily effort states, with low, moderate, and
+high nodes joined by directed edges whose thickness reflects transition
+probability and self-loops that mark each state's
 persistence.](nestimate-workflow_files/figure-html/plot-1.png)
 
 The heavy self-loops confirm what the state distribution reported
@@ -905,7 +939,7 @@ the plot types and their arguments in full.
 ## Where the line falls
 
 Everything descriptive in this vignette, from centralities, state
-distributions, entropy, and pruning to per-participant splits and the
+distributions, entropy, and pruning to per-student splits and the
 grouped models, runs on a model built from a single series. Everything
 inferential, meaning the bootstrap, stability, the Markov-order test,
 and the permutation test, requires many sequences, because resampling
@@ -917,4 +951,4 @@ your `breaks` before you compare anything, or pass `group` and let the
 pooled discretization fix them for you, so a difference between networks
 is a difference in behaviour and not in thresholds. And when a
 comparison rests on few sequences, say so: the `sequences` column exists
-to be read.
+to be read, and so does a stability coefficient that comes back at 0.40.

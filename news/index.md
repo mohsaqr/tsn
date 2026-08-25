@@ -1,5 +1,49 @@
 # Changelog
 
+## tsn 1.4.0
+
+### Breaking changes
+
+- The bundled example data sets have been replaced. `steps` and
+  `motivation` (which carried no usable provenance) are gone; in their
+  place the package ships two data sets with full provenance owned by
+  the package authors:
+  - **`srl`** — a balanced daily panel of 36 students reporting nine
+    self-regulated-learning indicators for 156 occasions on 0-100
+    scales, the companion data of *Advanced Learning Analytics Methods*
+    (CC BY-NC-SA 4.0; see the `COPYRIGHTS` file). Identical to the copy
+    in the authors’ ‘idiographic’ package.
+  - **`esm_srl`** — the authors’ own fully anonymized
+    experience-sampling study: 41 students, momentary
+    self-regulation/motivation/anxiety on 0-100 scales, fictional
+    identifiers and constant-shifted dates. The tsn copy adds a derived
+    `day_type` (weekday/weekend) factor so grouped models need no
+    caller-side preparation. Code that referenced `steps` or
+    `motivation` must switch data sets.
+- The internal `R/sysdata.rda` copy of the old data sets (an unused
+  leftover that silently re-shipped them inside the namespace) is
+  removed.
+
+### Documentation
+
+- Every vignette, example, and the README were rebuilt on the new data,
+  with all reported numbers recomputed:
+  - `vignette("pleasure-all-functions")` is now
+    [`vignette("constructing-time-series-networks")`](https://pak.dynasite.org/tsn/articles/constructing-time-series-networks.md),
+    following one student’s momentary anxiety series through every
+    exported verb.
+  - [`vignette("nestimate-workflow")`](https://pak.dynasite.org/tsn/articles/nestimate-workflow.md)
+    runs on the `srl` effort panel (fixed breaks at 40/70), one
+    student’s series for segmentation, a first-versus-second-half course
+    comparison, and the weekday/weekend grouped model.
+  - [`vignette("group-models")`](https://pak.dynasite.org/tsn/articles/group-models.md)
+    compares weekday and weekend effort dynamics end to end, including
+    the welding and threshold failure modes of hand-subsetting.
+  - [`vignette("nestimate-compatibility")`](https://pak.dynasite.org/tsn/articles/nestimate-compatibility.md)
+    maps the Nestimate verb surface on the `srl` effort model.
+  - [`vignette("plotting-time-series-networks")`](https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.md)
+    draws the same plot tour on the momentary anxiety series.
+
 ## tsn 1.3.0
 
 ### New features
@@ -140,18 +184,16 @@
   the plotting surface end to end — network and source-series views,
   state overlays, ribbon, heatmap, and stack types, and transition-model
   plots.
-- [`vignette("pleasure-all-functions")`](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md)
-  was rewritten around the packaged `motivation` pleasure series,
-  selecting it through each verb’s `series` argument rather than
-  extracting the column.
+- `vignette("pleasure-all-functions")` was rewritten around the packaged
+  `motivation` pleasure series, selecting it through each verb’s
+  `series` argument rather than extracting the column.
 
 ## tsn 1.1.0
 
-- New
-  [`vignette("pleasure-all-functions")`](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md):
-  a complete tutorial using the packaged `motivation$pleasure`
-  measurements to demonstrate all nine exported functions, the standard
-  result interface, and cograph-only network plots.
+- New `vignette("pleasure-all-functions")`: a complete tutorial using
+  the packaged `motivation$pleasure` measurements to demonstrate all
+  nine exported functions, the standard result interface, and
+  cograph-only network plots.
 - New Nestimate bridge:
   [`ts_tna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md),
   [`ts_ftna()`](https://pak.dynasite.org/tsn/reference/ts_tna.md),

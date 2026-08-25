@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,34 @@
       <small>Source: <a href="https://github.com/mohsaqr/tsn/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.4.0" id="tsn-140">tsn 1.4.0<a class="anchor" aria-label="anchor" href="#tsn-140"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-1-4-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-4-0"></a></h3>
+<ul><li>The bundled example data sets have been replaced. <code>steps</code> and <code>motivation</code> (which carried no usable provenance) are gone; in their place the package ships two data sets with full provenance owned by the package authors:
+<ul><li>
+<strong><code>srl</code></strong> — a balanced daily panel of 36 students reporting nine self-regulated-learning indicators for 156 occasions on 0-100 scales, the companion data of <em>Advanced Learning Analytics Methods</em> (CC BY-NC-SA 4.0; see the <code>COPYRIGHTS</code> file). Identical to the copy in the authors’ ‘idiographic’ package.</li>
+<li>
+<strong><code>esm_srl</code></strong> — the authors’ own fully anonymized experience-sampling study: 41 students, momentary self-regulation/motivation/anxiety on 0-100 scales, fictional identifiers and constant-shifted dates. The tsn copy adds a derived <code>day_type</code> (weekday/weekend) factor so grouped models need no caller-side preparation. Code that referenced <code>steps</code> or <code>motivation</code> must switch data sets.</li>
+</ul></li>
+<li>The internal <code>R/sysdata.rda</code> copy of the old data sets (an unused leftover that silently re-shipped them inside the namespace) is removed.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-1-4-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-4-0"></a></h3>
+<ul><li>Every vignette, example, and the README were rebuilt on the new data, with all reported numbers recomputed:
+<ul><li>
+<code>vignette("pleasure-all-functions")</code> is now <code><a href="../articles/constructing-time-series-networks.html">vignette("constructing-time-series-networks")</a></code>, following one student’s momentary anxiety series through every exported verb.</li>
+<li>
+<code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow")</a></code> runs on the <code>srl</code> effort panel (fixed breaks at 40/70), one student’s series for segmentation, a first-versus-second-half course comparison, and the weekday/weekend grouped model.</li>
+<li>
+<code><a href="../articles/group-models.html">vignette("group-models")</a></code> compares weekday and weekend effort dynamics end to end, including the welding and threshold failure modes of hand-subsetting.</li>
+<li>
+<code><a href="../articles/nestimate-compatibility.html">vignette("nestimate-compatibility")</a></code> maps the Nestimate verb surface on the <code>srl</code> effort model.</li>
+<li>
+<code><a href="../articles/plotting-time-series-networks.html">vignette("plotting-time-series-networks")</a></code> draws the same plot tour on the momentary anxiety series.</li>
+</ul></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.0" id="tsn-130">tsn 1.3.0<a class="anchor" aria-label="anchor" href="#tsn-130"></a></h2>
 <div class="section level3">
@@ -75,11 +103,11 @@
 <li>The <code>overlay</code> default for state and source-series views is now <code>"horizontal"</code> (value bands) rather than <code>"vertical"</code> (time runs), affecting <code><a href="../reference/plot.tsn_states.html">plot.tsn_states()</a></code>, <code>plot(type = "series")</code>, and <code><a href="../reference/plot.ts_tna.html">plot.ts_tna()</a></code>. Pass <code>overlay = "vertical"</code> to restore the previous shading.</li>
 <li>New <code><a href="../articles/plotting-time-series-networks.html">vignette("plotting-time-series-networks")</a></code>: the plotting surface end to end — network and source-series views, state overlays, ribbon, heatmap, and stack types, and transition-model plots.</li>
 <li>
-<code><a href="../articles/pleasure-all-functions.html">vignette("pleasure-all-functions")</a></code> was rewritten around the packaged <code>motivation</code> pleasure series, selecting it through each verb’s <code>series</code> argument rather than extracting the column.</li>
+<code>vignette("pleasure-all-functions")</code> was rewritten around the packaged <code>motivation</code> pleasure series, selecting it through each verb’s <code>series</code> argument rather than extracting the column.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="tsn-110">tsn 1.1.0<a class="anchor" aria-label="anchor" href="#tsn-110"></a></h2>
-<ul><li>New <code><a href="../articles/pleasure-all-functions.html">vignette("pleasure-all-functions")</a></code>: a complete tutorial using the packaged <code>motivation$pleasure</code> measurements to demonstrate all nine exported functions, the standard result interface, and cograph-only network plots.</li>
+<ul><li>New <code>vignette("pleasure-all-functions")</code>: a complete tutorial using the packaged <code>motivation$pleasure</code> measurements to demonstrate all nine exported functions, the standard result interface, and cograph-only network plots.</li>
 <li>New Nestimate bridge: <code><a href="../reference/ts_tna.html">ts_tna()</a></code>, <code><a href="../reference/ts_tna.html">ts_ftna()</a></code>, <code><a href="../reference/ts_tna.html">ts_cna()</a></code>, and <code><a href="../reference/ts_tna.html">ts_atna()</a></code> discretize one or many time series and build the matching Nestimate transition-network model (<code>netobject</code>) that keeps the source data (<code>$ts_source</code>) — plottable and compatible with Nestimate analyses whose sampling requirements the data satisfy. Node order follows the state level order (low/mid/high), not alphabetical.</li>
 <li>New <code><a href="../reference/series_networks.html">series_networks()</a></code> verb: splits a pooled bridge model into one full model per source series, all sharing the same node set and order for direct comparison and retaining the original Nestimate builder settings.</li>
 <li>

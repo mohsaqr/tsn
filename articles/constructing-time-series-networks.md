@@ -86,52 +86,50 @@ indexes the results by source series.
 
 ## Data
 
-The `motivation` data set bundled with the package is an example of
-experience-sampling, or intensive longitudinal, data: the same
-respondent was prompted several times a day and asked to report, in the
-moment, how they felt about the activity they were engaged in. Each of
-its 4,871 rows is one such momentary report, collected between September
-2018 and July 2021, and no values are missing. The thirteen columns fall
-into a few natural groups. Three record motivation (`autonomy`,
-`competence`, `relatedness`); three record appraisal of the current
-activity (`pleasure`, `interest`, `importance`); several describe the
-situation and its emotional framing, together with a categorical context
-label whose values are Home, Work, Personal, and Other; and one records
-overall `mood`. Two further columns place each report in time, giving
-the calendar date and the position of the report within that day’s
-sequence of prompts.
+The `esm_srl` data set bundled with the package is an example of
+experience-sampling, or intensive longitudinal, data: 41 students were
+prompted repeatedly, usually more than once a day, and asked to rate
+their momentary self-regulation, motivation, and anxiety on 0-100
+scales. Each of its 2,820 rows is one such momentary report. The data
+are fully anonymized — the participant identifiers are fictional names
+and the calendar dates have been shifted by a constant offset, so
+within-person spacing is preserved while no real dates or identities
+remain. The nine indicators span self-regulation (`planning`,
+`monitoring`, `effort`, `regulation`), motivation (`efficacy`, `value`,
+`motivated`, `enjoyment`), and `anxiety`; a derived `day_type` column
+marks weekday and weekend reports.
 
-This vignette follows a single one of these signals, the `pleasure`
-rating, which captures how pleasant the respondent found the current
-activity at the moment of the prompt. To keep every network small enough
-to read in full, the analysis uses only the first 60 reports, which each
-verb selects by name from the data frame. Passing the data frame rather
-than a bare vector preserves the recorded order of the observations, and
-that order is what every method below treats as the flow of time.
+This vignette follows a single one of these signals for a single
+student: the momentary `anxiety` ratings of the participant recorded as
+Jamal, who reported 79 occasions in total. To keep every network small
+enough to read in full, the analysis uses only his first 60 reports,
+which each verb selects by name from the data frame. Passing the data
+frame rather than a bare vector preserves the recorded order of the
+observations, and that order is what every method below treats as the
+flow of time.
 
 ``` r
 
-data("motivation", package = "tsn")
+data("esm_srl", package = "tsn")
 
-pleasure <- head(motivation, 60)
+anxiety <- head(subset(esm_srl, name == "Jamal"), 60)
 
-dim(pleasure)
+dim(anxiety)
 #> [1] 60 13
 ```
 
-These 60 reports were collected over 21 days, from 29 September to 19
-October 2018. The pleasure ratings occupy the observed range 6 to 44,
-with a median of 30, a mean of 26.8, and a standard deviation of about
-10, so they spread across a wide band rather than clustering near a
-single value. The segment carries no systematic trend: the first twenty
-reports average 27.5 and the last twenty average 27.0, essentially
-unchanged. The representations that follow should therefore be read as
-descriptions of short-run fluctuation around a roughly constant level,
-not of a rising or falling series. The distinction matters for
-interpretation, because several of the constructions below, in
-particular the visibility graph and the trend labels, respond to the
-local rises and falls of the series rather than to its overall
-direction.
+These 60 reports span 31 anonymized calendar days. The anxiety ratings
+occupy the full observed range 0 to 100, with a median of 49, a mean of
+47.0, and a standard deviation of about 27, so they spread across a wide
+band rather than clustering near a single value. The segment carries no
+systematic trend: the first twenty reports average 44.9 and the last
+twenty average 46.3, essentially unchanged. The representations that
+follow should therefore be read as descriptions of short-run fluctuation
+around a roughly constant level, not of a rising or falling series. The
+distinction matters for interpretation, because several of the
+constructions below, in particular the visibility graph and the trend
+labels, respond to the local rises and falls of the series rather than
+to its overall direction.
 
 ## Transition Network Analysis
 
@@ -151,29 +149,29 @@ continuous values with ordered categorical states.
 ``` r
 
 states <- discretize(
-  data = pleasure,
-  series = "pleasure",
+  data = anxiety,
+  series = "anxiety",
   labels = c("Low", "Middle", "High")
 )
 
 states
 #> <tsn_states> quantile discretization (transform: none): 60 observations, 3 states
-#>        id time value  state probability
-#>  pleasure    1    32 Middle           1
-#>  pleasure    2    32 Middle           1
-#>  pleasure    3    32 Middle           1
-#>  pleasure    4    26 Middle           1
-#>  pleasure    5    16    Low           1
-#>  pleasure    6     6    Low           1
-#>  pleasure    7    30 Middle           1
-#>  pleasure    8     6    Low           1
-#>  pleasure    9    44   High           1
-#>  pleasure   10    42   High           1
+#>       id time     value  state probability
+#>  anxiety    1 18.279570    Low           1
+#>  anxiety    2 58.064516 Middle           1
+#>  anxiety    3 16.129032    Low           1
+#>  anxiety    4 56.989247 Middle           1
+#>  anxiety    5 55.913978 Middle           1
+#>  anxiety    6 70.967742   High           1
+#>  anxiety    7 74.193548   High           1
+#>  anxiety    8 56.989247 Middle           1
+#>  anxiety    9  8.602151    Low           1
+#>  anxiety   10 50.537634 Middle           1
 summary(states)
 #>    state count proportion mean_value
-#> 1    Low    20  0.3333333   14.75000
-#> 2 Middle    23  0.3833333   29.13043
-#> 3   High    17  0.2833333   37.82353
+#> 1    Low    20  0.3333333   17.04301
+#> 2 Middle    20  0.3333333   45.69892
+#> 3   High    20  0.3333333   78.38710
 ```
 
 Each row records the source identifier, the time index, the observed
@@ -183,9 +181,9 @@ value, the assigned state, and an assignment probability. The
 values in the unit interval for probabilistic discretizers such as
 `gaussian` or `kde`. Because the state labels follow the ordering of the
 values, `Low`, `Middle`, and `High` retain a strict ordinal meaning.
-Quantile boundaries do not, in general, divide the observations into
-exactly equal groups when values are tied; in this segment the counts
-are 20 `Low`, 23 `Middle`, and 17 `High`.
+Quantile boundaries need not divide tied observations into exactly equal
+groups; in this segment they happen to do so, with 20 observations in
+each state and state means of 17.0, 45.7, and 78.4.
 
 The state sequence is the intermediate object from which every
 transition network below is built. Its three states become the network
@@ -199,9 +197,9 @@ the edges.
 plot(states, type = "ribbon")
 ```
 
-![Ribbon plot of the pleasure series with a strip of Low, Middle, and
+![Ribbon plot of the anxiety series with a strip of Low, Middle, and
 High states drawn beneath the measured values along observation
-order.](pleasure-all-functions_files/figure-html/discretize-plot-1.png)
+order.](constructing-time-series-networks_files/figure-html/discretize-plot-1.png)
 
 The ribbon view places the discrete states beneath the measured series,
 so the correspondence between an observation and its assigned state
@@ -222,29 +220,31 @@ probabilities <- ts_tna(states)
 
 probabilities
 #> Transition Network (relative probabilities) [directed]
-#>   Weights: [0.227, 0.409]  |  mean: 0.333
+#>   Weights: [0.158, 0.526]  |  mean: 0.333
 #> 
 #>   Weight matrix:
 #>            Low Middle  High
-#>   Low    0.300  0.350 0.350
-#>   Middle 0.364  0.409 0.227
-#>   High   0.353  0.353 0.294 
+#>   Low    0.316  0.526 0.158
+#>   Middle 0.350  0.200 0.450
+#>   High   0.300  0.300 0.400 
 #> 
 #>   Initial probabilities:
-#>   Middle        1.000  ████████████████████████████████████████
-#>   Low           0.000  
+#>   Low           1.000  ████████████████████████████████████████
+#>   Middle        0.000  
 #>   High          0.000
 ```
 
 The diagonal entries measure persistence, the probability that the next
-observation stays in the current state: 0.300 for `Low`, 0.409 for
-`Middle`, and 0.294 for `High`. Comparing these with the marginal state
-proportions (0.333, 0.383, and 0.283) separates persistence from mere
-prevalence. `Middle` and `High` both persist above their marginal share,
-so a `Middle` or `High` observation is more likely to be followed by its
-own state than random ordering would imply. `Low` sits marginally below
-its share (0.300 against 0.333), indicating no such tendency to persist
-over this short segment.
+observation stays in the current state: 0.316 for `Low`, 0.200 for
+`Middle`, and 0.400 for `High`. Comparing these with the marginal state
+proportions (each exactly one third here) separates persistence from
+mere prevalence. `High` persists above its marginal share, so a
+high-anxiety report is more likely to be followed by another one than
+random ordering would imply. `Low` sits near its share, while `Middle`
+falls well below it: after a mid-range report the series usually leaves,
+most often upward (`Middle` to `High` is 0.450). The single largest
+transition probability is `Low` to `Middle` at 0.526 — low anxiety
+resolves toward the middle of the scale rather than holding.
 
 ``` r
 
@@ -253,13 +253,13 @@ plot(probabilities)
 
 ![Directed transition-probability network over the Low, Middle, and High
 states, with arrows labelled by conditional
-probabilities.](pleasure-all-functions_files/figure-html/ts-tna-plot-1.png)
+probabilities.](constructing-time-series-networks_files/figure-html/ts-tna-plot-1.png)
 
 Row normalization is what makes this representation interpretable. Each
 row is the conditional distribution of the next state given the current
 one, so the outgoing patterns of different states remain comparable even
-though the states have different marginal frequencies. A sequence of 60
-observations is thereby reduced to three nodes and the directed
+though the states may have different marginal frequencies. A sequence of
+60 observations is thereby reduced to three nodes and the directed
 relationships among them, with the temporal order retained as the basis
 for the estimates.
 
@@ -278,27 +278,26 @@ counts <- ts_ftna(states)
 
 counts
 #> Transition Network (frequency counts) [directed]
-#>   Weights: [5.000, 9.000]  |  mean: 6.556
+#>   Weights: [3.000, 10.000]  |  mean: 6.556
 #> 
 #>   Weight matrix:
 #>          Low Middle High
-#>   Low      6      7    7
-#>   Middle   8      9    5
-#>   High     6      6    5 
+#>   Low      6     10    3
+#>   Middle   7      4    9
+#>   High     6      6    8 
 #> 
 #>   Initial probabilities:
-#>   Middle        1.000  ████████████████████████████████████████
-#>   Low           0.000  
+#>   Low           1.000  ████████████████████████████████████████
+#>   Middle        0.000  
 #>   High          0.000
 ```
 
 The 60 observations form 59 adjacent pairs, so the count matrix sums to
-59. The most frequent single transition is `Middle` to `Middle`, which
-occurs 9 times and is the only self-transition that is also the largest
-count in its row. The `Low` and `High` rows are more evenly spread: a
-`Low` observation is followed equally often by `Middle` or `High` (7
-each) rather than by another `Low` (6), so persistence, although
-present, does not dominate the raw counts here. The frequency and
+59. The most frequent single transition is `Low` to `Middle`, which
+occurs 10 times; the largest self-transition, `High` to `High`, occurs
+8. No row is dominated by its own diagonal — `Middle` follows itself
+only 4 times against 16 departures — so persistence, although present
+for `High`, does not dominate the raw counts here. The frequency and
 probability networks describe the same transitions but answer different
 questions: the frequency network reports **how often** each transition
 occurred, whereas the probability network reports **how likely** it is
@@ -311,7 +310,7 @@ plot(counts)
 
 ![Directed frequency transition network over the three states, with
 arrows labelled by observed transition
-counts.](pleasure-all-functions_files/figure-html/ts-ftna-plot-1.png)
+counts.](constructing-time-series-networks_files/figure-html/ts-ftna-plot-1.png)
 
 ### State co-occurrence with `ts_cna()`
 
@@ -326,23 +325,25 @@ cooccurrence <- ts_cna(states)
 
 cooccurrence
 #> Co-occurrence Network [undirected]
-#>   Weights: [136.000, 460.000]  |  mean: 295.000
+#>   Weights: [190.000, 400.000]  |  mean: 295.000
 #> 
 #>   Weight matrix:
 #>          Low Middle High
-#>   Low    190    460  340
-#>   Middle 460    253  391
-#>   High   340    391  136
+#>   Low    190    400  400
+#>   Middle 400    190  400
+#>   High   400    400  190
 ```
 
 For a single sequence, these co-occurrence counts follow directly from
 the marginal state frequencies. An off-diagonal entry is the product of
-the two state counts, so the `Low`-`Middle` weight is `20 * 23 = 460`; a
-diagonal entry counts the unordered pairs within a state, so the
-`Low`-`Low` weight is `20 * 19 / 2 = 190`. The network therefore
-reflects the composition of the state alphabet rather than the temporal
-direction of transitions. A strong edge means the two states are both
-common, not that one tends to follow the other.
+the two state counts, so with 20 observations per state every
+between-state weight is `20 * 20 = 400`; a diagonal entry counts the
+unordered pairs within a state, so every self-weight is
+`20 * 19 / 2 = 190`. The network therefore reflects the composition of
+the state alphabet rather than the temporal direction of transitions —
+with exactly equal state counts it is completely uniform. A strong edge
+means the two states are both common, not that one tends to follow the
+other.
 
 ``` r
 
@@ -351,7 +352,7 @@ plot(cooccurrence)
 
 ![Undirected co-occurrence network over the three states, with symmetric
 edges weighted by state
-co-occurrence.](pleasure-all-functions_files/figure-html/ts-cna-plot-1.png)
+co-occurrence.](constructing-time-series-networks_files/figure-html/ts-cna-plot-1.png)
 
 The symmetric drawing makes the distinction explicit: an edge carries no
 source-to-target direction, in contrast to the transition networks
@@ -370,26 +371,26 @@ attention <- ts_atna(states)
 
 attention
 #> Attention Network (decay-weighted transitions) [directed]
-#>   Weights: [2.875, 5.015]  |  mean: 3.778
+#>   Weights: [2.462, 5.000]  |  mean: 3.778
 #> 
 #>   Weight matrix:
 #>            Low Middle  High
-#>   Low    3.524  4.055 4.031
-#>   Middle 5.015  4.801 2.988
-#>   High   3.085  3.625 2.875 
+#>   Low    3.470  4.793 2.462
+#>   Middle 3.771  2.867 5.000
+#>   High   3.738  3.726 4.172 
 #> 
 #>   Initial probabilities:
-#>   Middle        1.000  ████████████████████████████████████████
-#>   Low           0.000  
+#>   Low           1.000  ████████████████████████████████████████
+#>   Middle        0.000  
 #>   High          0.000
 ```
 
-The weights range from 2.875 to 5.015. Unlike the frequency and
+The weights range from 2.462 to 5.000. Unlike the frequency and
 probability networks, the largest weights here are off-diagonal: the
-strongest attention-weighted transition is `Middle` to `Low` (5.015),
-and the persistence diagonals are not the dominant entries in their
-rows. The attention mechanism consequently redistributes emphasis away
-from the self-transitions that the raw counts favour, and the weights
+strongest attention-weighted transitions are `Middle` to `High` (5.000)
+and `Low` to `Middle` (4.793), and the persistence diagonals are not the
+dominant entries in their rows. The attention mechanism consequently
+redistributes emphasis away from self-transitions, and the weights
 should be read on the model’s own attention scale rather than compared
 directly with counts or probabilities.
 
@@ -400,7 +401,7 @@ plot(attention)
 
 ![Directed attention-weighted transition network over the three states,
 with edges weighted by accumulated attention
-values.](pleasure-all-functions_files/figure-html/ts-atna-plot-1.png)
+values.](constructing-time-series-networks_files/figure-html/ts-atna-plot-1.png)
 
 ### Indexing the model with `series_networks()`
 
@@ -409,15 +410,15 @@ returns an indexed collection of the network models attached to the
 source series. It is designed for analyses that extract networks across
 many series at once, where the index preserves the link between each
 series and its model. With a single input series it returns one entry,
-corresponding to `pleasure`.
+corresponding to `anxiety`.
 
 ``` r
 
 individual <- series_networks(probabilities)
 
 individual
-#>    series type observations states edges
-#>  pleasure  tna           60      3     9
+#>   series type observations states edges
+#>  anxiety  tna           60      3     9
 ```
 
 The index records the source series, the network type, and the number of
@@ -430,9 +431,9 @@ distinct states plus the three self-transitions.
 plot(individual)
 ```
 
-![The single indexed transition-probability network for the pleasure
+![The single indexed transition-probability network for the anxiety
 series, drawn from the series_networks
-collection.](pleasure-all-functions_files/figure-html/series-networks-plot-1.png)
+collection.](constructing-time-series-networks_files/figure-html/series-networks-plot-1.png)
 
 The collection thus provides a higher-level handle on the extracted
 networks while keeping their provenance. Given several source series,
@@ -450,48 +451,50 @@ influence of isolated extreme ratings.
 ``` r
 
 directions <- trend(
-  data = pleasure,
-  series = "pleasure"
+  data = anxiety,
+  series = "anxiety"
 )
 
 directions
 #> <tsn_trend> slope (robust), window 6: 60 observations across 1 series
-#>        id time value    metric      state
-#>  pleasure    1    32        NA    Initial
-#>  pleasure    2    32        NA    Initial
-#>  pleasure    3    32 -5.333333 Descending
-#>  pleasure    4    26 -5.333333 Descending
-#>  pleasure    5    16 -5.200000 Descending
-#>  pleasure    6     6  1.333333  Ascending
-#>  pleasure    7    30  7.000000  Turbulent
-#>  pleasure    8     6  6.200000  Ascending
-#>  pleasure    9    44 -0.800000 Descending
-#>  pleasure   10    42 -3.500000  Turbulent
+#>       id time     value    metric      state
+#>  anxiety    1 18.279570        NA    Initial
+#>  anxiety    2 58.064516        NA    Initial
+#>  anxiety    3 16.129032  9.408602  Ascending
+#>  anxiety    4 56.989247  5.734767  Ascending
+#>  anxiety    5 55.913978  6.989247  Ascending
+#>  anxiety    6 70.967742 -1.075269 Descending
+#>  anxiety    7 74.193548 -5.107527  Turbulent
+#>  anxiety    8 56.989247 -3.225806 Descending
+#>  anxiety    9  8.602151  1.792115  Ascending
+#>  anxiety   10 50.537634  1.792115  Turbulent
 summary(directions)
 #>        state count proportion
-#> 1  Ascending    21 0.35000000
-#> 2 Descending    17 0.28333333
-#> 3       Flat     4 0.06666667
-#> 4  Turbulent    13 0.21666667
-#> 5    Initial     5 0.08333333
+#> 1  Ascending    24 0.40000000
+#> 2 Descending    21 0.35000000
+#> 3  Turbulent    10 0.16666667
+#> 4    Initial     5 0.08333333
 ```
 
-`Ascending` is the most common label with 21 observations, followed by
-`Descending` with 17, `Turbulent` with 13, `Initial` with 5, and `Flat`
-with 4. The near balance between ascending and descending positions is
-what a segment without drift should produce: local direction keeps
-reversing rather than accumulating in one direction. `Initial` marks the
-leading positions that lack a complete centered window, and
-`Missing Data` would mark absent values, of which this segment has none.
+`Ascending` is the most common label with 24 observations, followed by
+`Descending` with 21, `Turbulent` with 10, and `Initial` with 5. The
+near balance between ascending and descending positions is what a
+segment without drift should produce: local direction keeps reversing
+rather than accumulating in one direction. No observation earns the
+`Flat` label at all — in this segment the local slope is never both
+small and steady for a full window, which is itself a description of how
+restless the momentary ratings are. `Initial` marks the leading
+positions that lack a complete centered window, and `Missing Data` would
+mark absent values, of which this segment has none.
 
 ``` r
 
 plot(directions)
 ```
 
-![The pleasure series with each observation coloured by its trend label:
-Ascending, Descending, Flat, Turbulent, or
-Initial.](pleasure-all-functions_files/figure-html/trend-plot-1.png)
+![The anxiety series with each observation coloured by its trend label:
+Ascending, Descending, Turbulent, or
+Initial.](constructing-time-series-networks_files/figure-html/trend-plot-1.png)
 
 The default plot colours each observation by its trend label.
 
@@ -500,9 +503,9 @@ The default plot colours each observation by its trend label.
 plot(directions, type = "panels")
 ```
 
-![Two stacked panels: the pleasure series on top and its rolling slope
+![Two stacked panels: the anxiety series on top and its rolling slope
 metric below, with a shaded flat band marking near-zero
-slope.](pleasure-all-functions_files/figure-html/trend-panels-1.png)
+slope.](constructing-time-series-networks_files/figure-html/trend-panels-1.png)
 
 The panel view places the rolling metric below the measurements, so the
 points at which the metric crosses the flat band can be checked against
@@ -520,18 +523,18 @@ stronger condition.
 ``` r
 
 natural <- vg(
-  data = pleasure,
-  series = "pleasure"
+  data = anxiety,
+  series = "anxiety"
 )
 
 summary(natural)
 #>       method unit nodes dyads edges    density minimum_weight maximum_weight
-#> 1 visibility time    60   143   143 0.08079096              1              1
+#> 1 visibility time    60   144   144 0.08135593              1              1
 #>   directed
 #> 1    FALSE
 ```
 
-The natural visibility graph has 60 nodes and 143 edges. At this length
+The natural visibility graph has 60 nodes and 144 edges. At this length
 the edges remain distinguishable, so it can be drawn directly. Node size
 encodes degree, and the peaks accumulate the most connections because
 they stay visible over the smaller values around them.
@@ -541,30 +544,30 @@ they stay visible over the smaller values around them.
 plot(natural, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
-![Natural visibility graph of sixty pleasure observations, drawn with a
+![Natural visibility graph of sixty anxiety observations, drawn with a
 Fruchterman-Reingold layout and nodes sized by degree; the high-degree
 hubs correspond to peaks that see far along the series, spread apart so
 individual nodes stay
-distinguishable.](pleasure-all-functions_files/figure-html/vg-network-1.png)
+distinguishable.](constructing-time-series-networks_files/figure-html/vg-network-1.png)
 
 The horizontal rule keeps the same 60 nodes but fewer edges.
 
 ``` r
 
 horizontal <- vg(
-  data = pleasure,
+  data = anxiety,
   type = "horizontal",
-  series = "pleasure"
+  series = "anxiety"
 )
 
 summary(horizontal)
 #>       method unit nodes dyads edges    density minimum_weight maximum_weight
-#> 1 visibility time    60   107   107 0.06045198              1              1
+#> 1 visibility time    60   106   106 0.05988701              1              1
 #>   directed
 #> 1    FALSE
 ```
 
-It retains 107 of the 143 connections, removing the 36 that a natural
+It retains 106 of the 144 connections, removing the 38 that a natural
 line of sight can clear but a horizontal one cannot. The result keeps
 the temporal chain of consecutive observations while dropping the longer
 sightlines that only the natural view permits. In both graphs the edge
@@ -579,7 +582,7 @@ plot(horizontal, layout = "fr", node_size_range = c(1.4, 4.5))
 the same Fruchterman-Reingold layout and degree-scaled nodes; it is
 sparser than the natural graph, with the temporal chain visible
 alongside a smaller number of longer
-edges.](pleasure-all-functions_files/figure-html/vg-network-horizontal-1.png)
+edges.](constructing-time-series-networks_files/figure-html/vg-network-horizontal-1.png)
 
 Every network also retains the series it was built from, which the
 source-series view recovers.
@@ -589,9 +592,9 @@ source-series view recovers.
 plot(horizontal, type = "series")
 ```
 
-![The sixty pleasure observations behind the visibility graph, plotted
-as a line over observation
-order.](pleasure-all-functions_files/figure-html/vg-series-1.png)
+![The sixty anxiety observations behind the visibility graph, plotted as
+a line over observation
+order.](constructing-time-series-networks_files/figure-html/vg-series-1.png)
 
 This view makes the short-run fluctuation that the visibility rule reads
 directly apparent.
@@ -607,15 +610,15 @@ of 2 yields 28 overlapping windows.
 ``` r
 
 windows <- tsn(
-  data = pleasure,
+  data = anxiety,
   method = "distance",
-  series = "pleasure",
+  series = "anxiety",
   step = 2
 )
 
 summary(windows)
 #>     method   unit nodes dyads edges density minimum_weight maximum_weight
-#> 1 distance window    28   378   378       1     0.01682183      0.1118912
+#> 1 distance window    28   378   378       1    0.006923743     0.03540467
 #>   directed
 #> 1    FALSE
 ```
@@ -627,9 +630,9 @@ more similar windows.
 ``` r
 
 sparse <- tsn(
-  data = pleasure,
+  data = anxiety,
   method = "distance",
-  series = "pleasure",
+  series = "anxiety",
   step = 2,
   connect = "nearest",
   neighbors = 2
@@ -637,13 +640,13 @@ sparse <- tsn(
 
 summary(sparse)
 #>     method   unit nodes dyads edges   density minimum_weight maximum_weight
-#> 1 distance window    28   378    40 0.1058201     0.03137678      0.1118912
+#> 1 distance window    28   378    41 0.1084656     0.01240041     0.03540467
 #>   directed
 #> 1    FALSE
 ```
 
-Nearest-neighbour sparsification keeps 40 edges and lowers the density
-from 1 to 0.106, retaining the strongest local similarities instead of
+Nearest-neighbour sparsification keeps 41 edges and lowers the density
+from 1 to 0.108, retaining the strongest local similarities instead of
 drawing every pair.
 
 ``` r
@@ -652,14 +655,13 @@ plot(sparse)
 ```
 
 ![Nearest-neighbour distance network over twenty-eight sliding windows
-of the pleasure series, with edges joining the most similar
-windows.](pleasure-all-functions_files/figure-html/tsn-network-1.png)
+of the anxiety series, with edges joining the most similar
+windows.](constructing-time-series-networks_files/figure-html/tsn-network-1.png)
 
-No retained edge joins immediately adjacent windows. The closest
-retained pairs are two windows apart and the most distant are twenty-one
-windows apart, which shows that overlap in time does not by itself
-determine similarity in value: windows far apart in the sequence can
-still be each other’s nearest neighbours.
+Only two of the retained edges join immediately adjacent windows; the
+others span anywhere from two to nineteen positions. Overlap in time
+therefore does not by itself determine similarity in value: windows far
+apart in the sequence can still be each other’s nearest neighbours.
 
 The distance measure is itself a modelling choice. Dynamic time warping
 aligns two windows by their shape, tolerating the shift or stretch in
@@ -670,9 +672,9 @@ windows.
 ``` r
 
 warped <- tsn(
-  data = pleasure,
+  data = anxiety,
   method = "distance",
-  series = "pleasure",
+  series = "anxiety",
   step = 2,
   distance = "dtw",
   connect = "nearest",
@@ -681,15 +683,16 @@ warped <- tsn(
 
 summary(warped)
 #>     method   unit nodes dyads edges   density minimum_weight maximum_weight
-#> 1 distance window    28   378    39 0.1031746     0.01851852     0.05555556
+#> 1 distance window    28   378    37 0.0978836    0.007326873     0.04443383
 #>   directed
 #> 1    FALSE
 ```
 
-The warped network keeps 39 edges, almost as many as the Euclidean
-version’s 40, yet it connects largely different pairs of windows.
-Whether two windows count as similar therefore depends as much on the
-chosen distance as on the series itself.
+The warped network keeps 37 edges against the Euclidean version’s 41,
+yet only 12 edges appear in both: the two rules connect largely
+different pairs of windows. Whether two windows count as similar
+therefore depends as much on the chosen distance as on the series
+itself.
 
 ``` r
 
@@ -699,4 +702,4 @@ plot(warped)
 ![Nearest-neighbour distance network over the same twenty-eight windows
 using dynamic time warping, connecting a different set of window pairs
 than the Euclidean
-network.](pleasure-all-functions_files/figure-html/tsn-dtw-network-1.png)
+network.](constructing-time-series-networks_files/figure-html/tsn-dtw-network-1.png)

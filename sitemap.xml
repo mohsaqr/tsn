@@ -2,11 +2,11 @@
 <url><loc>https://pak.dynasite.org/tsn/404.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/LICENSE-text.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/LICENSE.html</loc></url>
+<url><loc>https://pak.dynasite.org/tsn/articles/constructing-time-series-networks.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/group-models.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/index.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/nestimate-compatibility.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/nestimate-workflow.html</loc></url>
-<url><loc>https://pak.dynasite.org/tsn/articles/pleasure-all-functions.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/authors.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/index.html</loc></url>
@@ -17,8 +17,8 @@
 <url><loc>https://pak.dynasite.org/tsn/reference/as.matrix.ts_tna.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/as.matrix.tsn.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/discretize.html</loc></url>
+<url><loc>https://pak.dynasite.org/tsn/reference/esm_srl.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/index.html</loc></url>
-<url><loc>https://pak.dynasite.org/tsn/reference/motivation.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/plot.ts_tna.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/plot.ts_tna_group.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/plot.tsn.html</loc></url>
@@ -29,7 +29,7 @@
 <url><loc>https://pak.dynasite.org/tsn/reference/print.tsn_states.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/print.tsn_trend.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/series_networks.html</loc></url>
-<url><loc>https://pak.dynasite.org/tsn/reference/steps.html</loc></url>
+<url><loc>https://pak.dynasite.org/tsn/reference/srl.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/summary.tsn.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/summary.tsn_series_networks.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/summary.tsn_states.html</loc></url>

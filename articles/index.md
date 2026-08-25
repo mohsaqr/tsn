@@ -6,7 +6,7 @@ The construction surface — every exported verb on one series, and the
 plotting system end to end.
 
 - [Constructing Time Series
-  Networks](https://pak.dynasite.org/tsn/articles/pleasure-all-functions.md):
+  Networks](https://pak.dynasite.org/tsn/articles/constructing-time-series-networks.md):
 - [Plotting Time Series
   Networks](https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.md):
 

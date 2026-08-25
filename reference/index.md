@@ -83,7 +83,7 @@ Standard interface shared by every result object.
 
 ## Data
 
-- [`motivation`](https://pak.dynasite.org/tsn/reference/motivation.md) :
-  Repeated Motivation Measurements
-- [`steps`](https://pak.dynasite.org/tsn/reference/steps.md) : Daily
-  Step Counts
+- [`srl`](https://pak.dynasite.org/tsn/reference/srl.md) : Daily
+  Self-Regulated Learning Panel
+- [`esm_srl`](https://pak.dynasite.org/tsn/reference/esm_srl.md) :
+  Momentary Self-Regulated Learning Experience-Sampling Data

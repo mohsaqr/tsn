@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,49 +108,57 @@ single series is a single sample: there is nothing to resample. The
 dividing line is the unit of analysis, and knowing where it falls is
 what keeps a transition model from being read for more than it can
 support.</p>
+<p>Two bundled data sets carry the analysis. <code>esm_srl</code> is an
+experience-sampling study in which 41 students rated momentary
+self-regulation, motivation, and anxiety on 0-100 scales;
+<code>srl</code> is a balanced daily panel in which 36 students reported
+nine self-regulated-learning indicators for 156 occasions each.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/tsn/" class="external-link">tsn</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">motivation</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">esm_srl</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">srl</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="from-measurements-to-a-model">From measurements to a model<a class="anchor" aria-label="anchor" href="#from-measurements-to-a-model"></a>
 </h2>
 <p><code><a href="../reference/ts_tna.html">ts_tna()</a></code> takes a data frame and the name of one numeric
 column, cuts that column into states, and estimates the transition
-network in one call. Here it runs on the first 200 observations of the
-<code>pleasure</code> rating from the <code>motivation</code> study, an
-intensive-longitudinal record of momentary experience.</p>
+network in one call. Here it runs on the 79 momentary
+<code>anxiety</code> reports of one student, Jamal, from the
+<code>esm_srl</code> study.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pleasure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">motivation</span>, <span class="fl">200</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">jamal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">esm_srl</span>, <span class="va">name</span> <span class="op">==</span> <span class="st">"Jamal"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">pleasure</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  <span class="va">jamal</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.278, 0.417]  |  mean: 0.333</span></span>
+<span><span class="co">#&gt;   Weights: [0.231, 0.423]  |  mean: 0.333</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;          low   mid  high</span></span>
-<span><span class="co">#&gt;   low  0.403 0.313 0.284</span></span>
-<span><span class="co">#&gt;   mid  0.278 0.417 0.306</span></span>
-<span><span class="co">#&gt;   high 0.333 0.367 0.300 </span></span>
+<span><span class="co">#&gt;   low  0.370 0.370 0.259</span></span>
+<span><span class="co">#&gt;   mid  0.240 0.360 0.400</span></span>
+<span><span class="co">#&gt;   high 0.423 0.231 0.346 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   high          1.000  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   low           0.000  </span></span>
-<span><span class="co">#&gt;   mid           0.000</span></span></code></pre></div>
+<span><span class="co">#&gt;   low           1.000  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   mid           0.000  </span></span>
+<span><span class="co">#&gt;   high          0.000</span></span></code></pre></div>
 <p>The printed object is the complete model: a row-stochastic weight
 matrix whose entry <em>(i, j)</em> is the probability of moving to state
 <em>j</em> given that the system is currently in state <em>i</em>,
 together with the initial-state distribution. Each row sums to one
-because from any state the process must go somewhere.</p>
+because from any state the process must go somewhere. One entry already
+rewards reading: after a high-anxiety report, the most likely next state
+is <code>low</code> (0.423) — for this student, high anxiety resolves
+sharply rather than escalating.</p>
 <div class="section level3">
 <h3 id="the-bridge-this-object-is-a-nestimate-model">The bridge: this object <em>is</em> a Nestimate model<a class="anchor" aria-label="anchor" href="#the-bridge-this-object-is-a-nestimate-model"></a>
 </h3>
@@ -180,20 +188,20 @@ gives the raw transition counts behind those probabilities.
 directed movement. Changing the edge definition means changing only the
 constructor.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_tna.html">ts_ftna</a></span><span class="op">(</span><span class="va">pleasure</span>, series <span class="op">=</span> <span class="st">"pleasure"</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ts_tna.html">ts_ftna</a></span><span class="op">(</span><span class="va">jamal</span>, series <span class="op">=</span> <span class="st">"anxiety"</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (frequency counts) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [18.000, 30.000]  |  mean: 22.111</span></span>
+<span><span class="co">#&gt;   Weights: [6.000, 11.000]  |  mean: 8.667</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;        low mid high</span></span>
-<span><span class="co">#&gt;   low   27  21   19</span></span>
-<span><span class="co">#&gt;   mid   20  30   22</span></span>
-<span><span class="co">#&gt;   high  20  22   18 </span></span>
+<span><span class="co">#&gt;   low   10  10    7</span></span>
+<span><span class="co">#&gt;   mid    6   9   10</span></span>
+<span><span class="co">#&gt;   high  11   6    9 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   high          1.000  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   low           0.000  </span></span>
-<span><span class="co">#&gt;   mid           0.000</span></span></code></pre></div>
+<span><span class="co">#&gt;   low           1.000  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   mid           0.000  </span></span>
+<span><span class="co">#&gt;   high          0.000</span></span></code></pre></div>
 <p>The remainder of the vignette uses <code><a href="../reference/ts_tna.html">ts_tna()</a></code>, because the
 inferential tests are written for probabilities.</p>
 </div>
@@ -218,179 +226,176 @@ them into units that can be resampled. The <code>segment</code> argument
 supplies that unit by cutting the series into shorter blocks, each
 treated as its own sequence. This is the block bootstrap, and tsn
 provides its two standard forms.</p>
-<p>The series below is one participant’s 299 daily step counts. Two
-features of the call matter before the segmenting itself. States are cut
-at 5,000 and 10,000 steps with <code>discretization = "threshold"</code>
-rather than at the default tertiles, so the states mean the same thing
-outside this sample; the next section returns to why that matters. And
-segmentation is applied <em>after</em> discretization, so every block
-inherits the same cut points and no block is ever discretized against
-itself.</p>
+<p>The series below is one student’s 156 daily <code>effort</code>
+reports from the <code>srl</code> panel. Two features of the call matter
+before the segmenting itself. States are cut at 40 and 70 on the 0-100
+scale with <code>discretization = "threshold"</code> rather than at the
+default tertiles, so the states mean the same thing outside this sample;
+the next section returns to why that matters. And segmentation is
+applied <em>after</em> discretization, so every block inherits the same
+cut points and no block is ever discretized against itself.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walkers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">steps</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">one_walker</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">walkers</span>, <span class="va">id</span> <span class="op">==</span> <span class="fl">193</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">students</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">srl</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">effort</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">erik</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">students</span>, <span class="va">name</span> <span class="op">==</span> <span class="st">"Erik"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">whole</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">one_walker</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
+<span>  <span class="va">erik</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>,</span>
-<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Partitioning cuts the 299 observations into consecutive,
-non-overlapping blocks. At <code>segment = 10</code> there are thirty of
-them.</p>
+<p>Partitioning cuts the 156 observations into consecutive,
+non-overlapping blocks. At <code>segment = 10</code> there are sixteen
+of them.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">one_walker</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
+<span>  <span class="va">erik</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  segment <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>,</span>
-<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">blocks</span>, iter <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">2024</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">blocks</span>, iter <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
 <span><span class="co">#&gt;   -----------------------------------------------</span></span>
-<span><span class="co">#&gt;   active → moderate    0.558  [0.457, 0.653]  ** </span></span>
-<span><span class="co">#&gt;   moderate → moderate   0.437  [0.336, 0.525]  *  </span></span>
+<span><span class="co">#&gt;   low → low            0.451  [0.358, 0.547]  *  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bootstrap Network  [Transition Network (relative) | directed]</span></span>
 <span><span class="co">#&gt;   Iterations : 500  |  Nodes : 3</span></span>
-<span><span class="co">#&gt;   Edges      : 2 significant / 9 total</span></span>
+<span><span class="co">#&gt;   Edges      : 1 significant / 9 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
-<p>Thirty sequences, and the bootstrap now runs. Partitioning is not
-free: every cut destroys the transition that straddles it, so thirty
-blocks cost roughly thirty of the 298 transitions and the estimate
-shifts slightly.</p>
+<p>Sixteen sequences, and the bootstrap now runs. Partitioning is not
+free: every cut destroys the transition that straddles it, so sixteen
+blocks cost fifteen of the 155 transitions — about ten percent — and the
+estimate shifts slightly.</p>
 <p>Sliding the window instead of partitioning keeps all of them. At
 <code>segment = 2, overlap = TRUE</code> the blocks are the consecutive
 lag-1 pairs, so every transition appears exactly once and the network is
 <em>identical</em> to the unsegmented one.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lag_one</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">one_walker</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
+<span>  <span class="va">erik</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  segment <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  overlap <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>,</span>
-<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">lag_one</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">whole</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">lag_one</span>, iter <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">2024</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
-<span><span class="co">#&gt;   -----------------------------------------------</span></span>
-<span><span class="co">#&gt;   active → moderate    0.559  [0.459, 0.659]  ** </span></span>
-<span><span class="co">#&gt;   moderate → moderate   0.426  [0.344, 0.504]  ** </span></span>
-<span><span class="co">#&gt;   moderate → active    0.359  [0.285, 0.439]  *  </span></span>
-<span><span class="co">#&gt; </span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">lag_one</span>, iter <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap Network  [Transition Network (relative) | directed]</span></span>
 <span><span class="co">#&gt;   Iterations : 500  |  Nodes : 3</span></span>
-<span><span class="co">#&gt;   Edges      : 3 significant / 9 total</span></span>
+<span><span class="co">#&gt;   Edges      : 0 significant / 9 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
-<p>The two schemes trade precision against independence. Sliding blocks
-preserve the point estimate exactly, yield the most units, and tend to
-give narrower intervals: a mean width of 0.18 here against 0.21 for the
-partitioned blocks, narrow enough to call a third edge significant where
-partitioning calls two. The tendency is not a guarantee, since two of
-the nine edges come out wider. And the narrowness carries a cost.
-Overlapping blocks share observations, so they are not independent, and
-resampling lag-1 pairs assumes exactly the first-order Markov property
-the model itself assumes. That is the assumption the Markov-order test
-below rejects for these data, which makes those intervals
-optimistic.</p>
-<p>Partitioned blocks are the more conservative choice. A block
-preserves whatever dependence exists inside it, so structure beyond one
-lag survives resampling, at the price of the boundary transitions lost
-to the cuts. Blocks of 10 to 30 retain 90% to 97% of the transitions,
-which is usually the right trade; blocks of 2 retain only half and are
-better avoided.</p>
+<p>The two schemes trade the point estimate against independence.
+Sliding blocks preserve the estimate exactly and yield the most units;
+partitioned blocks respect whatever dependence exists inside a block, at
+the price of the boundary transitions lost to the cuts. On this series
+the two run neck and neck — mean interval widths of 0.253 for the
+partitioned blocks against 0.254 for the lag-1 pairs, with a single edge
+crossing the stability criterion under partitioning and none under
+sliding. That is the real lesson of the exercise: 156 volatile
+observations of one person yield intervals a quarter of a probability
+unit wide however they are resampled. Where the two schemes do differ,
+prefer partitioning, because resampling lag-1 pairs assumes exactly the
+first-order Markov property the model itself assumes — an assumption the
+Markov-order test below rejects for these data. Blocks of 10 to 30
+retain roughly 90% to 97% of the transitions, which is usually the right
+trade; blocks of 2 retain only half and are better avoided.</p>
 <p>None of this manufactures information. Segmenting a single series
 asks how stable one person’s own dynamics are, and says nothing about
 anyone else. A claim about people in general needs people in general, so
-the rest of the vignette uses all 151 of them.</p>
+the rest of the vignette uses all 36 of them.</p>
 <div class="section level3">
 <h3 id="choosing-states-that-mean-something">Choosing states that mean something<a class="anchor" aria-label="anchor" href="#choosing-states-that-mean-something"></a>
 </h3>
 <p>The default <code>discretization = "quantile"</code> cuts at the
 tertiles, forcing each of the three states to hold a third of the
 observations, so the state sizes carry no information, by construction.
-That is why every model built from the <code>steps</code> data uses
-fixed thresholds of 5,000 and 10,000 steps instead. Fixed breaks make
-the states interpretable outside the sample, and they give every model
-one shared alphabet, which is what makes the period comparison below
-legitimate. (The grouped <code>pleasure</code> model at the end keeps
-the quantile default; grouping pools the series before cutting it, so
-its groups share an alphabet without breaks being named.)</p>
+That is why every model built from the <code>srl</code> panel uses fixed
+thresholds of 40 and 70 on the 0-100 effort scale instead. Fixed breaks
+make the states interpretable outside the sample — below 40 is low
+effort wherever it occurs — and they give every model one shared
+alphabet, which is what makes the period comparison below legitimate.
+(The grouped <code>esm_srl</code> model at the end keeps the quantile
+default; grouping pools the series before cutting it, so its groups
+share an alphabet without breaks being named.)</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">walk_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">walkers</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<code class="sourceCode R"><span><span class="va">effort_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="va">students</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>,</span>
-<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">walk_model</span></span>
+<span><span class="va">effort_model</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.062, 0.619]  |  mean: 0.333</span></span>
+<span><span class="co">#&gt;   Weights: [0.165, 0.575]  |  mean: 0.333</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             sedentary moderate active</span></span>
-<span><span class="co">#&gt;   sedentary     0.353    0.445  0.202</span></span>
-<span><span class="co">#&gt;   moderate      0.154    0.501  0.345</span></span>
-<span><span class="co">#&gt;   active        0.062    0.320  0.619 </span></span>
+<span><span class="co">#&gt;              low moderate  high</span></span>
+<span><span class="co">#&gt;   low      0.415    0.314 0.272</span></span>
+<span><span class="co">#&gt;   moderate 0.218    0.453 0.329</span></span>
+<span><span class="co">#&gt;   high     0.165    0.260 0.575 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   active        0.576  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   moderate      0.311  ██████████████████████</span></span>
-<span><span class="co">#&gt;   sedentary     0.113  ████████</span></span></code></pre></div>
+<span><span class="co">#&gt;   high          0.417  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   moderate      0.389  █████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   low           0.194  ███████████████████</span></span></code></pre></div>
 <p>The states now mean something outside the data, the same cut points
 apply to every comparison made later, and the state distribution is
 worth reading.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   group     state count proportion</span></span>
-<span><span class="co">#&gt; 1   all    active 13921  0.4484425</span></span>
-<span><span class="co">#&gt; 2   all  moderate 12776  0.4115582</span></span>
-<span><span class="co">#&gt; 3   all sedentary  4346  0.1399994</span></span></code></pre></div>
-<p>Every state is strongly self-preferring, and an active day is the
-most persistent of all at 0.62: activity, once reached, tends to
-continue. Step counts show marked day-to-day inertia.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   group    state count proportion</span></span>
+<span><span class="co">#&gt; 1   all     high  2341  0.4174394</span></span>
+<span><span class="co">#&gt; 2   all moderate  1900  0.3388017</span></span>
+<span><span class="co">#&gt; 3   all      low  1367  0.2437589</span></span></code></pre></div>
+<p>High effort is the panel’s most common state at 41.7% of the days,
+and it is also the most persistent: the <code>high -&gt; high</code>
+probability of 0.575 is the largest entry in the matrix. Effort, once
+high, tends to continue — and the asymmetry runs one way, since a
+low-effort day returns to <code>low</code> at only 0.415.</p>
 </div>
 <div class="section level3">
 <h3 id="one-network-per-person">One network per person<a class="anchor" aria-label="anchor" href="#one-network-per-person"></a>
 </h3>
 <p>The pooled model estimates a single network across everyone.
 <code><a href="../reference/series_networks.html">series_networks()</a></code> splits it into one complete model per
-participant, each rebuilt on the same alphabet so node sets stay aligned
-and comparable.</p>
+student, each rebuilt on the same alphabet so node sets stay aligned and
+comparable.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">per_person</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">per_person</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">per_person</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   series type observations states edges</span></span>
-<span><span class="co">#&gt; 1     35  tna          295      3     6</span></span>
-<span><span class="co">#&gt; 2     37  tna          278      3     9</span></span>
-<span><span class="co">#&gt; 3     47  tna          297      3     9</span></span>
-<span><span class="co">#&gt; 4     57  tna          239      3     9</span></span>
-<span><span class="co">#&gt; 5     58  tna          176      3     9</span></span>
-<span><span class="co">#&gt; 6     70  tna          257      3     9</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  Aisha  tna          156      3     9</span></span>
+<span><span class="co">#&gt; 2  Alice  tna          156      3     9</span></span>
+<span><span class="co">#&gt; 3  Anika  tna          156      3     9</span></span>
+<span><span class="co">#&gt; 4 Astrid  tna          156      3     7</span></span>
+<span><span class="co">#&gt; 5  Bjorn  tna          156      3     9</span></span>
+<span><span class="co">#&gt; 6    Bob  tna          156      3     9</span></span></code></pre></div>
 <p>Each row indexes a full <code>ts_tna</code> model that prints and
 plots on its own: the models are the list elements, and this is the tidy
-index over them. Because the cut points are fixed step counts rather
-than sample quantiles, a participant’s personal network describes their
-own activity, not their rank within the sample.</p>
+index over them. Because the cut points are fixed scale positions rather
+than sample quantiles, a student’s personal network describes their own
+effort, not their rank within the panel. The index already shows
+individual structure: one of the first six students never makes two of
+the nine transitions at all, so their network carries seven edges rather
+than nine.</p>
 </div>
 </div>
 <div class="section level2">
@@ -400,30 +405,35 @@ own activity, not their rank within the sample.</p>
 <h3 id="centrality">Centrality<a class="anchor" aria-label="anchor" href="#centrality"></a>
 </h3>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.</span></span>
-<span><span class="co">#&gt;               state InStrength Betweenness Diffusion</span></span>
-<span><span class="co">#&gt; sedentary sedentary  0.2152510           0 1.0000000</span></span>
-<span><span class="co">#&gt; moderate   moderate  0.7650336           1 0.4116171</span></span>
-<span><span class="co">#&gt; active       active  0.5470912           0 0.0000000</span></span></code></pre></div>
+<span><span class="co">#&gt;             state InStrength Betweenness Diffusion</span></span>
+<span><span class="co">#&gt; low           low  0.3832538           0 1.0000000</span></span>
+<span><span class="co">#&gt; moderate moderate  0.5738366           0 0.7292556</span></span>
+<span><span class="co">#&gt; high         high  0.6003974           0 0.0000000</span></span></code></pre></div>
 <p>The message notes that centralities exclude self-transitions by
 default, which matters for a transition network: the diagonal is usually
 the largest entry, so a state can be highly persistent while receiving
 little traffic from elsewhere. Excluding the diagonal measures how
 central a state is to <em>movement</em> between states rather than to
-staying put. Passing <code>loops = TRUE</code> includes it.</p>
+staying put. Here <code>high</code> and <code>moderate</code> receive
+similar between-state traffic (in-strengths of 0.60 and 0.57) while
+<code>low</code> receives markedly less (0.38); the betweenness column
+is uniformly zero because in a fully connected three-state network no
+state is an obligatory bridge. Passing <code>loops = TRUE</code>
+includes the diagonal.</p>
 </div>
 <div class="section level3">
 <h3 id="how-much-of-the-sequence-is-structure-and-how-much-is-noise">How much of the sequence is structure, and how much is noise<a class="anchor" aria-label="anchor" href="#how-much-of-the-sequence-is-structure-and-how-much-is-noise"></a>
 </h3>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Entropy (3 states, bits; ceiling = 1.585)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                           raw            normalised</span></span>
-<span><span class="co">#&gt;   Entropy rate    h(P)  = 1.346 bits    0.849</span></span>
-<span><span class="co">#&gt;   Stationary    H(pi)  = 1.444 bits    0.911</span></span>
-<span><span class="co">#&gt;   Redundancy   H(pi)-h = 0.098 bits    0.068</span></span>
+<span><span class="co">#&gt;   Entropy rate    h(P)  = 1.479 bits    0.933</span></span>
+<span><span class="co">#&gt;   Stationary    H(pi)  = 1.552 bits    0.979</span></span>
+<span><span class="co">#&gt;   Redundancy   H(pi)-h = 0.073 bits    0.047</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Normalised: h(P) and H(pi) are raw / log_2(n_states) (0 = deterministic, 1 = uniform);</span></span>
 <span><span class="co">#&gt;   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi), not raw / log_2(n_states).</span></span></code></pre></div>
@@ -432,9 +442,11 @@ so 0 is a perfectly deterministic process and 1 means every next state
 is equally likely from wherever the process currently sits. A value of 1
 requires more than an uninformative current state: a lopsided but
 state-independent process still scores well below it. Cut at the
-tertiles, these same step counts score 0.93; cut at 5,000 and 10,000
-they score 0.85. The cut points are not cosmetic: they decide how much
-structure is left to find.</p>
+tertiles, these same effort reports score 0.96; cut at 40 and 70 they
+score 0.93. The fixed thresholds recover slightly more structure, and
+either way the message is sobering: day-to-day effort is mostly noise
+around a weak first-order signal, which is worth knowing before any edge
+is over-interpreted.</p>
 </div>
 </div>
 <div class="section level2">
@@ -445,26 +457,27 @@ structure is left to find.</p>
 edges removed, so its result flows straight back into any verb
 above.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">walk_model</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">effort_model</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.320, 0.619]  |  mean: 0.430</span></span>
+<span><span class="co">#&gt;   Weights: [0.314, 0.575]  |  mean: 0.417</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             sedentary moderate active</span></span>
-<span><span class="co">#&gt;   sedentary     0.353    0.445  0.000</span></span>
-<span><span class="co">#&gt;   moderate      0.000    0.501  0.345</span></span>
-<span><span class="co">#&gt;   active        0.000    0.320  0.619 </span></span>
+<span><span class="co">#&gt;              low moderate  high</span></span>
+<span><span class="co">#&gt;   low      0.415    0.314 0.000</span></span>
+<span><span class="co">#&gt;   moderate 0.000    0.453 0.329</span></span>
+<span><span class="co">#&gt;   high     0.000    0.000 0.575 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   active        0.576  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   moderate      0.311  ██████████████████████</span></span>
-<span><span class="co">#&gt;   sedentary     0.113  ████████</span></span></code></pre></div>
-<p>Three edges fall below the threshold: every route <em>into</em>
-sedentary from a higher state, together with the direct leap from
-sedentary to active. What survives says that a sedentary day is harder
-to fall into than to climb out of. The
-<code>sedentary -&gt; moderate</code> edge is a strong 0.445, while
-nothing descends into sedentary above 0.3.</p>
+<span><span class="co">#&gt;   high          0.417  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   moderate      0.389  █████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   low           0.194  ███████████████████</span></span></code></pre></div>
+<p>Four edges fall below the threshold, and they are not a random four:
+every <em>descending</em> route (<code>moderate -&gt; low</code>,
+<code>high -&gt; low</code>, <code>high -&gt; moderate</code>)
+disappears, together with the direct <code>low -&gt; high</code> leap.
+What survives is the ascending ladder — <code>low -&gt; moderate</code>
+at 0.314, <code>moderate -&gt; high</code> at 0.329 — and the three
+persistence loops. Effort climbs stepwise and decays only weakly.</p>
 <p>Prune after testing rather than before, however. A threshold ranks
 edges by size, and size is not the same as interest: a small but
 reliably estimated edge can matter more than a large but uncertain
@@ -477,50 +490,52 @@ one.</p>
 replacement, re-estimates the network on each resample, and reports a
 confidence interval for every edge.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2024</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">boot</span></span>
 <span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
 <span><span class="co">#&gt;   -----------------------------------------------</span></span>
-<span><span class="co">#&gt;   active → active      0.618  [0.585, 0.648]  ** </span></span>
-<span><span class="co">#&gt;   moderate → moderate   0.500  [0.478, 0.523]  ** </span></span>
-<span><span class="co">#&gt;   sedentary → moderate   0.444  [0.419, 0.469]  ** </span></span>
-<span><span class="co">#&gt;   sedentary → sedentary   0.353  [0.323, 0.386]  ** </span></span>
-<span><span class="co">#&gt;   moderate → active    0.346  [0.318, 0.373]  ** </span></span>
-<span><span class="co">#&gt;   ... and 4 more significant edges</span></span>
+<span><span class="co">#&gt;   high → high          0.571  [0.458, 0.653]  *  </span></span>
+<span><span class="co">#&gt;   moderate → moderate   0.452  [0.392, 0.508]  ** </span></span>
+<span><span class="co">#&gt;   moderate → high      0.333  [0.284, 0.385]  ** </span></span>
+<span><span class="co">#&gt;   low → moderate       0.317  [0.258, 0.375]  *  </span></span>
+<span><span class="co">#&gt;   high → moderate      0.264  [0.211, 0.328]  *  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Bootstrap Network  [Transition Network (relative) | directed]</span></span>
 <span><span class="co">#&gt;   Iterations : 200  |  Nodes : 3</span></span>
-<span><span class="co">#&gt;   Edges      : 9 significant / 9 total</span></span>
+<span><span class="co">#&gt;   Edges      : 5 significant / 9 total</span></span>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns the tidy, one-row-per-edge table.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        from        to     weight       mean          sd     p_value  sig</span></span>
-<span><span class="co">#&gt; 1 sedentary sedentary 0.35281837 0.35345581 0.016363187 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt; 2 sedentary  moderate 0.44514034 0.44378997 0.012517516 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt; 3 sedentary    active 0.20204129 0.20275421 0.012723224 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt; 4  moderate sedentary 0.15365259 0.15382362 0.008219952 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt; 5  moderate  moderate 0.50129748 0.50036003 0.011436886 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt; 6  moderate    active 0.34504993 0.34581635 0.014524197 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt; 7    active sedentary 0.06159838 0.06212676 0.005251614 0.014925373 TRUE</span></span>
-<span><span class="co">#&gt; 8    active  moderate 0.31989325 0.31996300 0.011000596 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt; 9    active    active 0.61850837 0.61791024 0.014531904 0.004975124 TRUE</span></span>
-<span><span class="co">#&gt;     ci_lower  ci_upper   cr_lower   cr_upper</span></span>
-<span><span class="co">#&gt; 1 0.32318763 0.3856584 0.26461378 0.44102296</span></span>
-<span><span class="co">#&gt; 2 0.41903064 0.4688517 0.33385525 0.55642542</span></span>
-<span><span class="co">#&gt; 3 0.17664549 0.2244967 0.15153097 0.25255161</span></span>
-<span><span class="co">#&gt; 4 0.13841919 0.1697292 0.11523944 0.19206574</span></span>
-<span><span class="co">#&gt; 5 0.47778672 0.5230883 0.37597311 0.62662184</span></span>
-<span><span class="co">#&gt; 6 0.31847498 0.3727507 0.25878745 0.43131242</span></span>
-<span><span class="co">#&gt; 7 0.05314263 0.0738917 0.04619879 0.07699798</span></span>
-<span><span class="co">#&gt; 8 0.29783560 0.3433023 0.23991994 0.39986656</span></span>
-<span><span class="co">#&gt; 9 0.58489465 0.6482990 0.46388128 0.77313546</span></span></code></pre></div>
-<p>With 151 sequences behind it, every edge is estimated precisely and
-all nine survive resampling. Confidence intervals a few hundredths wide
-are what a large sample buys, and they are the ground on which the
-descriptive reading above can be reported rather than merely
-observed.</p>
+<span><span class="co">#&gt;       from       to    weight      mean         sd     p_value   sig  ci_lower</span></span>
+<span><span class="co">#&gt; 1      low      low 0.4148311 0.4015282 0.05284228 0.059701493 FALSE 0.3043293</span></span>
+<span><span class="co">#&gt; 2      low moderate 0.3135095 0.3166900 0.03084593 0.024875622  TRUE 0.2583890</span></span>
+<span><span class="co">#&gt; 3      low     high 0.2716593 0.2817819 0.03701263 0.084577114 FALSE 0.2172464</span></span>
+<span><span class="co">#&gt; 4 moderate      low 0.2184517 0.2151464 0.02620083 0.059701493 FALSE 0.1630474</span></span>
+<span><span class="co">#&gt; 5 moderate moderate 0.4528102 0.4519208 0.02976832 0.004975124  TRUE 0.3920565</span></span>
+<span><span class="co">#&gt; 6 moderate     high 0.3287381 0.3329328 0.02742877 0.004975124  TRUE 0.2840620</span></span>
+<span><span class="co">#&gt; 7     high      low 0.1648021 0.1654507 0.02913549 0.154228856 FALSE 0.1105726</span></span>
+<span><span class="co">#&gt; 8     high moderate 0.2603270 0.2636688 0.03085939 0.044776119  TRUE 0.2111482</span></span>
+<span><span class="co">#&gt; 9     high     high 0.5748709 0.5708806 0.05172929 0.014925373  TRUE 0.4581270</span></span>
+<span><span class="co">#&gt;    ci_upper  cr_lower  cr_upper</span></span>
+<span><span class="co">#&gt; 1 0.5035205 0.3111233 0.5185389</span></span>
+<span><span class="co">#&gt; 2 0.3754918 0.2351322 0.3918869</span></span>
+<span><span class="co">#&gt; 3 0.3582807 0.2037445 0.3395742</span></span>
+<span><span class="co">#&gt; 4 0.2667262 0.1638388 0.2730647</span></span>
+<span><span class="co">#&gt; 5 0.5079602 0.3396076 0.5660127</span></span>
+<span><span class="co">#&gt; 6 0.3851077 0.2465536 0.4109226</span></span>
+<span><span class="co">#&gt; 7 0.2260268 0.1236015 0.2060026</span></span>
+<span><span class="co">#&gt; 8 0.3284161 0.1952453 0.3254088</span></span>
+<span><span class="co">#&gt; 9 0.6534180 0.4311532 0.7185886</span></span></code></pre></div>
+<p>Five of the nine edges survive resampling — the three persistence
+loops and the two ascending steps, precisely the edges pruning kept. The
+other four, all descending routes or the <code>low -&gt; high</code>
+leap, move too much across resamples of the 36 students to clear the
+stability criterion. This is what a moderate panel buys: the backbone is
+firm, the weaker cross-currents are not, and the two verdicts (pruning
+by size, bootstrap by stability) agreeing on the same five edges is
+itself informative.</p>
 </div>
 <div class="section level2">
 <h2 id="stability-would-the-same-states-rank-first-in-a-smaller-study">Stability: would the same states rank first in a smaller study?<a class="anchor" aria-label="anchor" href="#stability-would-the-same-states-rank-first-in-a-smaller-study"></a>
@@ -530,19 +545,21 @@ the sequences, re-computes the centralities, and reports the largest
 proportion that can be dropped while the ordering still tracks the
 original, a correlation-stability coefficient.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">walk_model</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Centrality Stability (100 iterations, threshold = 0.7)</span></span>
 <span><span class="co">#&gt;   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   CS-coefficients:</span></span>
-<span><span class="co">#&gt;     InStrength       0.90</span></span>
-<span><span class="co">#&gt;     OutStrength      0.90</span></span>
-<span><span class="co">#&gt;     Betweenness      0.90</span></span></code></pre></div>
-<p>All three coefficients reach 0.90, against conventional bars of 0.5
-for acceptable and 0.7 for excellent. That measures how stable the
-<em>ordering</em> is under resampling; it does not speak to whether the
-ordering is substantively meaningful, only to whether a smaller study
-would have recovered it.</p>
+<span><span class="co">#&gt;     InStrength       0.60</span></span>
+<span><span class="co">#&gt;     OutStrength      0.40</span></span></code></pre></div>
+<p>The in-strength ordering holds to a 0.60 drop — acceptable, against
+conventional bars of 0.5 for acceptable and 0.7 for excellent — but the
+out-strength ordering fails the bar at 0.40. With 36 sequences, claims
+about which state <em>sends</em> the most between-state traffic should
+not be made from this panel; claims about which state receives it are on
+firmer ground. This is the stability check doing its job, and the honest
+report includes the number that failed.</p>
 </div>
 <div class="section level2">
 <h2 id="markov-order-is-a-first-order-model-enough">Markov order: is a first-order model enough?<a class="anchor" aria-label="anchor" href="#markov-order-is-a-first-order-model-enough"></a>
@@ -552,37 +569,38 @@ next state depends on the current one and nothing earlier. That
 assumption is testable, by comparing the fit of models of increasing
 order.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]</span></span>
-<span><span class="co">#&gt;   151 sequences / 31043 observations / 3 states</span></span>
+<span><span class="co">#&gt;   36 sequences / 5608 observations / 3 states</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Selected order  BIC: 3   AIC: 3   permutation-LRT: 3</span></span>
+<span><span class="co">#&gt;   Selected order  BIC: 2   AIC: 3   permutation-LRT: 3</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  order    loglik      AIC      BIC df      g2 p_permutation  p_asymptotic</span></span>
-<span><span class="co">#&gt;      0 -31051.63 62107.27 62123.95 NA      NA            NA            NA</span></span>
-<span><span class="co">#&gt;      1 -28961.91 57939.82 58006.57  4 4179.40   0.001996008  0.000000e+00</span></span>
-<span><span class="co">#&gt;      2 -28209.20 56470.40 56687.32 12 1505.37   0.001996008 2.624960e-315</span></span>
-<span><span class="co">#&gt;      3 -27901.81 55963.62 56631.07 36  614.68   0.001996008 1.933327e-106</span></span>
+<span><span class="co">#&gt;  order   loglik      AIC      BIC df     g2 p_permutation  p_asymptotic</span></span>
+<span><span class="co">#&gt;      0 -6031.21 12066.41 12079.67 NA     NA            NA            NA</span></span>
+<span><span class="co">#&gt;      1 -5750.23 11516.45 11569.51  4 561.95   0.001996008 2.653668e-120</span></span>
+<span><span class="co">#&gt;      2 -5606.12 11264.24 11436.67 12 288.17   0.001996008  1.422835e-54</span></span>
+<span><span class="co">#&gt;      3 -5494.72 11149.43 11679.99 36 222.75   0.001996008  8.841816e-29</span></span>
 <span><span class="co">#&gt;  significant</span></span>
 <span><span class="co">#&gt;           NA</span></span>
 <span><span class="co">#&gt;         TRUE</span></span>
 <span><span class="co">#&gt;         TRUE</span></span>
 <span><span class="co">#&gt;         TRUE</span></span></code></pre></div>
-<p>The test disagrees with the first-order model. AIC, BIC, and the
-permutation likelihood-ratio test all prefer a higher order, meaning
-yesterday carries information about tomorrow beyond what today already
-conveys. This does not invalidate the first-order network, but it bounds
-the claim: the network is a summary of one-step behaviour, not a full
-description of the process.</p>
+<p>The test disagrees with the first-order model. AIC and the
+permutation likelihood-ratio test prefer order 3 and BIC order 2,
+meaning yesterday carries information about tomorrow beyond what today
+already conveys. This does not invalidate the first-order network, but
+it bounds the claim: the network is a summary of one-step behaviour, not
+a full description of the process.</p>
 <p>The natural follow-up is a higher-order network.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon</a></span><span class="op">(</span><span class="va">walk_model</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon</a></span><span class="op">(</span><span class="va">effort_model</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Higher-Order Network (HON)</span></span>
 <span><span class="co">#&gt;   Nodes:        3 (3 first-order states)</span></span>
 <span><span class="co">#&gt;   Edges:        9</span></span>
 <span><span class="co">#&gt;   Max order:    1 (requested 2)</span></span>
 <span><span class="co">#&gt;   Min freq:     1</span></span>
-<span><span class="co">#&gt;   Trajectories: 151</span></span></code></pre></div>
+<span><span class="co">#&gt;   Trajectories: 36</span></span></code></pre></div>
 <p>The higher-order construction keeps every node at order 1: it finds
 no individual context that shifts the next-step distribution enough to
 justify splitting the node. The two criteria disagree because they ask
@@ -597,39 +615,36 @@ localized in any single state.</p>
 </h2>
 <p>The tests so far describe one network. <code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>
 compares two, shuffling the group labels to build a null distribution
-for every edge. The <code>steps</code> series runs from April 2019 to
-March 2020; splitting at the start of November contrasts the warmer
-months with the colder ones. The two spans are unequal in length,
-roughly six and a half months against four.</p>
+for every edge. The <code>srl</code> panel covers 156 occasions per
+student; splitting at occasion 78 contrasts the first half of the course
+with the second, with the same 36 students on both sides.</p>
 <p>Both models are built with the same fixed <code>breaks</code>, which
 matters more than it appears: had each period been discretized on its
 own quantiles, the two networks would rest on different cut points, and
 any difference between them could reflect the thresholds rather than
 behaviour.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cutoff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-11-01"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">early</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">walkers</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span> <span class="op">&lt;</span> <span class="va">cutoff</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<code class="sourceCode R"><span><span class="va">first_half</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">students</span>, <span class="va">day</span> <span class="op">&lt;=</span> <span class="fl">78</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>,</span>
-<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">late</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">walkers</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="va">day</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="va">cutoff</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span><span class="va">second_half</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">students</span>, <span class="va">day</span> <span class="op">&gt;</span> <span class="fl">78</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"threshold"</span>,</span>
-<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5000</span>, <span class="fl">10000</span><span class="op">)</span>,</span>
-<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sedentary"</span>, <span class="st">"moderate"</span>, <span class="st">"active"</span><span class="op">)</span></span>
+<span>  breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation</a></span><span class="op">(</span><span class="va">early</span>, <span class="va">late</span>, iter <span class="op">=</span> <span class="fl">2000</span>, seed <span class="op">=</span> <span class="fl">2024</span><span class="op">)</span></span>
+<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span>, iter <span class="op">=</span> <span class="fl">2000</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">comparison</span></span>
 <span><span class="co">#&gt; Permutation Test:Transition Network (relative probabilities) [directed]</span></span>
@@ -637,16 +652,16 @@ behaviour.</p>
 <span><span class="co">#&gt;   Nodes: 3  |  Edges tested: 9  |  Significant: 0</span></span></code></pre></div>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        from        to   weight_x   weight_y         diff effect_size    p_value</span></span>
-<span><span class="co">#&gt; 1 sedentary sedentary 0.34985280 0.35525154 -0.005398748 -0.18420352 0.86406797</span></span>
-<span><span class="co">#&gt; 2 sedentary  moderate 0.44602552 0.44395410  0.002071411  0.08267605 0.93753123</span></span>
-<span><span class="co">#&gt; 3 sedentary    active 0.20412169 0.20079435  0.003327337  0.15848152 0.88655672</span></span>
-<span><span class="co">#&gt; 4  moderate sedentary 0.14430829 0.16225831 -0.017950026 -1.26222133 0.20589705</span></span>
-<span><span class="co">#&gt; 5  moderate  moderate 0.50048371 0.50224285 -0.001759131 -0.09494720 0.91554223</span></span>
-<span><span class="co">#&gt; 6  moderate    active 0.35520800 0.33549884  0.019709158  0.87706971 0.38030985</span></span>
-<span><span class="co">#&gt; 7    active sedentary 0.05810102 0.06593238 -0.007831364 -0.93700923 0.35282359</span></span>
-<span><span class="co">#&gt; 8    active  moderate 0.30333977 0.33761664 -0.034276870 -1.78233216 0.07196402</span></span>
-<span><span class="co">#&gt; 9    active    active 0.63855921 0.59645097  0.042108234  1.75491892 0.07946027</span></span>
+<span><span class="co">#&gt;       from       to  weight_x  weight_y          diff effect_size   p_value</span></span>
+<span><span class="co">#&gt; 1      low      low 0.4143070 0.4152047 -0.0008976739 -0.01176955 0.9905047</span></span>
+<span><span class="co">#&gt; 2      low moderate 0.3293592 0.2967836  0.0325755397  0.68417855 0.4937531</span></span>
+<span><span class="co">#&gt; 3      low     high 0.2563338 0.2880117 -0.0316778658 -0.61092234 0.5532234</span></span>
+<span><span class="co">#&gt; 4 moderate      low 0.2134472 0.2230523 -0.0096051227 -0.23379724 0.8345827</span></span>
+<span><span class="co">#&gt; 5 moderate moderate 0.4557097 0.4514408  0.0042689434  0.08454169 0.9385307</span></span>
+<span><span class="co">#&gt; 6 moderate     high 0.3308431 0.3255069  0.0053361793  0.12210174 0.9010495</span></span>
+<span><span class="co">#&gt; 7     high      low 0.1665229 0.1637631  0.0027597983  0.07267935 0.9480260</span></span>
+<span><span class="co">#&gt; 8     high moderate 0.2476273 0.2700348 -0.0224075783 -0.50254694 0.6276862</span></span>
+<span><span class="co">#&gt; 9     high     high 0.5858499 0.5662021  0.0196477800  0.29315994 0.7611194</span></span>
 <span><span class="co">#&gt;     sig</span></span>
 <span><span class="co">#&gt; 1 FALSE</span></span>
 <span><span class="co">#&gt; 2 FALSE</span></span>
@@ -657,205 +672,223 @@ behaviour.</p>
 <span><span class="co">#&gt; 7 FALSE</span></span>
 <span><span class="co">#&gt; 8 FALSE</span></span>
 <span><span class="co">#&gt; 9 FALSE</span></span></code></pre></div>
-<p>None of the nine edge comparisons reaches significance; the smallest
-p-value is 0.07. The estimates are not identical, but no difference
-survives the permutation null. That is a more informative result than a
-scattering of small p-values would have been, because the two periods
-differ in how much people walked in the first place:</p>
+<p>Nothing separates the halves: no edge comparison comes near
+significance (the smallest p-value is 0.49) and the largest estimated
+difference on any edge is 0.033. The compositions agree just as
+closely:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">early</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   group     state count proportion</span></span>
-<span><span class="co">#&gt; 1   all    active  7328  0.4689620</span></span>
-<span><span class="co">#&gt; 2   all  moderate  6253  0.4001664</span></span>
-<span><span class="co">#&gt; 3   all sedentary  2045  0.1308716</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">first_half</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   group    state count proportion</span></span>
+<span><span class="co">#&gt; 1   all     high  1176  0.4195505</span></span>
+<span><span class="co">#&gt; 2   all moderate   949  0.3385658</span></span>
+<span><span class="co">#&gt; 3   all      low   678  0.2418837</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">late</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   group     state count proportion</span></span>
-<span><span class="co">#&gt; 1   all    active  6593  0.4276448</span></span>
-<span><span class="co">#&gt; 2   all  moderate  6523  0.4231044</span></span>
-<span><span class="co">#&gt; 3   all sedentary  2301  0.1492508</span></span></code></pre></div>
-<p>Active days fall from 46.9% before November to 42.8% after it, and
-sedentary days rise. The seasonal shift is therefore plain in the
-<em>composition</em> of the states while no comparison of the
-<em>transitions</em> between them reaches significance. The estimated
-sedentary-to-moderate probability, for instance, is 0.446 before
-November and 0.444 after, with a permutation p-value of 0.94.</p>
+<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">second_half</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   group    state count proportion</span></span>
+<span><span class="co">#&gt; 1   all     high  1165  0.4153298</span></span>
+<span><span class="co">#&gt; 2   all moderate   951  0.3390374</span></span>
+<span><span class="co">#&gt; 3   all      low   689  0.2456328</span></span></code></pre></div>
+<p>High-effort days make up 42.0% of the first half and 41.5% of the
+second; every proportion moves by less than a percentage point. Level
+and dynamics are both stationary across the course: whatever effort
+habits these students have, they are set before the midpoint and do not
+drift. A null this uniform is a finding — it licenses pooling the whole
+course into the single model above, which a real first-to-second-half
+shift would have forbidden.</p>
 <p>Two cautions bound how far that carries. Failing to reject nine tests
-is not the same as showing the dynamics are identical, and the two
-models do not rest on quite the same people: 140 participants contribute
-before November and 149 after, with 138 in both.</p>
-<p>That distinction is the reason to build a transition network at all.
-A comparison of means or of state proportions finds the seasonal
-difference and stops there; the transition model asks a further question
-of the same population, whether the <em>dynamics</em> moved with the
-season, and finds no evidence that they did.</p>
+is not the same as proving the dynamics identical, and the balanced
+design helps the comparison: the same 36 students stand on both sides of
+the cut, so the null is not an artefact of different people in different
+periods.</p>
 </div>
 <div class="section level2">
-<h2 id="more-than-two-groups-one-model-per-context">More than two groups: one model per context<a class="anchor" aria-label="anchor" href="#more-than-two-groups-one-model-per-context"></a>
+<h2 id="more-than-two-groups-one-model-per-condition">More than two groups: one model per condition<a class="anchor" aria-label="anchor" href="#more-than-two-groups-one-model-per-condition"></a>
 </h2>
 <p>Building two models by hand is manageable when there are two. When
 the variable that separates the groups is already a column in the data,
 the <code>group</code> argument builds one network per level in a single
 call, and it scales past two, which the pairwise form does not.</p>
-<p>The <code>motivation</code> study records where each measurement was
-taken in <code>task_context_type</code>, so the pleasure ratings can be
-split by context.</p>
+<p>The <code>esm_srl</code> study carries a <code>day_type</code> column
+marking weekday and weekend reports, so momentary effort can be split by
+day type.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">by_context</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
-<span>  <span class="va">motivation</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"task_context_type"</span>,</span>
+<code class="sourceCode R"><span><span class="va">by_day</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">esm_srl</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">effort</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
+<span>  time <span class="op">=</span> <span class="st">"occasion"</span>,</span>
+<span>  group <span class="op">=</span> <span class="st">"day_type"</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"mid"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">by_context</span></span>
-<span><span class="co">#&gt; Group Networks (4 groups, group_col: task_context_type)</span></span>
+<span><span class="va">by_day</span></span>
+<span><span class="co">#&gt; Group Networks (2 groups, group_col: day_type)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Group     Nodes  Edges  Weights</span></span>
-<span><span class="co">#&gt;   Home      3      9      [0.040, 0.762]</span></span>
-<span><span class="co">#&gt;   Other     3      1      [1.000, 1.000]</span></span>
-<span><span class="co">#&gt;   Personal  3      9      [0.065, 0.664]</span></span>
-<span><span class="co">#&gt;   Work      3      9      [0.156, 0.518]</span></span></code></pre></div>
+<span><span class="co">#&gt;   Group    Nodes  Edges  Weights</span></span>
+<span><span class="co">#&gt;   weekday  3      9      [0.098, 0.631]</span></span>
+<span><span class="co">#&gt;   weekend  3      9      [0.085, 0.633]</span></span></code></pre></div>
 <p>Two things happen here that would be tedious to arrange by hand. The
-states are cut from the <em>pooled</em> series before the split, so all
-four networks rest on one set of thresholds and share a node set, the
-same discipline the fixed <code>breaks</code> enforced earlier, applied
+states are cut from the <em>pooled</em> series before the split, so both
+networks rest on one set of thresholds and share a node set, the same
+discipline the fixed <code>breaks</code> enforced earlier, applied
 automatically. And the result is a Nestimate
 <code>netobject_group</code>, so the compatible grouped verbs take it
 directly: <code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code>,
 <code><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code>,
 <code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>, and their
-neighbours. Not every verb applies: those needing a precision matrix or
-a clustering attribute reject a transition model, and there is no
-grouped <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, so networks are plotted one at a
-time.</p>
+neighbours, while <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> with a <code>group</code> argument
+draws one selected network. Not every verb applies: those needing a
+precision matrix or a clustering attribute reject a transition
+model.</p>
 <p><code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> gives the tidy view of how much data
 stands behind each network:</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_context</span>, what <span class="op">=</span> <span class="st">"groups"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      group type sequences observations states edges</span></span>
-<span><span class="co">#&gt; 1     Home  tna       832         1324      3     9</span></span>
-<span><span class="co">#&gt; 2    Other  tna         2            3      3     1</span></span>
-<span><span class="co">#&gt; 3 Personal  tna       822         1309      3     9</span></span>
-<span><span class="co">#&gt; 4     Work  tna       976         2235      3     9</span></span></code></pre></div>
-<p>The sequence counts repay a second look: <code>Home</code> has 1,324
-observations but 832 sequences. That is not padding. A run is cut at
-every change of series <em>and</em> at every change of group, and the
-two cuts are not the same. A change of series separates measurements
-that were never consecutive; a change of context falls between two
-genuinely adjacent measurements, and the transition across it is
-excluded from both networks because it belongs to neither context. This
-study alternates context from one measurement to the next (4,871
-observations form 2,632 contiguous runs), so each unbroken stretch
-within a context becomes its own sequence, and a pair of measurements
-separated by an intervening visit to a different context is never
-counted as a transition, because it never was one.</p>
-<p>That rule costs nothing when a group is constant within a series,
-which is the usual case for a condition or a cohort: each series then
-contributes one sequence and keeps its own ID.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">by_day</span>, what <span class="op">=</span> <span class="st">"groups"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     group type sequences observations states edges</span></span>
+<span><span class="co">#&gt; 1 weekday  tna       238         2033      3     9</span></span>
+<span><span class="co">#&gt; 2 weekend  tna       233          783      3     9</span></span></code></pre></div>
+<p>The sequence counts repay a second look: the weekday network holds
+2,033 observations in 238 sequences, the weekend network 783 in 233.
+That is not padding. A run is cut at every change of student
+<em>and</em> at every change of day type, and the two cuts are not the
+same. A change of student separates measurements that were never
+consecutive; a change of day type falls between two genuinely adjacent
+measurements, and the transition across it is excluded from both
+networks because it belongs to neither day type. A working week of
+roughly two reports a day therefore forms one sequence of eight to ten
+observations, a weekend one of three to four, and the Friday-to-Saturday
+transition is counted in neither.</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       group state count proportion</span></span>
-<span><span class="co">#&gt; 1      Home   low   827 0.62462236</span></span>
-<span><span class="co">#&gt; 2      Home   mid   409 0.30891239</span></span>
-<span><span class="co">#&gt; 3      Home  high    88 0.06646526</span></span>
-<span><span class="co">#&gt; 4     Other  high     1 0.33333333</span></span>
-<span><span class="co">#&gt; 5     Other   low     1 0.33333333</span></span>
-<span><span class="co">#&gt; 6     Other   mid     1 0.33333333</span></span>
-<span><span class="co">#&gt; 7  Personal  high   597 0.45607334</span></span>
-<span><span class="co">#&gt; 8  Personal   mid   459 0.35064935</span></span>
-<span><span class="co">#&gt; 9  Personal   low   253 0.19327731</span></span>
-<span><span class="co">#&gt; 10     Work  high   938 0.41968680</span></span>
-<span><span class="co">#&gt; 11     Work   mid   749 0.33512304</span></span>
-<span><span class="co">#&gt; 12     Work   low   548 0.24519016</span></span></code></pre></div>
-<p>The contexts are not alike. Pleasure is low on 62.5% of measurements
-taken at home and high on only 6.6% of them; personal time reverses that
-ordering: high on 45.6%, low on 19.3%. Work sits between the two on all
-three states. A mosaic plot shows the same contrast in the transition
-structure at a glance, one panel per context:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     group state count proportion</span></span>
+<span><span class="co">#&gt; 1 weekday   low   694  0.3413674</span></span>
+<span><span class="co">#&gt; 2 weekday  high   676  0.3325135</span></span>
+<span><span class="co">#&gt; 3 weekday   mid   663  0.3261190</span></span>
+<span><span class="co">#&gt; 4 weekend   mid   268  0.3422733</span></span>
+<span><span class="co">#&gt; 5 weekend  high   262  0.3346105</span></span>
+<span><span class="co">#&gt; 6 weekend   low   253  0.3231162</span></span></code></pre></div>
+<p>The compositions are nearly identical — each state holds close to a
+third of the reports on both day types, as pooled quantile cutting
+guarantees for the whole panel though not for each group. Whatever
+distinguishes weekends, it is not how much high-effort time they
+contain. The difference, if any, must live in the dynamics, and the
+shared alphabet is what makes that question answerable:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">by_context</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-workflow_files/figure-html/grouped-mosaic-1.png" class="r-plt" alt="Mosaic panels of the four context-specific transition networks, in which tile area encodes transition probability from each current state to each next state, showing the home context concentrated in the low-to-low cell and personal time in the high-to-high cell." width="100%" style="display: block; margin: auto;"></p>
-<p>Tile area encodes the transition probability from a current state
-(rows) to a next state (columns). The home panel is dominated by its
-low-to-low cell and the personal panel by its high-to-high cell, so the
-difference in <em>level</em> between the contexts reappears as a
-difference in <em>persistence</em>: wherever pleasure tends to be, it
-tends to stay.</p>
-<p>Because every network shares an alphabet, two of them can be set side
-by side and selected by name:</p>
+<code class="sourceCode R"><span><span class="va">day_comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation</a></span><span class="op">(</span><span class="va">by_day</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">day_comparison</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                group from   to   weight_x   weight_y          diff  effect_size</span></span>
+<span><span class="co">#&gt; 1 weekday vs weekend  low  low 0.61990212 0.63276836 -0.0128662409 -0.289921277</span></span>
+<span><span class="co">#&gt; 2 weekday vs weekend  low  mid 0.28221860 0.28248588 -0.0002672786 -0.006925447</span></span>
+<span><span class="co">#&gt; 3 weekday vs weekend  low high 0.09787928 0.08474576  0.0131335195  0.584487518</span></span>
+<span><span class="co">#&gt; 4 weekday vs weekend  mid  low 0.29441624 0.26111111  0.0333051325  0.900900323</span></span>
+<span><span class="co">#&gt; 5 weekday vs weekend  mid  mid 0.42978003 0.46666667 -0.0368866328 -0.878891544</span></span>
+<span><span class="co">#&gt; 6 weekday vs weekend  mid high 0.27580372 0.27222222  0.0035815003  0.093352074</span></span>
+<span><span class="co">#&gt; 7 weekday vs weekend high  low 0.11505922 0.12435233 -0.0092931099 -0.329460065</span></span>
+<span><span class="co">#&gt; 8 weekday vs weekend high  mid 0.25380711 0.34196891 -0.0881618053 -2.327154276</span></span>
+<span><span class="co">#&gt; 9 weekday vs weekend high high 0.63113367 0.53367876  0.0974549153  2.092734296</span></span>
+<span><span class="co">#&gt;      p_value   sig</span></span>
+<span><span class="co">#&gt; 1 0.77722278 FALSE</span></span>
+<span><span class="co">#&gt; 2 0.99500500 FALSE</span></span>
+<span><span class="co">#&gt; 3 0.56143856 FALSE</span></span>
+<span><span class="co">#&gt; 4 0.38061938 FALSE</span></span>
+<span><span class="co">#&gt; 5 0.37662338 FALSE</span></span>
+<span><span class="co">#&gt; 6 0.92007992 FALSE</span></span>
+<span><span class="co">#&gt; 7 0.77822178 FALSE</span></span>
+<span><span class="co">#&gt; 8 0.02297702  TRUE</span></span>
+<span><span class="co">#&gt; 9 0.04595405  TRUE</span></span></code></pre></div>
+<p>One robust difference emerges: <code>high -&gt; mid</code> runs at
+0.254 on weekdays and 0.342 on weekends (p = 0.023). Its mirror image,
+weekend <code>high -&gt; high</code> retention falling to 0.534 from
+0.631, sits exactly on the boundary (p = 0.046) and should be read as
+suggestive rather than established. Read together, the pattern is
+coherent: on weekends a high-effort spell is more likely to soften into
+the mid range and less likely to hold. This is the reverse of the
+seasonal result above — there, composition was free to move and nothing
+moved; here, composition is pinned by construction and the dynamics
+carry the difference.</p>
+<p>A mosaic plot shows both transition structures at a glance, one panel
+per day type:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">by_context</span>, i <span class="op">=</span> <span class="st">"Home"</span>, j <span class="op">=</span> <span class="st">"Work"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-workflow_files/figure-html/grouped-mosaic-1.png" class="r-plt" alt="Mosaic panels of the weekday and weekend transition networks, in which tile area encodes transition probability, showing the weekend high-to-mid cell visibly larger than its weekday counterpart." width="100%" style="display: block; margin: auto;"></p>
+<p>Because both networks share an alphabet, the pair can also be set
+side by side and compared as matrices:</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">by_day</span>, i <span class="op">=</span> <span class="st">"weekday"</span>, j <span class="op">=</span> <span class="st">"weekend"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network comparison</span></span>
 <span><span class="co">#&gt; ==================</span></span>
 <span><span class="co">#&gt; Summary metrics:</span></span>
 <span><span class="co">#&gt;              category               metric   value</span></span>
-<span><span class="co">#&gt;     Weight Deviations      Mean Abs. Diff.  0.2318</span></span>
-<span><span class="co">#&gt;     Weight Deviations    Median Abs. Diff.  0.2503</span></span>
-<span><span class="co">#&gt;     Weight Deviations            RMS Diff.  0.2581</span></span>
-<span><span class="co">#&gt;     Weight Deviations       Max Abs. Diff.  0.3699</span></span>
-<span><span class="co">#&gt;     Weight Deviations Rel. Mean Abs. Diff.  0.6953</span></span>
-<span><span class="co">#&gt;     Weight Deviations             CV Ratio   2.268</span></span>
-<span><span class="co">#&gt;          Correlations              Pearson -0.2137</span></span>
-<span><span class="co">#&gt;          Correlations             Spearman -0.2167</span></span>
-<span><span class="co">#&gt;          Correlations              Kendall -0.1111</span></span>
-<span><span class="co">#&gt;          Correlations             Distance  0.2513</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Euclidean  0.7743</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Manhattan   2.086</span></span>
-<span><span class="co">#&gt;       Dissimilarities             Canberra   3.477</span></span>
-<span><span class="co">#&gt;       Dissimilarities          Bray-Curtis  0.3477</span></span>
-<span><span class="co">#&gt;       Dissimilarities            Frobenius  0.6322</span></span>
-<span><span class="co">#&gt;          Similarities               Cosine  0.7693</span></span>
-<span><span class="co">#&gt;          Similarities              Jaccard  0.4841</span></span>
-<span><span class="co">#&gt;          Similarities                 Dice  0.6523</span></span>
-<span><span class="co">#&gt;          Similarities              Overlap  0.6523</span></span>
-<span><span class="co">#&gt;          Similarities                   RV  0.6594</span></span>
-<span><span class="co">#&gt;  Pattern Similarities       Rank Agreement  0.8333</span></span>
+<span><span class="co">#&gt;     Weight Deviations      Mean Abs. Diff. 0.03277</span></span>
+<span><span class="co">#&gt;     Weight Deviations    Median Abs. Diff. 0.01313</span></span>
+<span><span class="co">#&gt;     Weight Deviations            RMS Diff. 0.04735</span></span>
+<span><span class="co">#&gt;     Weight Deviations       Max Abs. Diff. 0.09745</span></span>
+<span><span class="co">#&gt;     Weight Deviations Rel. Mean Abs. Diff. 0.09832</span></span>
+<span><span class="co">#&gt;     Weight Deviations             CV Ratio   1.059</span></span>
+<span><span class="co">#&gt;          Correlations              Pearson  0.9657</span></span>
+<span><span class="co">#&gt;          Correlations             Spearman  0.8333</span></span>
+<span><span class="co">#&gt;          Correlations              Kendall  0.6667</span></span>
+<span><span class="co">#&gt;          Correlations             Distance  0.9357</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Euclidean   0.142</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Manhattan   0.295</span></span>
+<span><span class="co">#&gt;       Dissimilarities             Canberra  0.4608</span></span>
+<span><span class="co">#&gt;       Dissimilarities          Bray-Curtis 0.04916</span></span>
+<span><span class="co">#&gt;       Dissimilarities            Frobenius   0.116</span></span>
+<span><span class="co">#&gt;          Similarities               Cosine  0.9922</span></span>
+<span><span class="co">#&gt;          Similarities              Jaccard  0.9063</span></span>
+<span><span class="co">#&gt;          Similarities                 Dice  0.9508</span></span>
+<span><span class="co">#&gt;          Similarities              Overlap  0.9508</span></span>
+<span><span class="co">#&gt;          Similarities                   RV  0.9744</span></span>
+<span><span class="co">#&gt;  Pattern Similarities       Rank Agreement       1</span></span>
 <span><span class="co">#&gt;  Pattern Similarities       Sign Agreement       1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Network metrics (x vs y):</span></span>
-<span><span class="co">#&gt;                       metric      x      y</span></span>
-<span><span class="co">#&gt;                   Node Count      3      3</span></span>
-<span><span class="co">#&gt;                   Edge Count      9      9</span></span>
-<span><span class="co">#&gt;              Network Density      1      1</span></span>
-<span><span class="co">#&gt;                Mean Distance 0.2697 0.2882</span></span>
-<span><span class="co">#&gt;            Mean Out-Strength      1      1</span></span>
-<span><span class="co">#&gt;              SD Out-Strength 0.7008 0.2058</span></span>
-<span><span class="co">#&gt;             Mean In-Strength      1      1</span></span>
-<span><span class="co">#&gt;               SD In-Strength      0      0</span></span>
-<span><span class="co">#&gt;              Mean Out-Degree      3      3</span></span>
-<span><span class="co">#&gt;                SD Out-Degree      0      0</span></span>
-<span><span class="co">#&gt;  Centralization (Out-Degree)      0      0</span></span>
-<span><span class="co">#&gt;   Centralization (In-Degree)      0      0</span></span>
-<span><span class="co">#&gt;                  Reciprocity      1      1</span></span></code></pre></div>
+<span><span class="co">#&gt;                       metric       x      y</span></span>
+<span><span class="co">#&gt;                   Node Count       3      3</span></span>
+<span><span class="co">#&gt;                   Edge Count       9      9</span></span>
+<span><span class="co">#&gt;              Network Density       1      1</span></span>
+<span><span class="co">#&gt;                Mean Distance  0.2199 0.2278</span></span>
+<span><span class="co">#&gt;            Mean Out-Strength       1      1</span></span>
+<span><span class="co">#&gt;              SD Out-Strength 0.03206 0.1015</span></span>
+<span><span class="co">#&gt;             Mean In-Strength       1      1</span></span>
+<span><span class="co">#&gt;               SD In-Strength       0      0</span></span>
+<span><span class="co">#&gt;              Mean Out-Degree       3      3</span></span>
+<span><span class="co">#&gt;                SD Out-Degree       0      0</span></span>
+<span><span class="co">#&gt;  Centralization (Out-Degree)       0      0</span></span>
+<span><span class="co">#&gt;   Centralization (In-Degree)       0      0</span></span>
+<span><span class="co">#&gt;                  Reciprocity       1      1</span></span></code></pre></div>
+<p>A Pearson correlation of 0.966 with a maximum absolute difference of
+0.097 — the <code>high -&gt; high</code> retention gap — confirms the
+same reading: the two networks are close, and where they part is in how
+long high effort lasts.</p>
 <p>Pruning applies group-wise and returns a grouped model, so the
 collection can be carried through a workflow without being taken
 apart:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">by_context</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Group Networks (4 groups)</span></span>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">by_day</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Group Networks (2 groups)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Group     Nodes  Edges  Weights</span></span>
-<span><span class="co">#&gt;   Home      3      6      [0.148, 0.762]</span></span>
-<span><span class="co">#&gt;   Other     3      1      [1.000, 1.000]</span></span>
-<span><span class="co">#&gt;   Personal  3      6      [0.286, 0.664]</span></span>
-<span><span class="co">#&gt;   Work      3      6      [0.315, 0.518]</span></span></code></pre></div>
-<p>The index table states one caution plainly rather than hiding it:
-<code>Other</code> holds three observations and two sequences. It is a
-level of the column, so it gets a network, but a network estimated from
-a single transition is not a result. Read the <code>sequences</code> and
-<code>observations</code> columns before reading the edges.</p>
+<span><span class="co">#&gt;   Group    Nodes  Edges  Weights</span></span>
+<span><span class="co">#&gt;   weekday  3      5      [0.098, 0.631]</span></span>
+<span><span class="co">#&gt;   weekend  3      5      [0.085, 0.633]</span></span></code></pre></div>
+<p>One caution generalizes beyond this example. Every level of the
+grouping column gets a network, however little data stands behind it, so
+read the <code>sequences</code> and <code>observations</code> columns of
+the index before reading any edges. A network estimated from a handful
+of transitions is a level of a column, not a result.</p>
 </div>
 <div class="section level2">
-<h2 id="plotting-a-single-model">Plotting a single model<a class="anchor" aria-label="anchor" href="#plotting-a-single-model"></a>
+<h2 id="plotting-a-model">Plotting a model<a class="anchor" aria-label="anchor" href="#plotting-a-model"></a>
 </h2>
-<p>A grouped model has no <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, but any single
-network does, including the pooled step model. The plot draws the three
-states as nodes and the transition probabilities as directed edges, with
-self-loops for persistence.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">walk_model</span><span class="op">)</span></span></code></pre></div>
-<p><img src="nestimate-workflow_files/figure-html/plot-1.png" class="r-plt" alt="Transition network of daily step-count states, with sedentary, moderate, and active nodes joined by directed edges whose thickness reflects transition probability and self-loops that mark each state's persistence." width="100%" style="display: block; margin: auto;"></p>
+<p>Any single network has a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, and a grouped
+model draws one selected group at a time via its <code>group</code>
+argument. Here is the pooled effort model: three states as nodes,
+transition probabilities as directed edges, and self-loops for
+persistence.</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<p><img src="nestimate-workflow_files/figure-html/plot-1.png" class="r-plt" alt="Transition network of daily effort states, with low, moderate, and high nodes joined by directed edges whose thickness reflects transition probability and self-loops that mark each state's persistence." width="100%" style="display: block; margin: auto;"></p>
 <p>The heavy self-loops confirm what the state distribution reported
 numerically: each state mostly returns to itself, and movement between
 states is the smaller part of the process. The plotting vignette covers
@@ -865,7 +898,7 @@ the plot types and their arguments in full.</p>
 <h2 id="where-the-line-falls">Where the line falls<a class="anchor" aria-label="anchor" href="#where-the-line-falls"></a>
 </h2>
 <p>Everything descriptive in this vignette, from centralities, state
-distributions, entropy, and pruning to per-participant splits and the
+distributions, entropy, and pruning to per-student splits and the
 grouped models, runs on a model built from a single series. Everything
 inferential, meaning the bootstrap, stability, the Markov-order test,
 and the permutation test, requires many sequences, because resampling
@@ -876,7 +909,8 @@ them. Fix your <code>breaks</code> before you compare anything, or pass
 <code>group</code> and let the pooled discretization fix them for you,
 so a difference between networks is a difference in behaviour and not in
 thresholds. And when a comparison rests on few sequences, say so: the
-<code>sequences</code> column exists to be read.</p>
+<code>sequences</code> column exists to be read, and so does a stability
+coefficient that comes back at 0.40.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -15,10 +15,10 @@ labels, node size, and edge annotation. When `type` is omitted,
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) uses the
 default type for the corresponding result class.
 
-This vignette uses one `pleasure` series throughout. Each analytical
-object is constructed immediately before its first plot, keeping the
-relationship between the analysis and its graphical representation
-explicit.
+This vignette uses one momentary `anxiety` series throughout. Each
+analytical object is constructed immediately before its first plot,
+keeping the relationship between the analysis and its graphical
+representation explicit.
 
 | Result class | Plot types | Default |
 |----|----|----|
@@ -39,16 +39,18 @@ sequence, the state representation, or the network structure.
 
 ## Data
 
-The examples use the first 60 observations of `pleasure` from the
-`motivation` data. A 25-observation segment is used for visibility
-analysis so that individual nodes and edges remain distinguishable.
+The examples use the first 60 momentary anxiety reports of one student,
+Jamal, from the bundled `esm_srl` experience-sampling data (41 students,
+0-100 scales, fully anonymized). A 25-observation segment is used for
+visibility analysis so that individual nodes and edges remain
+distinguishable.
 
 ``` r
 
-data("motivation", package = "tsn")
+data("esm_srl", package = "tsn")
 
-pleasure <- head(motivation, 60)
-short <- head(pleasure, 25)
+anxiety <- head(subset(esm_srl, name == "Jamal"), 60)
+short <- head(anxiety, 25)
 ```
 
 ## Discrete-state plots
@@ -83,8 +85,8 @@ argument is required.
 ``` r
 
 states <- discretize(
-  data = pleasure,
-  series = "pleasure",
+  data = anxiety,
+  series = "anxiety",
   labels = c("Low", "Middle", "High")
 )
 
@@ -131,7 +133,7 @@ discretized and plotted beneath the original observations.
 
 ``` r
 
-changes <- with(pleasure, c(0, diff(pleasure)))
+changes <- with(anxiety, c(0, diff(anxiety)))
 
 change_states <- discretize(
   data = changes,
@@ -141,8 +143,8 @@ change_states <- discretize(
 plot(
   change_states,
   "stack",
-  with = with(pleasure, pleasure),
-  with_label = "Pleasure"
+  with = with(anxiety, anxiety),
+  with_label = "Anxiety"
 )
 ```
 
@@ -178,8 +180,8 @@ default point representation.
 ``` r
 
 directions <- trend(
-  data = pleasure,
-  series = "pleasure"
+  data = anxiety,
+  series = "anxiety"
 )
 
 plot(directions)
@@ -261,7 +263,7 @@ The default type is `"network"`.
 visibility <- vg(
   data = short,
   type = "horizontal",
-  series = "pleasure"
+  series = "anxiety"
 )
 
 plot(visibility)
@@ -280,7 +282,7 @@ observations remain mutually visible across intervening values.
 visibility <- vg(
   data = short,
   type = "horizontal",
-  series = "pleasure"
+  series = "anxiety"
 )
 
 plot(visibility, "series")
@@ -307,7 +309,7 @@ neighbours, which keeps the figure legible.
 windows <- tsn(
   data = short,
   method = "distance",
-  series = "pleasure",
+  series = "anxiety",
   step = 2,
   connect = "nearest",
   neighbors = 2
@@ -317,8 +319,7 @@ plot(windows)
 ```
 
 ![Nearest-neighbour distance network over sliding windows of the short
-pleasure series; node size encodes degree and edges join the most
-similar
+anxiety series; node size encodes degree and edges join the most similar
 windows.](plotting-time-series-networks_files/figure-html/distance-network-1.png)
 
 Node size still encodes degree, but the edges now express graded
@@ -339,7 +340,7 @@ above.
 visibility <- vg(
   data = short,
   type = "horizontal",
-  series = "pleasure"
+  series = "anxiety"
 )
 
 plot(visibility, layout = "circle")
@@ -347,7 +348,7 @@ plot(visibility, layout = "circle")
 
 ![The horizontal visibility graph redrawn with a circular layout,
 showing that the layout rearranges the same twenty-five nodes and
-forty-three
+forty-one
 edges.](plotting-time-series-networks_files/figure-html/network-encoding-1.png)
 
 The circular layout places the observations evenly around a ring, but

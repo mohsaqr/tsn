@@ -313,17 +313,15 @@ ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
 #>   high          0.334  ████████████████████████████████████████
 #>   mid           0.331  ████████████████████████████████████████
 
-# One network per context, on a shared alphabet:
-data(motivation)
-by_context <- ts_tna(
-  motivation,
-  series = "pleasure", group = "task_context_type",
-  labels = c("low", "mid", "high")
+# One network per day type, on a shared alphabet:
+data(esm_srl)
+by_day <- ts_tna(
+  subset(esm_srl, !is.na(effort)),
+  value = "effort", id = "name", time = "occasion",
+  group = "day_type", labels = c("low", "mid", "high")
 )
-as.data.frame(by_context, what = "groups")
-#>      group type sequences observations states edges
-#> 1     Home  tna       832         1324      3     9
-#> 2    Other  tna         2            3      3     1
-#> 3 Personal  tna       822         1309      3     9
-#> 4     Work  tna       976         2235      3     9
+as.data.frame(by_day, what = "groups")
+#>     group type sequences observations states edges
+#> 1 weekday  tna       238         2033      3     9
+#> 2 weekend  tna       233          783      3     9
 ```

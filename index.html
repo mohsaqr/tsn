@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,63 +131,63 @@
 <h2 id="state-transition-networks">State-transition networks<a class="anchor" aria-label="anchor" href="#state-transition-networks"></a>
 </h2>
 <p>The <code><a href="reference/ts_tna.html">ts_tna()</a></code> family constructs a transition network directly from raw measurements: each series is discretized, a single state alphabet is shared across all series, and the estimation is delegated to <code>Nestimate</code> (a Suggests dependency). The four functions differ only in the quantity placed on the edges. <code><a href="reference/ts_tna.html">ts_tna()</a></code> estimates transition probabilities, <code><a href="reference/ts_tna.html">ts_ftna()</a></code> raw transition frequencies, <code><a href="reference/ts_tna.html">ts_cna()</a></code> co-occurrences, and <code><a href="reference/ts_tna.html">ts_atna()</a></code> attention-weighted transitions.</p>
-<p>The packaged <code>steps</code> dataset records daily step counts. Because participant 35 has missing days, we model the complete observations for two participants:</p>
+<p>The packaged <code>srl</code> dataset records nine self-regulated-learning indicators for 36 students over 156 daily occasions, on 0-100 scales. Because a few reports are missing, we model the complete <code>effort</code> observations for two students:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">srl</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">complete</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">steps</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">complete</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">srl</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">effort</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ts_tna.html">ts_tna</a></span><span class="op">(</span></span>
 <span>  <span class="va">complete</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
-<span>  series <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">536</span>, <span class="fl">88</span><span class="op">)</span>,</span>
+<span>  series <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Erik"</span>, <span class="st">"Eve"</span><span class="op">)</span>,</span>
 <span>  n_states <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.108, 0.605]  |  mean: 0.333</span></span>
+<span><span class="co">#&gt;   Weights: [0.276, 0.398]  |  mean: 0.333</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Weight matrix:</span></span>
 <span><span class="co">#&gt;              low moderate  high</span></span>
-<span><span class="co">#&gt;   low      0.578    0.303 0.119</span></span>
-<span><span class="co">#&gt;   moderate 0.319    0.411 0.270</span></span>
-<span><span class="co">#&gt;   high     0.108    0.286 0.605 </span></span>
+<span><span class="co">#&gt;   low      0.381    0.343 0.276</span></span>
+<span><span class="co">#&gt;   moderate 0.304    0.373 0.324</span></span>
+<span><span class="co">#&gt;   high     0.320    0.282 0.398 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   high          1.000  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   low           0.000  </span></span>
-<span><span class="co">#&gt;   moderate      0.000</span></span></code></pre></div>
-<p>The transition matrix is strongly diagonal: in the pooled model a <code>low</code> day is followed by another <code>low</code> day with probability 0.578, and a <code>high</code> day by another <code>high</code> day with probability 0.605, so days tend to persist in their state. Because the state alphabet is learned from both series jointly, the two participants are placed on a common scale. <code><a href="reference/series_networks.html">series_networks()</a></code> then splits the pooled model into one network per series:</p>
+<span><span class="co">#&gt;   low           1.000  ████████████████████████████████████████</span></span>
+<span><span class="co">#&gt;   moderate      0.000  </span></span>
+<span><span class="co">#&gt;   high          0.000</span></span></code></pre></div>
+<p>The diagonal of the transition matrix is only mildly elevated: a <code>low</code> day is followed by another <code>low</code> day with probability 0.381 and a <code>high</code> day by another <code>high</code> day with probability 0.398, against roughly 0.3 for every alternative, so these students’ daily effort persists, but weakly. Because the state alphabet is learned from both series jointly, the two students are placed on a common scale. <code><a href="reference/series_networks.html">series_networks()</a></code> then splits the pooled model into one network per series:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/series_networks.html">series_networks</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  series type observations states edges</span></span>
-<span><span class="co">#&gt;      88  tna          292      3     9</span></span>
-<span><span class="co">#&gt;     536  tna          265      3     9</span></span></code></pre></div>
-<p>The resulting collection supports <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> directly (<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> takes <code>series = "&lt;name&gt;"</code> when the collection holds more than one model). The combined plot places each participant’s shaded series alongside their own transition network:</p>
+<span><span class="co">#&gt;    Erik  tna          156      3     9</span></span>
+<span><span class="co">#&gt;     Eve  tna          156      3     9</span></span></code></pre></div>
+<p>The resulting collection supports <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> directly (<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> takes <code>series = "&lt;name&gt;"</code> when the collection holds more than one model). The combined plot places each student’s shaded series alongside their own transition network:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, ribbon <span class="op">=</span> <span class="cn">TRUE</span>, overlay <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Registered S3 method overwritten by 'cograph':</span></span>
 <span><span class="co">#&gt;   method     from     </span></span>
 <span><span class="co">#&gt;   print.mcml Nestimate</span></span></code></pre></div>
-<p><img src="reference/figures/README-transition-plot-1.png" alt="Two rows, one per participant: each shows the daily step series with a state ribbon strip underneath and that participant's three-state transition network beside it, with edge weights printed on the arrows." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-transition-plot-1.png" alt="Two rows, one per student: each shows the daily effort series with a state ribbon strip underneath and that student's three-state transition network beside it, with edge weights printed on the arrows." width="100%" style="display: block; margin: auto;"></p>
 <p>Because the result is a genuine <code>Nestimate</code> model, the full range of downstream <code>Nestimate</code> tools applies unchanged (for example <code>Nestimate::net_centrality(model)</code>). Inferential procedures retain their usual sampling requirements; sequence bootstrap, in particular, is not informative for a model estimated from a single sequence.</p>
 </div>
 <div class="section level2">
 <h2 id="from-values-to-states-discretize-and-trend">From values to states: <code>discretize()</code> and <code>trend()</code>
 <a class="anchor" aria-label="anchor" href="#from-values-to-states-discretize-and-trend"></a>
 </h2>
-<p><code><a href="reference/discretize.html">discretize()</a></code> is the bridge from a numeric series to a state sequence. Using the same <code>steps</code> data, participant 536 contributes 265 complete days:</p>
+<p><code><a href="reference/discretize.html">discretize()</a></code> is the bridge from a numeric series to a state sequence. Using the same <code>srl</code> data, the student recorded as Erik contributes 156 daily reports:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">states</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/discretize.html">discretize</a></span><span class="op">(</span></span>
-<span>  <span class="va">steps</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>  <span class="va">srl</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
-<span>  series <span class="op">=</span> <span class="fl">536</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"Erik"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"quantile"</span>,</span>
 <span>  n_states <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"low"</span>, <span class="st">"moderate"</span>, <span class="st">"high"</span><span class="op">)</span></span>
@@ -195,50 +195,51 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">states</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      state count proportion mean_value</span></span>
-<span><span class="co">#&gt; 1      low    88  0.3320755   8838.966</span></span>
-<span><span class="co">#&gt; 2 moderate    89  0.3358491  13599.753</span></span>
-<span><span class="co">#&gt; 3     high    88  0.3320755  18165.034</span></span></code></pre></div>
+<span><span class="co">#&gt; 1      low    54  0.3461538   1.786875</span></span>
+<span><span class="co">#&gt; 2 moderate    50  0.3205128  43.228070</span></span>
+<span><span class="co">#&gt; 3     high    52  0.3333333  83.569501</span></span></code></pre></div>
 <p>Fifteen discretizers are available (<code>threshold</code>, <code>width</code>, <code>quantile</code>, <code>kde</code>, <code>kmeans</code>, <code>gaussian</code>, <code>hclust</code>, <code>ordinal</code>, <code>symbolic</code>, <code>change_points</code>, <code>entropy</code>, <code>magnitude</code>, <code>adaptive_magnitude</code>, <code>percentile_magnitude</code>, <code>dtw</code>). The temporal discretizers are group-aware: ordinal patterns, adaptive-magnitude features, and DTW windows are computed separately within each series and then mapped onto one shared state vocabulary, so that states remain comparable across series.</p>
 <p><code><a href="reference/trend.html">trend()</a></code> is a companion discretizer for <em>direction</em> rather than <em>level</em>: it classifies each observation by the slope of a rolling regression.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">movement</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/trend.html">trend</a></span><span class="op">(</span></span>
-<span>  <span class="va">steps</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>  <span class="va">srl</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
-<span>  series <span class="op">=</span> <span class="fl">536</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"Erik"</span>,</span>
 <span>  window <span class="op">=</span> <span class="fl">14</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">movement</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        state count proportion</span></span>
-<span><span class="co">#&gt; 1  Ascending    91  0.3433962</span></span>
-<span><span class="co">#&gt; 2 Descending    80  0.3018868</span></span>
-<span><span class="co">#&gt; 3  Turbulent    81  0.3056604</span></span>
-<span><span class="co">#&gt; 4    Initial    13  0.0490566</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  Ascending    43 0.27564103</span></span>
+<span><span class="co">#&gt; 2 Descending    26 0.16666667</span></span>
+<span><span class="co">#&gt; 3       Flat    40 0.25641026</span></span>
+<span><span class="co">#&gt; 4  Turbulent    34 0.21794872</span></span>
+<span><span class="co">#&gt; 5    Initial    13 0.08333333</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="visibility-networks-observations-as-nodes">Visibility networks: observations as nodes<a class="anchor" aria-label="anchor" href="#visibility-networks-observations-as-nodes"></a>
 </h2>
-<p>A visibility graph (Lacasa et al., 2008) maps a single series onto a network of its observations: two time points are connected when an unobstructed straight sightline over the intervening values joins them. The packaged <code>motivation</code> dataset holds 4,871 experience-sampling measurements; the first 60 pleasure ratings suffice to illustrate the construction.</p>
+<p>A visibility graph (Lacasa et al., 2008) maps a single series onto a network of its observations: two time points are connected when an unobstructed straight sightline over the intervening values joins them. The packaged <code>esm_srl</code> dataset holds 2,820 momentary experience-sampling reports from 41 students; the first 60 anxiety ratings of one student suffice to illustrate the construction.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">motivation</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">esm_srl</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">pleasure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">motivation</span>, <span class="fl">60</span><span class="op">)</span></span>
-<span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vg.html">vg</a></span><span class="op">(</span><span class="va">pleasure</span>, series <span class="op">=</span> <span class="st">"pleasure"</span><span class="op">)</span></span>
+<span><span class="va">anxiety</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">esm_srl</span>, <span class="va">name</span> <span class="op">==</span> <span class="st">"Jamal"</span><span class="op">)</span>, <span class="fl">60</span><span class="op">)</span></span>
+<span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vg.html">vg</a></span><span class="op">(</span><span class="va">anxiety</span>, series <span class="op">=</span> <span class="st">"anxiety"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       method unit nodes dyads edges    density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 visibility time    60   143   143 0.08079096              1              1</span></span>
+<span><span class="co">#&gt; 1 visibility time    60   144   144 0.08135593              1              1</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The 60 observations become 60 nodes joined by 143 sightlines. Every network offers two complementary views: <code>plot(x)</code> draws the network itself through <code>cograph</code>, and <code>plot(x, "series")</code> shows the source series from which it was built.</p>
+<p>The 60 observations become 60 nodes joined by 144 sightlines. Every network offers two complementary views: <code>plot(x)</code> draws the network itself through <code>cograph</code>, and <code>plot(x, "series")</code> shows the source series from which it was built.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span>, layout <span class="op">=</span> <span class="st">"fr"</span>, node_size_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.4</span>, <span class="fl">4.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-visibility-network-1.png" alt="Natural visibility graph of sixty pleasure ratings, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the graph traces a near-linear backbone with side branches, and a few high-degree hubs correspond to peak observations that see far along the series." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-visibility-network-1.png" alt="Natural visibility graph of sixty anxiety ratings, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the graph traces a near-linear backbone with side branches, and a few high-degree hubs correspond to peak observations that see far along the series." width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">network</span>, <span class="st">"series"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-visibility-series-1.png" alt="The sixty pleasure ratings the visibility graph was built from, plotted as a line over observation order." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-visibility-series-1.png" alt="The sixty anxiety ratings the visibility graph was built from, plotted as a line over observation order." width="100%" style="display: block; margin: auto;"></p>
 <p><code>vg(x)</code> builds a natural visibility graph and <code>vg(x, "horizontal")</code> a horizontal one (Luque et al., 2009); the <code><a href="reference/tsn.html">tsn()</a></code> shortcuts <code>"nvg"</code> and <code>"hvg"</code> are equivalent. Visibility options include <code>directed</code>, <code>penetrable</code> (sightlines may cross a bounded number of points), <code>limit</code> (a maximum elapsed time), and <code>decay</code>. When a <code>time</code> column is supplied, both the sightlines and the elapsed-time rules respect the observed spacing between points, which may be irregular, rather than mere row positions.</p>
 </div>
 <div class="section level2">
@@ -247,11 +248,11 @@
 <p><code>tsn(unit = "state")</code> applies the same discretization engine and then projects the visibility graph onto the states: nodes become states, and each edge aggregates (by default, sums) the sightlines between occurrences of a state pair.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">state_network</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tsn.html">tsn</a></span><span class="op">(</span></span>
-<span>  <span class="va">steps</span>,</span>
-<span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>  <span class="va">srl</span>,</span>
+<span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span>
+<span>  id <span class="op">=</span> <span class="st">"name"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"day"</span>,</span>
-<span>  series <span class="op">=</span> <span class="fl">536</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"Erik"</span>,</span>
 <span>  unit <span class="op">=</span> <span class="st">"state"</span>,</span>
 <span>  discretization <span class="op">=</span> <span class="st">"quantile"</span>,</span>
 <span>  n_states <span class="op">=</span> <span class="fl">3</span></span>
@@ -259,40 +260,42 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">state_network</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       method  unit nodes dyads edges density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 visibility state     3     6     6       1             56            258</span></span>
+<span><span class="co">#&gt; 1 visibility state     3     6     6       1             21            135</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
 <p>The series view shades the states over the raw values, either as horizontal value bands (<code>overlay = "horizontal"</code>) or as vertical runs along time:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">state_network</span>, <span class="st">"series"</span>, overlay <span class="op">=</span> <span class="st">"horizontal"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-state-overlay-1.png" alt="Daily step counts for participant 536 with horizontal shading marking the three quantile state bands across the y-axis." width="100%" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-state-overlay-1.png" alt="Daily effort reports for the student Erik with horizontal shading marking the three quantile state bands across the y-axis." width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="distance-networks-series-and-windows-as-nodes">Distance networks: series and windows as nodes<a class="anchor" aria-label="anchor" href="#distance-networks-series-and-windows-as-nodes"></a>
 </h2>
-<p>Under <code>method = "distance"</code>, nodes are whole series (or sliding windows) and edge weights are similarities, so that larger weights indicate closer series. Comparing five motivation variables as complete series is a single call:</p>
+<p>Under <code>method = "distance"</code>, nodes are whole series (or sliding windows) and edge weights are similarities, so that larger weights indicate closer series. Comparing five of one student’s momentary indicators as complete series is a single call:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">affect</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tsn.html">tsn</a></span><span class="op">(</span></span>
-<span>  <span class="va">motivation</span>,</span>
-<span>  series <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pleasure"</span>, <span class="st">"autonomy"</span>, <span class="st">"competence"</span>, <span class="st">"relatedness"</span>, <span class="st">"mood"</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">hana</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">esm_srl</span>, <span class="va">name</span> <span class="op">==</span> <span class="st">"Hana"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">regulation</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tsn.html">tsn</a></span><span class="op">(</span></span>
+<span>  <span class="va">hana</span>,</span>
+<span>  series <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"planning"</span>, <span class="st">"monitoring"</span>, <span class="st">"effort"</span>, <span class="st">"motivated"</span>, <span class="st">"anxiety"</span><span class="op">)</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
 <span>  distance <span class="op">=</span> <span class="st">"correlation"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">affect</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">regulation</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     method   unit nodes dyads edges density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 distance series     5    10    10       1      0.5088532      0.6586452</span></span>
+<span><span class="co">#&gt; 1 distance series     5    10    10       1      0.3875223      0.7225132</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">affect</span>, labels <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-distance-network-1.png" alt="Correlation-distance network of five motivation variables, drawn with labeled nodes; all ten pairs are connected and autonomy and competence form the strongest tie." width="100%" style="display: block; margin: auto;"></p>
-<p>All ten pairs are connected because the default connectivity rule is <code>connect = "full"</code>; autonomy and competence form the closest pair. Fifteen distance measures are available (<code>euclidean</code>, <code>manhattan</code>, <code>maximum</code>, <code>canberra</code>, <code>minkowski</code>, <code>binary</code>, <code>cosine</code>, <code>correlation</code>, <code>spearman</code>, <code>dtw</code>, <code>ccf</code>, <code>nmi</code>, <code>voi</code>, <code>event_sync</code>, <code>van_rossum</code>), and <code>connect</code> sparsifies the network by nearest neighbours, a distance threshold, a percentile, or a Gaussian kernel.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">regulation</span>, labels <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-distance-network-1.png" alt="Correlation-distance network of five momentary self-regulation indicators, drawn with labeled nodes; all ten pairs are connected and planning and effort form the strongest tie." width="100%" style="display: block; margin: auto;"></p>
+<p>All ten pairs are connected because the default connectivity rule is <code>connect = "full"</code>; planning and effort form the closest pair. Fifteen distance measures are available (<code>euclidean</code>, <code>manhattan</code>, <code>maximum</code>, <code>canberra</code>, <code>minkowski</code>, <code>binary</code>, <code>cosine</code>, <code>correlation</code>, <code>spearman</code>, <code>dtw</code>, <code>ccf</code>, <code>nmi</code>, <code>voi</code>, <code>event_sync</code>, <code>van_rossum</code>), and <code>connect</code> sparsifies the network by nearest neighbours, a distance threshold, a percentile, or a Gaussian kernel.</p>
 <p>The same function compares sliding windows of a single series, turning one trajectory into a network of its own epochs:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">windows</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tsn.html">tsn</a></span><span class="op">(</span></span>
-<span>  <span class="va">pleasure</span>,</span>
-<span>  series <span class="op">=</span> <span class="st">"pleasure"</span>,</span>
+<span>  <span class="va">anxiety</span>,</span>
+<span>  series <span class="op">=</span> <span class="st">"anxiety"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"distance"</span>,</span>
 <span>  distance <span class="op">=</span> <span class="st">"dtw"</span>,</span>
 <span>  window <span class="op">=</span> <span class="fl">12</span>,</span>
@@ -303,10 +306,10 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">windows</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     method   unit nodes dyads edges   density minimum_weight maximum_weight</span></span>
-<span><span class="co">#&gt; 1 distance window    13    78    17 0.2179487     0.00990099     0.02564103</span></span>
+<span><span class="co">#&gt; 1 distance window    13    78    16 0.2051282    0.004247933    0.006841757</span></span>
 <span><span class="co">#&gt;   directed</span></span>
 <span><span class="co">#&gt; 1    FALSE</span></span></code></pre></div>
-<p>The 60 ratings yield 13 overlapping windows; retaining each window’s two nearest neighbours keeps 17 of the 78 possible dyads. The default <code>window</code> is 10% of the series length, so <code>step</code> should be chosen relative to the series length. Further options include <code>chain = TRUE</code> (connect only consecutive windows or series), <code>directed = TRUE</code>, and <code>normalize = TRUE</code>.</p>
+<p>The 60 ratings yield 13 overlapping windows; retaining each window’s two nearest neighbours keeps 16 of the 78 possible dyads. The default <code>window</code> is 10% of the series length, so <code>step</code> should be chosen relative to the series length. Further options include <code>chain = TRUE</code> (connect only consecutive windows or series), <code>directed = TRUE</code>, and <code>normalize = TRUE</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="a-single-object-a-consistent-grammar">A single object, a consistent grammar<a class="anchor" aria-label="anchor" href="#a-single-object-a-consistent-grammar"></a>
@@ -329,7 +332,11 @@
 <li>
 <code><a href="articles/nestimate-workflow.html">vignette("nestimate-workflow")</a></code> builds a transition-network model from a series and tests it with <code>Nestimate</code>: bootstrap confidence intervals, centrality stability, a Markov-order test, and a permutation test comparing two periods.</li>
 <li>
-<code><a href="articles/pleasure-all-functions.html">vignette("pleasure-all-functions")</a></code> applies every exported <code>tsn</code> function to the packaged <code>motivation</code> pleasure series, building each network representation in turn.</li>
+<code><a href="articles/constructing-time-series-networks.html">vignette("constructing-time-series-networks")</a></code> applies every exported <code>tsn</code> function to one packaged momentary anxiety series, building each network representation in turn.</li>
+<li>
+<code><a href="articles/group-models.html">vignette("group-models")</a></code> builds one transition network per condition on a shared state alphabet and compares them.</li>
+<li>
+<code><a href="articles/nestimate-compatibility.html">vignette("nestimate-compatibility")</a></code> maps, verb by verb, which Nestimate analyses accept a <code>tsn</code> model directly.</li>
 <li>
 <code><a href="articles/plotting-time-series-networks.html">vignette("plotting-time-series-networks")</a></code> documents the plotting surface: the network and source-series views, state overlays, and transition-model plots.</li>
 </ul>

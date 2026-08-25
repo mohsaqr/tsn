@@ -379,23 +379,27 @@ tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "distance")
 #> Use plot(x) for the network or plot(x, "series") for the source series.
 #> With cograph installed, splot(x) renders a publication-quality network.
 
-data(steps)
+data(srl)
 tsn(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   unit = "state",
   discretization = "gaussian"
 )
-#> <tsn> visibility state network: 3 nodes, 4 connected dyads
+#> <tsn> visibility state network: 3 nodes, 6 connected dyads
 #>  from to  distance weight connected     method  unit distance_method
-#>     2  2  6.641288    683      TRUE visibility state            <NA>
-#>     1  2  1.746032     63      TRUE visibility state            <NA>
-#>     2  3 26.483871     31      TRUE visibility state            <NA>
-#>     1  1  1.571429      7      TRUE visibility state            <NA>
+#>     1  2  1.590909     66      TRUE visibility state            <NA>
+#>     2  2  2.550847    118      TRUE visibility state            <NA>
+#>     2  3  4.888889    117      TRUE visibility state            <NA>
+#>     3  3 17.592593     81      TRUE visibility state            <NA>
+#>     1  3  2.125000     32      TRUE visibility state            <NA>
+#>     1  1  1.000000     13      TRUE visibility state            <NA>
 #>  connection_method directed from_start from_end to_start to_end
+#>            natural    FALSE         NA       NA       NA     NA
+#>            natural    FALSE         NA       NA       NA     NA
 #>            natural    FALSE         NA       NA       NA     NA
 #>            natural    FALSE         NA       NA       NA     NA
 #>            natural    FALSE         NA       NA       NA     NA

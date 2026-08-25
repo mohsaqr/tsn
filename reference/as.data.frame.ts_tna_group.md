@@ -57,24 +57,22 @@ A base data frame whose first column is `group`.
 ## Examples
 
 ``` r
-data(motivation)
+data(esm_srl)
 networks <- ts_tna(
-  motivation,
-  series = "pleasure", group = "task_context_type",
-  labels = c("low", "mid", "high")
+  subset(esm_srl, !is.na(effort)),
+  value = "effort", id = "name", time = "occasion",
+  group = "day_type", labels = c("low", "mid", "high")
 )
 as.data.frame(networks, what = "groups")
-#>      group type sequences observations states edges
-#> 1     Home  tna       832         1324      3     9
-#> 2    Other  tna         2            3      3     1
-#> 3 Personal  tna       822         1309      3     9
-#> 4     Work  tna       976         2235      3     9
+#>     group type sequences observations states edges
+#> 1 weekday  tna       238         2033      3     9
+#> 2 weekend  tna       233          783      3     9
 head(as.data.frame(networks))
-#>   group from  to    weight
-#> 1  Home  low low 0.7616099
-#> 2  Home  mid low 0.4366197
-#> 3  Home high low 0.4814815
-#> 4  Home  low mid 0.1981424
-#> 5  Home  mid mid 0.4718310
-#> 6  Home high mid 0.3703704
+#>     group from  to    weight
+#> 1 weekday  low low 0.6199021
+#> 2 weekday  mid low 0.2944162
+#> 3 weekday high low 0.1150592
+#> 4 weekday  low mid 0.2822186
+#> 5 weekday  mid mid 0.4297800
+#> 6 weekday high mid 0.2538071
 ```

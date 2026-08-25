@@ -13,7 +13,7 @@ or discretized states."><meta property="og:image" content="https://pak.dynasite.
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -414,23 +414,27 @@ delay patterns. <em>Physical Review E</em>, 66, 041904.
 <span class="r-out co"><span class="r-pr">#&gt;</span> Use plot(x) for the network or plot(x, "series") for the source series.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With cograph installed, splot(x) renders a publication-quality network.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">steps</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">srl</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">tsn</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">steps</span>,</span></span>
-<span class="r-in"><span>  value <span class="op">=</span> <span class="st">"steps"</span>,</span></span>
-<span class="r-in"><span>  id <span class="op">=</span> <span class="st">"id"</span>,</span></span>
+<span class="r-in"><span>  <span class="va">srl</span>,</span></span>
+<span class="r-in"><span>  value <span class="op">=</span> <span class="st">"effort"</span>,</span></span>
+<span class="r-in"><span>  id <span class="op">=</span> <span class="st">"name"</span>,</span></span>
 <span class="r-in"><span>  time <span class="op">=</span> <span class="st">"day"</span>,</span></span>
-<span class="r-in"><span>  series <span class="op">=</span> <span class="fl">536</span>,</span></span>
+<span class="r-in"><span>  series <span class="op">=</span> <span class="st">"Erik"</span>,</span></span>
 <span class="r-in"><span>  unit <span class="op">=</span> <span class="st">"state"</span>,</span></span>
 <span class="r-in"><span>  discretization <span class="op">=</span> <span class="st">"gaussian"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;tsn&gt; visibility state network: 3 nodes, 4 connected dyads</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;tsn&gt; visibility state network: 3 nodes, 6 connected dyads</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  from to  distance weight connected     method  unit distance_method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     2  2  6.641288    683      TRUE visibility state            &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     1  2  1.746032     63      TRUE visibility state            &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     2  3 26.483871     31      TRUE visibility state            &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     1  1  1.571429      7      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1  2  1.590909     66      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2  2  2.550847    118      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2  3  4.888889    117      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     3  3 17.592593     81      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1  3  2.125000     32      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1  1  1.000000     13      TRUE visibility state            &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  connection_method directed from_start from_end to_start to_end</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            natural    FALSE         NA       NA       NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            natural    FALSE         NA       NA       NA     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            natural    FALSE         NA       NA       NA     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            natural    FALSE         NA       NA       NA     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            natural    FALSE         NA       NA       NA     NA</span>

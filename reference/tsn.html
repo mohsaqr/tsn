@@ -13,7 +13,7 @@ or discretized states."><meta property="og:image" content="https://pak.dynasite.
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,12 +22,7 @@ or discretized states."><meta property="og:image" content="https://pak.dynasite.
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/nestimate-workflow.html">Transition Networks from Time Series: Estimation and Inference with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">Constructing Time Series Networks</a></li>
-    <li><a class="dropdown-item" href="../articles/plotting-time-series-networks.html">Plotting Time Series Networks</a></li>
-  </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -125,7 +120,10 @@ granular arguments (<code>unit</code>, <code>visibility</code>, <code>discretiza
 
 <dt id="arg-series">series<a class="anchor" aria-label="anchor" href="#arg-series"></a></dt>
 <dd><p>Optional series IDs for long data or numeric column names for
-wide data. Selection happens inside <code>tsn()</code>.</p></dd>
+wide data. Selection happens inside <code>tsn()</code>, and the requested order is
+authoritative for every input form: long rows are reordered to it exactly
+as wide, matrix, and list input are, so chained or directed edges do not
+depend on the input container.</p></dd>
 
 
 <dt id="arg-unit">unit<a class="anchor" aria-label="anchor" href="#arg-unit"></a></dt>
@@ -227,12 +225,15 @@ weights: <code>"inverse"</code> (the default weight rule, <code>1 / (1 + d)</cod
 
 
 <dt id="arg-n-states">n_states<a class="anchor" aria-label="anchor" href="#arg-n-states"></a></dt>
-<dd><p>Number of states. Ignored by <code>discretization = "ordinal"</code>,
-whose state count follows the embedding arguments <code>m</code> and <code>tau</code>.</p></dd>
+<dd><p>Number of states. Not consumed by
+<code>discretization = "ordinal"</code>, whose state count follows the embedding
+arguments <code>m</code> and <code>tau</code>; supplying both is an error.</p></dd>
 
 
 <dt id="arg-breaks">breaks<a class="anchor" aria-label="anchor" href="#arg-breaks"></a></dt>
-<dd><p>Optional internal thresholds when <code>discretization = "threshold"</code>.</p></dd>
+<dd><p>Optional internal thresholds when
+<code>discretization = "threshold"</code>. An error with any other discretizer,
+which computes its own boundaries.</p></dd>
 
 
 <dt id="arg-m">m<a class="anchor" aria-label="anchor" href="#arg-m"></a></dt>
@@ -283,7 +284,8 @@ rescales by the 5th-95th percentile range, clamped to <code>[0, 1]</code>.</p></
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional seed used by stochastic discretizers.</p></dd>
+<dd><p>Optional seed for the stochastic discretizers (<code>"kmeans"</code> and
+<code>"gaussian"</code>). An error with the deterministic discretizers.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -293,6 +295,24 @@ rescales by the 5th-95th percentile range, clamped to <code>[0, 1]</code>.</p></
 tidy dyad table; use <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> for that table,
 <code>as.data.frame(x, what = "series")</code> for the canonical source observations,
 and <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix()</a></code> for the weighted adjacency matrix.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Every supplied argument must be consumed by the resolved configuration.
+An option that the selected <code>method</code>, <code>unit</code>, <code>distance</code>, <code>connect</code>, or
+<code>discretization</code> cannot use — for example <code>chain</code> on a visibility network,
+<code>limit</code> on a distance network, <code>p</code> without <code>distance = "minkowski"</code>, or
+<code>breaks</code> without <code>discretization = "threshold"</code> — is rejected with an
+error rather than silently ignored, so a typo or a misunderstood
+configuration cannot produce a plausible but unintended model. Shortcut
+methods (<code>"nvg"</code>, <code>"hvg"</code>, discretizer names) likewise reject granular
+arguments that contradict what the shortcut implies.</p>
+<p>For state networks, caller-supplied <code>state</code> values fix the node order:
+factors keep their declared level order (an unused level becomes a
+zero-degree node), and plain character states are ordered by first
+appearance. Discretized states follow the discretizer's numeric state
+order. The <code>state</code> column of the stored source series preserves this
+factor.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -358,7 +378,7 @@ delay patterns. <em>Physical Review E</em>, 66, 041904.
 <span class="r-in"><span><span class="fu">tsn</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">1</span>, <span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">5</span>, <span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">2</span>, <span class="fl">7</span><span class="op">)</span>, <span class="st">"ordinal"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;tsn&gt; visibility state network: 3 nodes, 3 connected dyads</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  from to distance weight connected     method  unit distance_method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     2  1 1.000000      4      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1  2 1.000000      4      TRUE visibility state            &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     2  2 1.666667      6      TRUE visibility state            &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     2  3 1.000000      2      TRUE visibility state            &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  connection_method directed from_start from_end to_start to_end</span>
@@ -407,7 +427,7 @@ delay patterns. <em>Physical Review E</em>, 66, 041904.
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;tsn&gt; visibility state network: 3 nodes, 4 connected dyads</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  from to  distance weight connected     method  unit distance_method</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     2  2  6.641288    683      TRUE visibility state            &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     2  1  1.746032     63      TRUE visibility state            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1  2  1.746032     63      TRUE visibility state            &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     2  3 26.483871     31      TRUE visibility state            &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     1  1  1.571429      7      TRUE visibility state            &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  connection_method directed from_start from_end to_start to_end</span>

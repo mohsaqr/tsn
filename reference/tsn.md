@@ -80,7 +80,10 @@ tsn(
 - series:
 
   Optional series IDs for long data or numeric column names for wide
-  data. Selection happens inside `tsn()`.
+  data. Selection happens inside `tsn()`, and the requested order is
+  authoritative for every input form: long rows are reordered to it
+  exactly as wide, matrix, and list input are, so chained or directed
+  edges do not depend on the input container.
 
 - unit:
 
@@ -182,12 +185,14 @@ tsn(
 
 - n_states:
 
-  Number of states. Ignored by `discretization = "ordinal"`, whose state
-  count follows the embedding arguments `m` and `tau`.
+  Number of states. Not consumed by `discretization = "ordinal"`, whose
+  state count follows the embedding arguments `m` and `tau`; supplying
+  both is an error.
 
 - breaks:
 
-  Optional internal thresholds when `discretization = "threshold"`.
+  Optional internal thresholds when `discretization = "threshold"`. An
+  error with any other discretizer, which computes its own boundaries.
 
 - m:
 
@@ -238,7 +243,8 @@ tsn(
 
 - seed:
 
-  Optional seed used by stochastic discretizers.
+  Optional seed for the stochastic discretizers (`"kmeans"` and
+  `"gaussian"`). An error with the deterministic discretizers.
 
 ## Value
 
@@ -249,6 +255,26 @@ the tidy dyad table; use
 table, `as.data.frame(x, what = "series")` for the canonical source
 observations, and [`as.matrix()`](https://rdrr.io/r/base/matrix.html)
 for the weighted adjacency matrix.
+
+## Details
+
+Every supplied argument must be consumed by the resolved configuration.
+An option that the selected `method`, `unit`, `distance`, `connect`, or
+`discretization` cannot use — for example `chain` on a visibility
+network, `limit` on a distance network, `p` without
+`distance = "minkowski"`, or `breaks` without
+`discretization = "threshold"` — is rejected with an error rather than
+silently ignored, so a typo or a misunderstood configuration cannot
+produce a plausible but unintended model. Shortcut methods (`"nvg"`,
+`"hvg"`, discretizer names) likewise reject granular arguments that
+contradict what the shortcut implies.
+
+For state networks, caller-supplied `state` values fix the node order:
+factors keep their declared level order (an unused level becomes a
+zero-degree node), and plain character states are ordered by first
+appearance. Discretized states follow the discretizer's numeric state
+order. The `state` column of the stored source series preserves this
+factor.
 
 ## References
 
@@ -317,7 +343,7 @@ tsn(c(3, 1, 4, 2, 5), "hvg")
 tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "ordinal")
 #> <tsn> visibility state network: 3 nodes, 3 connected dyads
 #>  from to distance weight connected     method  unit distance_method
-#>     2  1 1.000000      4      TRUE visibility state            <NA>
+#>     1  2 1.000000      4      TRUE visibility state            <NA>
 #>     2  2 1.666667      6      TRUE visibility state            <NA>
 #>     2  3 1.000000      2      TRUE visibility state            <NA>
 #>  connection_method directed from_start from_end to_start to_end
@@ -366,7 +392,7 @@ tsn(
 #> <tsn> visibility state network: 3 nodes, 4 connected dyads
 #>  from to  distance weight connected     method  unit distance_method
 #>     2  2  6.641288    683      TRUE visibility state            <NA>
-#>     2  1  1.746032     63      TRUE visibility state            <NA>
+#>     1  2  1.746032     63      TRUE visibility state            <NA>
 #>     2  3 26.483871     31      TRUE visibility state            <NA>
 #>     1  1  1.571429      7      TRUE visibility state            <NA>
 #>  connection_method directed from_start from_end to_start to_end

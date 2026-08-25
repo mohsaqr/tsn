@@ -62,6 +62,8 @@ Standard interface shared by every result object.
   : Plot a trend classification
 - [`plot(`*`<ts_tna>`*`)`](https://pak.dynasite.org/tsn/reference/plot.ts_tna.md)
   : Plot a Time-Series Transition Network
+- [`plot(`*`<ts_tna_group>`*`)`](https://pak.dynasite.org/tsn/reference/plot.ts_tna_group.md)
+  : Plot One Network of a Grouped Transition Model
 - [`print(`*`<tsn>`*`)`](https://pak.dynasite.org/tsn/reference/print.tsn.md)
   : Print a TSN network
 - [`print(`*`<tsn_states>`*`)`](https://pak.dynasite.org/tsn/reference/print.tsn_states.md)

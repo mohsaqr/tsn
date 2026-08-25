@@ -25,7 +25,7 @@ alphabet or clustering model.'><meta property="og:image" content="https://pak.dy
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,12 +34,7 @@ alphabet or clustering model.'><meta property="og:image" content="https://pak.dy
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/nestimate-workflow.html">Transition Networks from Time Series: Estimation and Inference with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">Constructing Time Series Networks</a></li>
-    <li><a class="dropdown-item" href="../articles/plotting-time-series-networks.html">Plotting Time Series Networks</a></li>
-  </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -121,12 +116,14 @@ data frame, or a <code>tsn</code> object (its source series are used).</p></dd>
 
 
 <dt id="arg-n-states">n_states<a class="anchor" aria-label="anchor" href="#arg-n-states"></a></dt>
-<dd><p>Number of states. Ignored by <code>"ordinal"</code>, whose state count
-follows the embedding arguments <code>m</code> and <code>tau</code>.</p></dd>
+<dd><p>Number of states. Not consumed by <code>"ordinal"</code>, whose state
+count follows the embedding arguments <code>m</code> and <code>tau</code>; supplying both is an
+error.</p></dd>
 
 
 <dt id="arg-breaks">breaks<a class="anchor" aria-label="anchor" href="#arg-breaks"></a></dt>
-<dd><p>Optional interior thresholds for <code>method = "threshold"</code>.</p></dd>
+<dd><p>Optional interior thresholds for <code>method = "threshold"</code>. An
+error with any other method, which computes its own boundaries.</p></dd>
 
 
 <dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
@@ -148,7 +145,8 @@ states produced. When <code>NULL</code>, states are numbered consecutively.</p><
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional seed used by stochastic discretizers.</p></dd>
+<dd><p>Optional seed for the stochastic discretizers (<code>"kmeans"</code> and
+<code>"gaussian"</code>). An error with the deterministic methods.</p></dd>
 
 </dl></div>
     <div class="section level2">

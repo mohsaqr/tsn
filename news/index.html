@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -16,12 +16,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/nestimate-workflow.html">Transition Networks from Time Series: Estimation and Inference with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">Constructing Time Series Networks</a></li>
-    <li><a class="dropdown-item" href="../articles/plotting-time-series-networks.html">Plotting Time Series Networks</a></li>
-  </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -37,6 +32,40 @@
       <small>Source: <a href="https://github.com/mohsaqr/tsn/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.3.0" id="tsn-130">tsn 1.3.0<a class="anchor" aria-label="anchor" href="#tsn-130"></a></h2>
+<div class="section level3">
+<h3 id="new-features-1-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-3-0"></a></h3>
+<ul><li>Grouped transition models: <code><a href="../reference/ts_tna.html">ts_tna()</a></code>, <code><a href="../reference/ts_tna.html">ts_ftna()</a></code>, <code><a href="../reference/ts_tna.html">ts_cna()</a></code>, and <code><a href="../reference/ts_tna.html">ts_atna()</a></code> gain a <code>group</code> argument naming a column of <code>data</code>. The result is one network per group — a <code>ts_tna_group</code> (also a Nestimate <code>netobject_group</code>) that Nestimate’s compatible grouped verbs (<code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>) accept directly. States are discretized from the pooled series before the split, so every group shares one alphabet and node set. A sequence never spans a group boundary: contiguous runs of the group column become their own sequences, so no transition is ever counted between observations that were not adjacent in time. <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on the collection returns tidy <code>edges</code>, <code>series</code>, or <code>groups</code> tables.</li>
+<li>
+<code>segment</code> and <code>overlap</code> on the <code>ts_*na()</code> family cut each series into shorter sequences so sequence-based inference (bootstrap, permutation, stability) has units to resample. Partitioned blocks are the conservative default; <code>overlap = TRUE</code> slides the block one observation at a time and at <code>segment = 2</code> reproduces the unsegmented estimate exactly.</li>
+<li>New <code><a href="../reference/as.matrix.ts_tna.html">as.matrix.ts_tna()</a></code> and <code><a href="../reference/as.data.frame.ts_tna.html">as.data.frame.ts_tna()</a></code> methods: the weight matrix and a tidy one-row-per-state-pair edge table (plus <code>what = "series"</code> for the per-observation source table).</li>
+<li>New <code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow")</a></code>: raw series to transition network to the Nestimate inferential stack, including segmentation and grouped comparison.</li>
+<li>New <code><a href="../articles/group-models.html">vignette("group-models")</a></code>: a full tutorial on grouped transition models — why hand-subsetting both fabricates transitions and shifts the state thresholds, how the pooled alphabet and boundary rule fix it, and the descriptive and inferential comparison of groups end to end.</li>
+<li>New <code><a href="../articles/nestimate-compatibility.html">vignette("nestimate-compatibility")</a></code>: the verb-by-verb map of which Nestimate analyses accept a tsn model directly — reading, composition, dynamics, entropy, pruning, reliability, and model comparison — plus the verbs that do not apply and why, ending in a compatibility table.</li>
+<li>New <code><a href="../reference/plot.ts_tna_group.html">plot.ts_tna_group()</a></code> method: draws one selected network of a grouped model (<code>plot(x, group = "Home")</code>) with the full <code><a href="../reference/plot.ts_tna.html">plot.ts_tna()</a></code> surface, so a group can be rendered without reaching into the collection.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="breaking-changes-1-3-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-3-0"></a></h3>
+<ul><li>Arguments that the selected configuration cannot consume are now rejected with an error instead of being silently ignored — for example <code>chain</code> or <code>normalize</code> on a visibility network, <code>limit</code>, <code>decay</code>, <code>penetrable</code>, or <code>aggregation</code> on a distance network, <code>step</code> outside <code>unit = "window"</code>, <code>p</code> without <code>distance = "minkowski"</code>, <code>breaks</code> without <code>discretization = "threshold"</code>, <code>n_states</code> with the ordinal discretizer, <code>seed</code> with a deterministic discretizer, and any discretization option when <code>data</code> is already a <code>tsn_states</code>. Shortcut methods (<code>"nvg"</code>, <code>"hvg"</code>, discretizer names) likewise reject granular arguments that contradict what the shortcut implies. Previously these calls returned a plausible but unintended model.</li>
+<li>
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> density now uses a fixed possible-edge universe per network family: state networks always count self-loops among the possible edges, and series/window/time networks never do. Previously the denominator depended on whether a loop happened to be observed, so densities were not comparable across models. State networks without observed loops report a lower (correct) density than before.</li>
+<li>Caller-supplied factor <code>state</code> values now fix the node order by their level order, unused factor levels are retained as zero-degree nodes, and the stored source <code>state</code> column stays a factor. Discretized states order nodes numerically (<code>"1"</code>, <code>"2"</code>, …) instead of by first appearance. Plain character states keep first-appearance order.</li>
+<li>The <code>"okabe"</code> plot palette now rejects requests for more than its nine colour-blind-safe colours instead of returning <code>NA</code> colours.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-1-3-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-3-0"></a></h3>
+<ul><li>
+<code>series</code> selection on long data now follows the requested series order, exactly as wide, matrix, and list selection do. Previously the same selection could reverse chained or directed edges depending on the input container.</li>
+<li>Point-level distance networks (<code>method = "distance", unit = "time"</code>) now use the same collision-safe node labels as the visibility family, so valid <code>(id, time)</code> pairs whose display strings collide are no longer rejected.</li>
+<li>
+<code>ts_*na(series = ..., group = ...)</code> no longer warns that groups excluded by the caller’s own <code>series</code> selection were “lost to discretization”.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="performance-1-3-0">Performance<a class="anchor" aria-label="anchor" href="#performance-1-3-0"></a></h3>
+<ul><li>Natural visibility construction now runs in quadratic instead of cubic time (and no longer materializes all candidate pairs at once): a 1,000-observation series builds in well under a second. The same scan accelerates horizontal visibility with <code>penetrable</code> or <code>limit</code> set.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="tsn-120">tsn 1.2.0<a class="anchor" aria-label="anchor" href="#tsn-120"></a></h2>
 <ul><li>

@@ -19,7 +19,7 @@ transitions (ts_atna)."><meta property="og:image" content="https://pak.dynasite.
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,12 +28,7 @@ transitions (ts_atna)."><meta property="og:image" content="https://pak.dynasite.
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/nestimate-workflow.html">Transition Networks from Time Series: Estimation and Inference with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/pleasure-all-functions.html">Constructing Time Series Networks</a></li>
-    <li><a class="dropdown-item" href="../articles/plotting-time-series-networks.html">Plotting Time Series Networks</a></li>
-  </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -170,16 +165,22 @@ data frame, or a <code>tsn_states</code> result from <code><a href="discretize.h
 
 <dt id="arg-discretization">discretization<a class="anchor" aria-label="anchor" href="#arg-discretization"></a></dt>
 <dd><p>Discretization method passed to <code><a href="discretize.html">discretize()</a></code>
-(default <code>"quantile"</code>). Ignored when <code>data</code> is already a <code>tsn_states</code>.</p></dd>
+(default <code>"quantile"</code>). When <code>data</code> is already a <code>tsn_states</code>, supplying
+this or any other discretization option (<code>value</code>, <code>id</code>, <code>time</code>,
+<code>n_states</code>, <code>breaks</code>, <code>labels</code>, <code>transform</code>, <code>m</code>, <code>tau</code>, <code>seed</code>) is an
+error: the states are already fixed and the option could not take effect.</p></dd>
 
 
 <dt id="arg-n-states">n_states<a class="anchor" aria-label="anchor" href="#arg-n-states"></a></dt>
-<dd><p>Number of states (default <code>3</code>).</p></dd>
+<dd><p>Number of states (default <code>3</code>). Not consumed by
+<code>discretization = "ordinal"</code>, whose state count follows <code>m</code> and <code>tau</code>;
+supplying both is an error.</p></dd>
 
 
 <dt id="arg-breaks">breaks<a class="anchor" aria-label="anchor" href="#arg-breaks"></a></dt>
 <dd><p>Optional interior thresholds for
-<code>discretization = "threshold"</code>.</p></dd>
+<code>discretization = "threshold"</code>. An error with any other discretizer,
+which computes its own boundaries.</p></dd>
 
 
 <dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
@@ -231,7 +232,8 @@ a group change is dropped from both groups: it belongs to neither.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional seed used by stochastic discretizers.</p></dd>
+<dd><p>Optional seed for the stochastic discretizers (<code>"kmeans"</code> and
+<code>"gaussian"</code>). An error with the deterministic discretizers.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

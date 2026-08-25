@@ -2,7 +2,9 @@
 <url><loc>https://pak.dynasite.org/tsn/404.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/LICENSE-text.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/LICENSE.html</loc></url>
+<url><loc>https://pak.dynasite.org/tsn/articles/group-models.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/index.html</loc></url>
+<url><loc>https://pak.dynasite.org/tsn/articles/nestimate-compatibility.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/nestimate-workflow.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/pleasure-all-functions.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/articles/plotting-time-series-networks.html</loc></url>
@@ -18,6 +20,7 @@
 <url><loc>https://pak.dynasite.org/tsn/reference/index.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/motivation.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/plot.ts_tna.html</loc></url>
+<url><loc>https://pak.dynasite.org/tsn/reference/plot.ts_tna_group.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/plot.tsn.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/plot.tsn_series_networks.html</loc></url>
 <url><loc>https://pak.dynasite.org/tsn/reference/plot.tsn_states.html</loc></url>

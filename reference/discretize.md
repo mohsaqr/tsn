@@ -65,12 +65,14 @@ discretize(
 
 - n_states:
 
-  Number of states. Ignored by `"ordinal"`, whose state count follows
-  the embedding arguments `m` and `tau`.
+  Number of states. Not consumed by `"ordinal"`, whose state count
+  follows the embedding arguments `m` and `tau`; supplying both is an
+  error.
 
 - breaks:
 
-  Optional interior thresholds for `method = "threshold"`.
+  Optional interior thresholds for `method = "threshold"`. An error with
+  any other method, which computes its own boundaries.
 
 - labels:
 
@@ -92,7 +94,8 @@ discretize(
 
 - seed:
 
-  Optional seed used by stochastic discretizers.
+  Optional seed for the stochastic discretizers (`"kmeans"` and
+  `"gaussian"`). An error with the deterministic methods.
 
 ## Value
 

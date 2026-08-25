@@ -120,15 +120,22 @@ ts_atna(
 
   Discretization method passed to
   [`discretize()`](https://pak.dynasite.org/tsn/reference/discretize.md)
-  (default `"quantile"`). Ignored when `data` is already a `tsn_states`.
+  (default `"quantile"`). When `data` is already a `tsn_states`,
+  supplying this or any other discretization option (`value`, `id`,
+  `time`, `n_states`, `breaks`, `labels`, `transform`, `m`, `tau`,
+  `seed`) is an error: the states are already fixed and the option could
+  not take effect.
 
 - n_states:
 
-  Number of states (default `3`).
+  Number of states (default `3`). Not consumed by
+  `discretization = "ordinal"`, whose state count follows `m` and `tau`;
+  supplying both is an error.
 
 - breaks:
 
-  Optional interior thresholds for `discretization = "threshold"`.
+  Optional interior thresholds for `discretization = "threshold"`. An
+  error with any other discretizer, which computes its own boundaries.
 
 - labels:
 
@@ -180,7 +187,8 @@ ts_atna(
 
 - seed:
 
-  Optional seed used by stochastic discretizers.
+  Optional seed for the stochastic discretizers (`"kmeans"` and
+  `"gaussian"`). An error with the deterministic discretizers.
 
 - ...:
 

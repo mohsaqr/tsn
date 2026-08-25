@@ -47,7 +47,7 @@ representation, including state placement, point display, colour, labels, node
 size, and edge annotation. When `type` is omitted, `plot()` uses the default type
 for the corresponding result class.
 
-This vignette uses one `pleasure` series throughout. Each analytical object is
+This vignette uses one momentary `anxiety` series throughout. Each analytical object is
 constructed immediately before its first plot, keeping the relationship between
 the analysis and its graphical representation explicit.
 
@@ -70,15 +70,17 @@ sequence, the state representation, or the network structure.
 
 # Data
 
-The examples use the first 60 observations of `pleasure` from the `motivation`
-data. A 25-observation segment is used for visibility analysis so that
-individual nodes and edges remain distinguishable.
+The examples use the first 60 momentary anxiety reports of one student,
+Jamal, from the bundled `esm_srl` experience-sampling data (41 students,
+0-100 scales, fully anonymized). A 25-observation segment is used for
+visibility analysis so that individual nodes and edges remain
+distinguishable.
 
 ```{r data}
-data("motivation", package = "tsn")
+data("esm_srl", package = "tsn")
 
-pleasure <- head(motivation, 60)
-short <- head(pleasure, 25)
+anxiety <- head(subset(esm_srl, name == "Jamal"), 60)
+short <- head(anxiety, 25)
 ```
 
 # Discrete-state plots
@@ -110,8 +112,8 @@ required.
 
 ```{r states-overlay}
 states <- discretize(
-  data = pleasure,
-  series = "pleasure",
+  data = anxiety,
+  series = "anxiety",
   labels = c("Low", "Middle", "High")
 )
 
@@ -147,7 +149,7 @@ the measured series. Here, one-step changes are discretized and plotted beneath
 the original observations.
 
 ```{r states-stack, fig.height=7}
-changes <- with(pleasure, c(0, diff(pleasure)))
+changes <- with(anxiety, c(0, diff(anxiety)))
 
 change_states <- discretize(
   data = changes,
@@ -157,8 +159,8 @@ change_states <- discretize(
 plot(
   change_states,
   "stack",
-  with = with(pleasure, pleasure),
-  with_label = "Pleasure"
+  with = with(anxiety, anxiety),
+  with_label = "Anxiety"
 )
 ```
 
@@ -190,8 +192,8 @@ point representation.
 
 ```{r trend-points}
 directions <- trend(
-  data = pleasure,
-  series = "pleasure"
+  data = anxiety,
+  series = "anxiety"
 )
 
 plot(directions)
@@ -257,7 +259,7 @@ default type is `"network"`.
 visibility <- vg(
   data = short,
   type = "horizontal",
-  series = "pleasure"
+  series = "anxiety"
 )
 
 plot(visibility)
@@ -273,7 +275,7 @@ remain mutually visible across intervening values.
 visibility <- vg(
   data = short,
   type = "horizontal",
-  series = "pleasure"
+  series = "anxiety"
 )
 
 plot(visibility, "series")
@@ -291,11 +293,11 @@ and assigns each edge a weight equal to `1 / (1 + distance)`, so the same
 rule retains only each window's two nearest neighbours, which keeps the figure
 legible.
 
-```{r distance-network, eval=has_cograph, fig.alt="Nearest-neighbour distance network over sliding windows of the short pleasure series; node size encodes degree and edges join the most similar windows."}
+```{r distance-network, eval=has_cograph, fig.alt="Nearest-neighbour distance network over sliding windows of the short anxiety series; node size encodes degree and edges join the most similar windows."}
 windows <- tsn(
   data = short,
   method = "distance",
-  series = "pleasure",
+  series = "anxiety",
   step = 2,
   connect = "nearest",
   neighbors = 2
@@ -315,11 +317,11 @@ Graphical arguments change how a network is drawn without changing the fitted
 object. Here the visibility graph is redrawn with a circular layout; the nodes,
 edges, and weights are identical to the default view above.
 
-```{r network-encoding, eval=has_cograph, fig.alt="The horizontal visibility graph redrawn with a circular layout, showing that the layout rearranges the same twenty-five nodes and forty-three edges."}
+```{r network-encoding, eval=has_cograph, fig.alt="The horizontal visibility graph redrawn with a circular layout, showing that the layout rearranges the same twenty-five nodes and forty-one edges."}
 visibility <- vg(
   data = short,
   type = "horizontal",
-  series = "pleasure"
+  series = "anxiety"
 )
 
 plot(visibility, layout = "circle")

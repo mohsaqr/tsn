@@ -1,5 +1,5 @@
-data("steps", package = "tsn", envir = environment())
-data("motivation", package = "tsn", envir = environment())
+data("srl", package = "tsn", envir = environment())
+data("esm_srl", package = "tsn", envir = environment())
 
 grp_labels <- c("low", "mid", "high")
 
@@ -193,15 +193,14 @@ test_that("sequence IDs identify their data across groups", {
 
 test_that("segmenting inside a group supplies sequences without crossing groups", {
   skip_if_not_installed("Nestimate")
-  walkers <- subset(subset(steps, !is.na(steps)), id %in% c(35, 193, 238))
-  walkers$half <- ifelse(
-    as.Date(walkers$day) < as.Date("2019-11-01"), "early", "late"
-  )
+  walkers <- subset(subset(srl, !is.na(effort)),
+                    name %in% c("Erik", "Eve", "Frank"))
+  walkers$half <- ifelse(walkers$day <= 78, "early", "late")
   grouped <- ts_tna(
     walkers,
-    value = "steps", id = "id", time = "day", group = "half", segment = 10,
-    discretization = "threshold", breaks = c(5000, 10000),
-    labels = c("sedentary", "moderate", "active")
+    value = "effort", id = "name", time = "day", group = "half", segment = 10,
+    discretization = "threshold", breaks = c(40, 70),
+    labels = c("low", "moderate", "high")
   )
   index <- as.data.frame(grouped, what = "groups")
 
@@ -211,13 +210,13 @@ test_that("segmenting inside a group supplies sequences without crossing groups"
   origins <- sub("[.].*$", "", as.character(
     unique(as.data.frame(grouped, what = "series")$id)
   ))
-  expect_setequal(origins, c("35", "193", "238"))
+  expect_setequal(origins, c("Erik", "Eve", "Frank"))
   # Grouping alone partitions the series: no row is duplicated or dropped.
   whole <- ts_tna(
     walkers,
-    value = "steps", id = "id", time = "day", group = "half",
-    discretization = "threshold", breaks = c(5000, 10000),
-    labels = c("sedentary", "moderate", "active")
+    value = "effort", id = "name", time = "day", group = "half",
+    discretization = "threshold", breaks = c(40, 70),
+    labels = c("low", "moderate", "high")
   )
   expect_identical(
     sum(as.data.frame(whole, what = "groups")$observations), nrow(walkers)
@@ -289,18 +288,18 @@ test_that("as.data.frame gives a tidy view of every group without reaching in", 
 
 test_that("group works on wide data, where it is a row-level column", {
   skip_if_not_installed("Nestimate")
-  # motivation has no ID column: each measure is a series and the context
-  # varies by row, so the group must be matched on the row index.
+  # Selecting one measurement column makes the data wide: the column is one
+  # series and the day type varies by row, so the group is matched on the
+  # row index.
+  rows <- subset(esm_srl, !is.na(anxiety))
   grouped <- ts_tna(
-    motivation,
-    series = "pleasure", group = "task_context_type", labels = grp_labels
+    rows,
+    series = "anxiety", group = "day_type", labels = grp_labels
   )
   index <- as.data.frame(grouped, what = "groups")
 
-  expect_setequal(
-    as.character(index$group), c("Home", "Other", "Personal", "Work")
-  )
-  expect_identical(sum(index$observations), nrow(motivation))
+  expect_setequal(as.character(index$group), c("weekday", "weekend"))
+  expect_identical(sum(index$observations), nrow(rows))
   expect_true(all(index$states == 3L))
 })
 

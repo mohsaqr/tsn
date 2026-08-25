@@ -44,13 +44,13 @@ if (requireNamespace("cograph", quietly = TRUE)) {
   plot(network, layout = "spring")
 }
 
-data(steps)
+data(srl)
 states <- tsn(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   unit = "state",
   discretization = "quantile"
 )

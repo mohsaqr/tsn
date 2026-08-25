@@ -1,38 +1,41 @@
-data("motivation", package = "tsn", envir = environment())
-data("steps", package = "tsn", envir = environment())
+# Pins the central claims of vignette("nestimate-workflow"). If a data or code
+# change moves these numbers, the vignette prose must be recomputed and
+# rewritten, not just re-rendered.
 
-nw_pleasure <- utils::head(motivation, 200L)
+data("esm_srl", package = "tsn", envir = environment())
+data("srl", package = "tsn", envir = environment())
+
+nw_jamal <- subset(esm_srl, name == "Jamal")
 nw_labels <- c("low", "mid", "high")
-
-nw_walkers <- function() subset(steps, !is.na(steps))
-
-nw_cutoff <- as.Date("2019-11-01")
+nw_students <- function() subset(srl, !is.na(effort))
 
 # The vignette fixes the cut points so every model shares one alphabet.
-nw_walk_model <- function(data = nw_walkers()) {
+nw_effort_model <- function(data = nw_students()) {
   ts_tna(
     data,
-    value = "steps", id = "id", time = "day",
-    discretization = "threshold", breaks = c(5000, 10000),
-    labels = c("sedentary", "moderate", "active")
+    value = "effort", id = "name", time = "day",
+    discretization = "threshold", breaks = c(40, 70),
+    labels = c("low", "moderate", "high")
   )
 }
 
 test_that("ts_tna returns a Nestimate netobject, which is what the bridge relies on", {
   skip_if_not_installed("Nestimate")
-  model <- ts_tna(nw_pleasure, series = "pleasure", labels = nw_labels)
+  model <- ts_tna(nw_jamal, series = "anxiety", labels = nw_labels)
 
-  # The vignette's central claim: no conversion step is needed because the
-  # object already inherits the class Nestimate's verbs dispatch on.
   expect_s3_class(model, "ts_tna")
   expect_s3_class(model, "netobject")
   expect_identical(model$n_nodes, 3L)
   expect_identical(as.character(model$nodes$label), nw_labels)
+  # The reading the vignette gives the intro matrix: after a high-anxiety
+  # report the most likely next state is low.
+  expect_equal(unname(as.matrix(model)["high", "low"]), 0.4230769,
+               tolerance = 1e-6)
 })
 
 test_that("the four constructors share an interface and differ only in edge meaning", {
   skip_if_not_installed("Nestimate")
-  args <- list(nw_pleasure, series = "pleasure", labels = nw_labels)
+  args <- list(nw_jamal, series = "anxiety", labels = nw_labels)
   models <- lapply(
     c("ts_tna", "ts_ftna", "ts_atna", "ts_cna"),
     function(verb) do.call(verb, args)
@@ -43,136 +46,138 @@ test_that("the four constructors share an interface and differ only in edge mean
     vapply(models, function(m) m$method, character(1L)),
     c("relative", "frequency", "attention", "co_occurrence")
   )
-  # ts_cna is undirected, so it carries fewer edges than the directed three.
   expect_identical(
     vapply(models, function(m) m$n_edges, integer(1L)),
     c(9L, 9L, 9L, 6L)
   )
 })
 
-test_that("descriptive Nestimate verbs accept a single-series model", {
-  skip_if_not_installed("Nestimate")
-  model <- ts_tna(nw_pleasure, series = "pleasure", labels = nw_labels)
-
-  centrality <- Nestimate::net_centrality(model)
-  expect_s3_class(centrality, "data.frame")
-  expect_identical(nrow(centrality), 3L)
-
-  distribution <- Nestimate::state_distribution(model)
-  expect_s3_class(distribution, "data.frame")
-  # Quantile discretization forces near-equal states BY CONSTRUCTION, which is
-  # exactly why the vignette switches to explicit breaks for the step data.
-  expect_true(all(abs(distribution$proportion - 1 / 3) < 0.05))
-
-  pruned <- Nestimate::net_prune(model, method = "threshold", threshold = 0.3)
-  expect_s3_class(pruned, "ts_tna")
-  expect_s3_class(pruned, "netobject")
-})
-
-test_that("the pooled step model carries one sequence per participant", {
-  skip_if_not_installed("Nestimate")
-  walkers <- nw_walkers()
-  expect_false(anyNA(walkers$steps))
-
-  model <- nw_walk_model(walkers)
-  expect_identical(nrow(model$data), 151L)
-
-  per_person <- summary(series_networks(model))
-  expect_s3_class(per_person, "data.frame")
-  expect_identical(nrow(per_person), 151L)
-  # Split models share the pooled alphabet, so node sets stay aligned.
-  expect_true(all(per_person$states == 3L))
-})
-
 test_that("explicit breaks change the model, and are not silently ignored", {
   skip_if_not_installed("Nestimate")
-  # `breaks` is only consumed by discretization = "threshold"; with any other
+  # breaks is only consumed by discretization = "threshold"; with any other
   # discretizer it is rejected outright rather than silently ignored.
   expect_error(
     ts_tna(
-      nw_walkers(),
-      value = "steps", id = "id", time = "day",
-      breaks = c(5000, 10000), labels = nw_labels
+      nw_students(),
+      value = "effort", id = "name", time = "day",
+      breaks = c(40, 70), labels = c("low", "moderate", "high")
     ),
     "breaks"
   )
-  # And when consumed, it must actually move the model: if the wiring broke,
-  # these two models would coincide.
+  # And when consumed, it must actually move the model.
   quantile_model <- ts_tna(
-    nw_walkers(),
-    value = "steps", id = "id", time = "day", labels = nw_labels
+    nw_students(),
+    value = "effort", id = "name", time = "day",
+    labels = c("low", "moderate", "high")
   )
-  threshold_model <- nw_walk_model()
-
-  quantile_share <- Nestimate::state_distribution(quantile_model)
-  threshold_share <- Nestimate::state_distribution(threshold_model)
-
-  expect_true(all(abs(quantile_share$proportion - 1 / 3) < 0.05))
-  expect_true(any(abs(threshold_share$proportion - 1 / 3) > 0.15))
+  threshold_model <- nw_effort_model()
+  expect_false(isTRUE(all.equal(
+    as.matrix(quantile_model), as.matrix(threshold_model)
+  )))
 })
 
-test_that("bootstrap retains every edge when 151 sequences back the estimate", {
+test_that("the pooled model carries one sequence per student and the documented structure", {
   skip_if_not_installed("Nestimate")
-  model <- nw_walk_model()
+  model <- nw_effort_model()
 
-  boot <- suppressWarnings(
-    Nestimate::bootstrap_network(model, iter = 200, seed = 2024)
-  )
-  edges <- summary(boot)
+  expect_identical(nrow(model$data), 36L)
+  per_person <- summary(series_networks(model))
+  expect_identical(nrow(per_person), 36L)
+  expect_true(all(per_person$states == 3L))
 
-  expect_s3_class(edges, "data.frame")
-  expect_identical(nrow(edges), 9L)
-  expect_true(all(edges$sig))
-  expect_true(all(edges$ci_lower <= edges$weight))
-  expect_true(all(edges$weight <= edges$ci_upper))
+  distribution <- Nestimate::state_distribution(model)
+  expect_equal(subset(distribution, state == "high")$proportion,
+               0.4174394, tolerance = 1e-6)
+  weights <- as.matrix(model)
+  expect_equal(unname(weights["high", "high"]), 0.5748709, tolerance = 1e-6)
+  expect_identical(max(weights), unname(weights["high", "high"]))
 })
 
-test_that("the Markov order test prefers an order above one", {
+test_that("fixed thresholds recover more structure than tertiles, as the prose reports", {
   skip_if_not_installed("Nestimate")
-  model <- nw_walk_model()
+  fixed <- Nestimate::transition_entropy(nw_effort_model())
+  tertiles <- Nestimate::transition_entropy(ts_tna(
+    nw_students(),
+    value = "effort", id = "name", time = "day",
+    labels = c("low", "moderate", "high")
+  ))
 
-  order_test <- suppressWarnings(Nestimate::markov_order_test(model))
-  # The vignette states the first-order network is a simplification; if this
-  # ever selects order 1 that claim needs rewriting.
-  expect_gt(order_test$bic_order, 1L)
-  expect_gt(order_test$aic_order, 1L)
-  expect_identical(order_test$n_sequences, 151L)
+  # The vignette prose reports normalised rates of 0.93 and 0.96.
+  expect_equal(fixed$entropy_rate_norm, 0.933, tolerance = 1e-3)
+  expect_equal(tertiles$entropy_rate_norm, 0.960, tolerance = 1e-3)
+  expect_lt(fixed$entropy_rate, tertiles$entropy_rate)
 })
 
-test_that("summer and winter differ in composition but not in dynamics", {
-  skip_if_not_installed("Nestimate")
-  walkers <- nw_walkers()
-  early <- nw_walk_model(subset(walkers, as.Date(day) < nw_cutoff))
-  late <- nw_walk_model(subset(walkers, as.Date(day) >= nw_cutoff))
-
-  comparison <- summary(
-    suppressWarnings(Nestimate::permutation(early, late, iter = 2000, seed = 2024))
-  )
-
-  # The vignette's claim is a NULL result on the transitions: no edge differs.
-  expect_identical(nrow(comparison), 9L)
-  expect_false(any(comparison$sig))
-
-  # ... while the composition does shift. If this ever stopped holding, the
-  # "marginal moves, dynamics do not" contrast would have no basis.
-  early_share <- Nestimate::state_distribution(early)
-  late_share <- Nestimate::state_distribution(late)
-  active_early <- subset(early_share, state == "active")
-  active_late <- subset(late_share, state == "active")
-  expect_gt(active_early$proportion, active_late$proportion)
-})
-
-test_that("a 0.3 threshold discards every route down into sedentary", {
+test_that("a 0.3 threshold discards every descending route, as the prose reads it", {
   skip_if_not_installed("Nestimate")
   pruned <- Nestimate::net_prune(
-    nw_walk_model(), method = "threshold", threshold = 0.3
+    nw_effort_model(), method = "threshold", threshold = 0.3
   )
   weights <- as.matrix(pruned$weights)
 
-  # The vignette reads the pruned model as "sedentary is harder to fall into
-  # than to climb out of", which depends on exactly these edges going to zero.
-  expect_identical(unname(weights["moderate", "sedentary"]), 0)
-  expect_identical(unname(weights["active", "sedentary"]), 0)
-  expect_identical(unname(weights["sedentary", "active"]), 0)
-  expect_gt(unname(weights["sedentary", "moderate"]), 0.4)
+  expect_identical(unname(weights["moderate", "low"]), 0)
+  expect_identical(unname(weights["high", "low"]), 0)
+  expect_identical(unname(weights["high", "moderate"]), 0)
+  expect_identical(unname(weights["low", "high"]), 0)
+  expect_gt(unname(weights["low", "moderate"]), 0.3)
+  expect_gt(unname(weights["moderate", "high"]), 0.3)
+})
+
+test_that("the seeded inference chunks match the vignette", {
+  skip_if_not_installed("Nestimate")
+  skip_on_cran()
+  model <- nw_effort_model()
+
+  boot <- summary(Nestimate::bootstrap_network(model, iter = 200, seed = 2026))
+  expect_identical(sum(boot$sig), 5L)
+
+  set.seed(2026)
+  stability <- Nestimate::centrality_stability(model, iter = 100)
+  expect_output(print(stability), "InStrength       0.60")
+  expect_output(print(stability), "OutStrength      0.40")
+
+  set.seed(2026)
+  order_test <- Nestimate::markov_order_test(model)
+  expect_output(print(order_test), "BIC: 2   AIC: 3   permutation-LRT: 3")
+})
+
+test_that("the two course halves differ in neither composition nor dynamics", {
+  skip_if_not_installed("Nestimate")
+  skip_on_cran()
+  students <- nw_students()
+  first_half <- nw_effort_model(subset(students, day <= 78))
+  second_half <- nw_effort_model(subset(students, day > 78))
+
+  comparison <- summary(
+    Nestimate::permutation(first_half, second_half, iter = 2000, seed = 2026)
+  )
+  expect_identical(nrow(comparison), 9L)
+  expect_false(any(comparison$sig))
+  expect_equal(min(comparison$p_value), 0.4937531, tolerance = 1e-6)
+
+  high_first <- subset(Nestimate::state_distribution(first_half),
+                       state == "high")
+  high_second <- subset(Nestimate::state_distribution(second_half),
+                        state == "high")
+  expect_lt(abs(high_first$proportion - high_second$proportion), 0.02)
+})
+
+test_that("the grouped day-type model matches the vignette", {
+  skip_if_not_installed("Nestimate")
+  skip_on_cran()
+  by_day <- ts_tna(
+    subset(esm_srl, !is.na(effort)),
+    value = "effort", id = "name", time = "occasion",
+    group = "day_type", labels = nw_labels
+  )
+  index <- as.data.frame(by_day, what = "groups")
+  expect_identical(index$sequences, c(238L, 233L))
+  expect_identical(index$observations, c(2033L, 783L))
+
+  comparison <- summary(Nestimate::permutation(by_day, iter = 1000,
+                                               seed = 2026))
+  softening <- subset(comparison, from == "high" & to == "mid")
+  expect_true(softening$sig)
+  expect_equal(softening$weight_x, 0.2538071, tolerance = 1e-6)
+  expect_equal(softening$weight_y, 0.3419689, tolerance = 1e-6)
 })

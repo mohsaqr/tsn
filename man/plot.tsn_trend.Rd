@@ -83,14 +83,14 @@ correlation \code{trend()} classified on) so a state change can be read
 against the metric that produced it.
 }
 \examples{
-data(steps)
-complete <- subset(steps, !is.na(steps))
+data(srl)
+complete <- subset(srl, !is.na(effort))
 classified <- trend(
   complete,
-  value = "steps", id = "id", time = "day", window = 7
+  value = "effort", id = "name", time = "day", window = 7
 )
-plot(classified, series = "536")
-plot(classified, "ribbon", series = "536")
-plot(classified, "panels", series = "536")
+plot(classified, series = "Erik")
+plot(classified, "ribbon", series = "Erik")
+plot(classified, "panels", series = "Erik")
 plot(classified, "heatmap", max_series = 12)
 }

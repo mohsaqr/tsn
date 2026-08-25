@@ -41,13 +41,13 @@ if (requireNamespace("cograph", quietly = TRUE)) {
   plot(network)
 }
 
-data(steps)
+data(srl)
 states <- vg(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   unit = "state",
   discretization = "quantile"
 )

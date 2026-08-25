@@ -370,15 +370,15 @@ summary.tsn_trend <- function(object, ...) {
 #' @param ... Reserved for future options.
 #' @return `x`, invisibly.
 #' @examples
-#' data(steps)
-#' complete <- subset(steps, !is.na(steps))
+#' data(srl)
+#' complete <- subset(srl, !is.na(effort))
 #' classified <- trend(
 #'   complete,
-#'   value = "steps", id = "id", time = "day", window = 7
+#'   value = "effort", id = "name", time = "day", window = 7
 #' )
-#' plot(classified, series = "536")
-#' plot(classified, "ribbon", series = "536")
-#' plot(classified, "panels", series = "536")
+#' plot(classified, series = "Erik")
+#' plot(classified, "ribbon", series = "Erik")
+#' plot(classified, "panels", series = "Erik")
 #' plot(classified, "heatmap", max_series = 12)
 #' @export
 plot.tsn_trend <- function(x, type = c("points", "ribbon", "heatmap", "panels"),

@@ -3,143 +3,137 @@
 # and rewritten, not just re-rendered.
 
 ct_model <- function() {
-  data(steps, envir = environment())
-  walkers <- subset(steps, !is.na(steps))
+  data(srl, envir = environment())
+  students <- subset(srl, !is.na(effort))
   ts_tna(
-    walkers,
-    value = "steps", id = "id", time = "day",
-    discretization = "threshold", breaks = c(5000, 10000),
-    labels = c("sedentary", "moderate", "active")
+    students,
+    value = "effort", id = "name", time = "day",
+    discretization = "threshold", breaks = c(40, 70),
+    labels = c("low", "moderate", "high")
   )
 }
 
 test_that("the model validates as a netobject and the accessors disagree only on loops", {
   skip_if_not_installed("Nestimate")
-  walk_model <- ct_model()
+  effort_model <- ct_model()
 
-  expect_true(Nestimate::validate_netobject(walk_model))
+  expect_true(Nestimate::validate_netobject(effort_model))
 
-  edges <- as.data.frame(walk_model)
-  between <- Nestimate::extract_edges(walk_model)
+  edges <- as.data.frame(effort_model)
+  between <- Nestimate::extract_edges(effort_model)
   # extract_edges excludes self-transitions; the tsn accessor keeps them.
   expect_identical(nrow(edges), 9L)
   expect_identical(nrow(between), 6L)
   expect_false(any(between$from == between$to))
 
-  initial <- Nestimate::extract_initial_probs(walk_model)
+  initial <- Nestimate::extract_initial_probs(effort_model)
   expect_equal(sum(initial), 1)
-  expect_equal(initial[["active"]], 0.5761589, tolerance = 1e-6)
+  expect_equal(initial[["high"]], 0.4166667, tolerance = 1e-6)
 })
 
 test_that("dynamics summaries match the vignette", {
   skip_if_not_installed("Nestimate")
-  walk_model <- ct_model()
+  effort_model <- ct_model()
 
-  stability <- Nestimate::markov_stability(walk_model)$stability
-  active <- subset(stability, state == "active")
-  sedentary <- subset(stability, state == "sedentary")
-  expect_equal(active$sojourn_time, 2.62, tolerance = 1e-2)
-  expect_equal(sedentary$return_time, 7.12, tolerance = 1e-2)
+  spells <- Nestimate::markov_stability(effort_model)$stability
+  high <- subset(spells, state == "high")
+  low <- subset(spells, state == "low")
+  expect_equal(high$sojourn_time, 2.35, tolerance = 1e-2)
+  expect_equal(low$return_time, 4.10, tolerance = 1e-2)
 
-  expect_output(print(Nestimate::chain_structure(walk_model)),
+  expect_output(print(Nestimate::chain_structure(effort_model)),
                 "irreducible: TRUE")
-  expect_output(print(Nestimate::chain_structure(walk_model)),
+  expect_output(print(Nestimate::chain_structure(effort_model)),
                 "reversible: FALSE")
 
-  dependence <- Nestimate::path_dependence(walk_model)
-  expect_output(print(dependence), "KL_weighted      = 0.035")
+  dependence <- Nestimate::path_dependence(effort_model)
+  expect_output(print(dependence), "KL_weighted      = 0.038")
 
-  paths <- Nestimate::path_counts(walk_model)
-  top <- subset(paths, path == "active -> active")
-  expect_equal(top$proportion, 0.2776, tolerance = 1e-4)
+  paths <- Nestimate::path_counts(effort_model)
+  top <- subset(paths, path == "high -> high")
+  expect_equal(top$proportion, 0.2398, tolerance = 1e-4)
+
+  # Every between-state edge carries the same unit betweenness load.
+  betweenness <- Nestimate::net_edge_betweenness(effort_model)$weights
+  off_diagonal <- betweenness[row(betweenness) != col(betweenness)]
+  expect_true(all(off_diagonal == 1))
 })
 
-test_that("the four reliability verbs agree the model is precisely estimated", {
+test_that("the reliability verbs return the vignette's moderate verdicts", {
   skip_if_not_installed("Nestimate")
   skip_on_cran()
-  walk_model <- ct_model()
+  effort_model <- ct_model()
 
   set.seed(2026)
-  certain <- Nestimate::certainty(walk_model)
+  certain <- Nestimate::certainty(effort_model)
   expect_true(all(summary(certain)$sig))
 
-  dropped <- Nestimate::casedrop_reliability(walk_model, iter = 100,
+  boot <- summary(Nestimate::bootstrap_network(effort_model, iter = 200,
+                                               seed = 2026))
+  expect_identical(sum(boot$sig), 5L)
+
+  dropped <- Nestimate::casedrop_reliability(effort_model, iter = 100,
                                              seed = 2026)
-  expect_output(print(dropped), "CS-coefficient \\(r\\)    : 0.90")
+  expect_output(print(dropped), "CS-coefficient \\(r\\)    : 0.50")
 
   set.seed(2026)
-  halves <- Nestimate::network_reliability(walk_model)
-  expect_output(print(halves), "Pearson             mean = 0.99")
+  halves <- Nestimate::network_reliability(effort_model)
+  expect_output(print(halves), "Pearson             mean = 0.85")
 })
 
-test_that("the seasonal pair compares as documented across all four verbs", {
+test_that("the course halves agree under every comparison verb", {
   skip_if_not_installed("Nestimate")
   skip_on_cran()
-  data(steps, envir = environment())
-  walkers <- subset(steps, !is.na(steps))
-  cutoff <- as.Date("2019-11-01")
+  data(srl, envir = environment())
+  students <- subset(srl, !is.na(effort))
   build <- function(rows) {
     ts_tna(
       rows,
-      value = "steps", id = "id", time = "day",
-      discretization = "threshold", breaks = c(5000, 10000),
-      labels = c("sedentary", "moderate", "active")
+      value = "effort", id = "name", time = "day",
+      discretization = "threshold", breaks = c(40, 70),
+      labels = c("low", "moderate", "high")
     )
   }
-  early <- build(subset(walkers, as.Date(day) < cutoff))
-  late <- build(subset(walkers, as.Date(day) >= cutoff))
+  first_half <- build(subset(students, day <= 78))
+  second_half <- build(subset(students, day > 78))
 
-  difference <- Nestimate::subtract_networks(early, late)
-  expect_lt(max(abs(difference$difference_matrix)), 0.05)
+  difference <- Nestimate::subtract_networks(first_half, second_half)
+  expect_lt(max(abs(difference$difference_matrix)), 0.04)
 
   correlation <- stats::cor(
-    as.vector(as.matrix(early)),
-    as.vector(as.matrix(late))
+    as.vector(as.matrix(first_half)),
+    as.vector(as.matrix(second_half))
   )
   expect_gt(correlation, 0.99)
 
   set.seed(2026)
-  credible <- Nestimate::bayes_compare(early, late)
-  expect_output(print(credible), "Credibly different: 4")
+  credible <- Nestimate::bayes_compare(first_half, second_half)
+  expect_output(print(credible), "Credibly different: 0")
 
-  vertex <- Nestimate::vertex_compare(early, late, iter = 200, seed = 2026)
+  vertex <- Nestimate::vertex_compare(first_half, second_half, iter = 200,
+                                      seed = 2026)
   expect_output(print(vertex), "Snijders & Borgatti")
 })
 
 test_that("the pooled inference chunks match the vignette", {
   skip_if_not_installed("Nestimate")
   skip_on_cran()
-  walk_model <- ct_model()
+  effort_model <- ct_model()
 
-  centrality <- Nestimate::net_centrality(walk_model)
+  centrality <- Nestimate::net_centrality(effort_model)
   hub <- subset(as.data.frame(centrality), InStrength == max(InStrength))
-  expect_identical(as.character(hub$state), "moderate")
-  expect_equal(hub$InStrength, 0.7650336, tolerance = 1e-6)
-
-  boot <- Nestimate::bootstrap_network(walk_model, iter = 200, seed = 2026)
-  expect_true(all(summary(boot)$sig))
+  expect_identical(as.character(hub$state), "high")
+  expect_equal(hub$InStrength, 0.6003974, tolerance = 1e-6)
 
   set.seed(2026)
-  order_test <- Nestimate::markov_order_test(walk_model)
-  expect_output(print(order_test), "BIC: 3   AIC: 3   permutation-LRT: 3")
+  entropy <- Nestimate::entropy_bayes(effort_model)
+  expect_output(print(entropy), "1.478")
 
-  cutoff <- as.Date("2019-11-01")
-  data(steps, envir = environment())
-  walkers <- subset(steps, !is.na(steps))
-  early <- ts_tna(
-    subset(walkers, as.Date(day) < cutoff),
-    value = "steps", id = "id", time = "day",
-    discretization = "threshold", breaks = c(5000, 10000),
-    labels = c("sedentary", "moderate", "active")
-  )
-  late <- ts_tna(
-    subset(walkers, as.Date(day) >= cutoff),
-    value = "steps", id = "id", time = "day",
-    discretization = "threshold", breaks = c(5000, 10000),
-    labels = c("sedentary", "moderate", "active")
-  )
-  seasons <- summary(Nestimate::permutation(early, late, iter = 1000,
-                                            seed = 2026))
-  expect_identical(sum(seasons$sig), 0L)
-  expect_equal(min(seasons$p_value), 0.07092907, tolerance = 1e-6)
+  set.seed(2026)
+  order_test <- Nestimate::markov_order_test(effort_model)
+  expect_output(print(order_test), "BIC: 2   AIC: 3   permutation-LRT: 3")
+
+  expect_identical(Nestimate::pathways(
+    Nestimate::build_hon(effort_model, max_order = 2)
+  ), character(0))
 })

@@ -15,7 +15,7 @@ articles:
     The construction surface — every exported verb on one series, and the
     plotting system end to end.
   contents:
-  - pleasure-all-functions
+  - constructing-time-series-networks
   - plotting-time-series-networks
 
 - title: Transition-network modelling with Nestimate
@@ -80,5 +80,5 @@ reference:
 
 - title: Data
   contents:
-  - motivation
-  - steps
+  - srl
+  - esm_srl

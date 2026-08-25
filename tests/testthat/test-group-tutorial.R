@@ -2,104 +2,127 @@
 # change moves these numbers, the vignette prose must be recomputed and
 # rewritten, not just re-rendered.
 
-gt_labels <- c("low", "mid", "high")
+data("esm_srl", package = "tsn", envir = environment())
 
-gt_grouped <- function(data) {
+gt_labels <- c("low", "mid", "high")
+gt_rows <- function() subset(esm_srl, !is.na(effort))
+
+gt_grouped <- function() {
   ts_tna(
-    data,
-    series = "pleasure",
-    group = "task_context_type",
+    gt_rows(),
+    value = "effort",
+    id = "name",
+    time = "occasion",
+    group = "day_type",
     labels = gt_labels
   )
 }
 
-test_that("the grouped context model has the documented shape and backing data", {
+test_that("the grouped day-type model has the documented shape and backing data", {
   skip_if_not_installed("Nestimate")
-  data(motivation, envir = environment())
+  by_day <- gt_grouped()
+  index <- as.data.frame(by_day, what = "groups")
 
-  full <- gt_grouped(motivation)
-  full_index <- as.data.frame(full, what = "groups")
-  expect_identical(as.character(full_index$group),
-                   c("Home", "Other", "Personal", "Work"))
-  other <- subset(full_index, group == "Other")
-  expect_identical(other$sequences, 2L)
-  expect_identical(other$observations, 3L)
-  expect_identical(other$edges, 1L)
-
-  contexts <- subset(motivation, task_context_type != "Other")
-  by_context <- gt_grouped(contexts)
-  index <- as.data.frame(by_context, what = "groups")
-  expect_identical(index$sequences, c(832L, 822L, 976L))
-  expect_identical(index$observations, c(1324L, 1309L, 2235L))
+  expect_identical(as.character(index$group), c("weekday", "weekend"))
+  expect_identical(index$sequences, c(238L, 233L))
+  expect_identical(index$observations, c(2033L, 783L))
   expect_true(all(index$states == 3L))
 })
 
-test_that("pooled discretization and the hand-subset model disagree as documented", {
+test_that("hand-subsetting welds weekend runs and forces uninformative tertiles", {
   skip_if_not_installed("Nestimate")
-  data(motivation, envir = environment())
+  weekend_rows <- subset(gt_rows(), day_type == "weekend")
 
-  home_alone <- ts_tna(
-    subset(motivation, task_context_type == "Home"),
-    series = "pleasure",
+  weekend_alone <- ts_tna(
+    weekend_rows,
+    value = "effort", id = "name", time = "occasion",
     labels = gt_labels
   )
-  # The subset welds all home measurements into one sequence.
-  hand_built <- summary(series_networks(home_alone))
-  expect_identical(nrow(hand_built), 1L)
-  expect_identical(hand_built$observations, 1324L)
+  # The subset welds each student's weekends into ONE sequence: 41 sequences
+  # over 783 observations count 742 transitions, of which the grouped model's
+  # 233 genuine runs contain only 550 -- 192 fabricated.
+  expect_identical(nrow(weekend_alone$data), 41L)
+  expect_identical(nrow(weekend_alone$ts_source), 783L)
 
-  # Its own tertiles put roughly a third of measurements in each state...
-  own_scale <- Nestimate::state_distribution(home_alone)
-  expect_equal(subset(own_scale, state == "low")$proportion,
-               0.3731118, tolerance = 1e-6)
-
-  # ...while the pooled scale puts home at 62.5% low and 6.6% high.
-  by_context <- gt_grouped(subset(motivation, task_context_type != "Other"))
-  shared_scale <- Nestimate::state_distribution(by_context)
-  home_low <- subset(shared_scale, group == "Home" & state == "low")
-  home_high <- subset(shared_scale, group == "Home" & state == "high")
-  expect_equal(home_low$proportion, 0.6246224, tolerance = 1e-6)
-  expect_equal(home_high$proportion, 0.06646526, tolerance = 1e-6)
+  own_scale <- summary(discretize(
+    weekend_rows,
+    value = "effort", id = "name", time = "occasion",
+    labels = gt_labels
+  ))
+  # Own-quantile cutting forces exactly equal thirds: 261 apiece.
+  expect_identical(own_scale$count, c(261L, 261L, 261L))
 })
 
-test_that("the low-to-high edge and entropy ordering match the vignette", {
+test_that("the high-to-mid edge and summary panel match the vignette", {
   skip_if_not_installed("Nestimate")
-  data(motivation, envir = environment())
-  by_context <- gt_grouped(subset(motivation, task_context_type != "Other"))
+  by_day <- gt_grouped()
 
-  jump <- subset(as.data.frame(by_context), from == "low" & to == "high")
-  expect_equal(jump$weight, c(0.04024768, 0.35064935, 0.29051988),
-               tolerance = 1e-6)
+  softening <- subset(as.data.frame(by_day), from == "high" & to == "mid")
+  expect_equal(softening$weight, c(0.2538071, 0.3419689), tolerance = 1e-6)
 
-  entropy <- Nestimate::transition_entropy(by_context)
-  rates <- vapply(entropy, `[[`, numeric(1L), "entropy_rate")
-  expect_lt(rates[["Home"]], rates[["Personal"]])
-  expect_lt(rates[["Personal"]], rates[["Work"]])
+  weekday <- as.matrix(by_day[["weekday"]])
+  weekend <- as.matrix(by_day[["weekend"]])
+  expect_equal(unname(weekday["high", "high"]), 0.631, tolerance = 1e-3)
+  expect_equal(unname(weekend["high", "high"]), 0.534, tolerance = 1e-3)
+  # Weekday rows are the more even ones (SD of out-strength 0.032 vs 0.102).
+  expect_output(print(summary(by_day)), "0.03206")
+  expect_output(print(summary(by_day)), "0.1015")
 })
 
-test_that("the seeded permutation and comparison results match the vignette", {
+test_that("grouped dynamics summaries match the vignette", {
+  skip_if_not_installed("Nestimate")
+  by_day <- gt_grouped()
+
+  entropy <- Nestimate::transition_entropy(by_day)
+  expect_equal(entropy[["weekday"]]$entropy_rate, 1.365, tolerance = 1e-3)
+  expect_equal(entropy[["weekend"]]$entropy_rate, 1.385, tolerance = 1e-3)
+
+  centrality <- Nestimate::net_centrality(by_day)
+  expect_equal(centrality[["weekday"]]["mid", "InStrength"], 0.5360257,
+               tolerance = 1e-6)
+  expect_equal(centrality[["weekend"]]["mid", "InStrength"], 0.6244548,
+               tolerance = 1e-6)
+})
+
+test_that("the seeded grouped inference matches the vignette", {
   skip_if_not_installed("Nestimate")
   skip_on_cran()
-  data(motivation, envir = environment())
-  by_context <- gt_grouped(subset(motivation, task_context_type != "Other"))
+  by_day <- gt_grouped()
 
-  comparison <- Nestimate::permutation(by_context, iter = 1000, seed = 2026)
-  edge_table <- summary(comparison)
-  significant <- aggregate(sig ~ group, data = edge_table, FUN = sum)
-  expect_identical(
-    subset(significant, group == "Home vs Personal")$sig, 8L
-  )
-  expect_identical(
-    subset(significant, group == "Home vs Work")$sig, 8L
-  )
-  expect_identical(
-    subset(significant, group == "Personal vs Work")$sig, 3L
-  )
+  comparison <- summary(Nestimate::permutation(by_day, iter = 1000,
+                                               seed = 2026))
+  flagged <- subset(comparison, sig)
+  expect_true(all(paste(flagged$from, flagged$to) %in%
+                    c("high mid", "high high")))
+  softening <- subset(comparison, from == "high" & to == "mid")
+  expect_true(softening$sig)
+  expect_equal(softening$p_value, 0.02297702, tolerance = 1e-6)
 
-  # The Home and Personal weight matrices are negatively correlated.
-  home_personal <- stats::cor(
-    as.vector(as.matrix(by_context[["Home"]])),
-    as.vector(as.matrix(by_context[["Personal"]]))
+  correlation <- stats::cor(
+    as.vector(as.matrix(by_day[["weekday"]])),
+    as.vector(as.matrix(by_day[["weekend"]]))
   )
-  expect_lt(home_personal, -0.5)
+  expect_equal(correlation, 0.9657, tolerance = 1e-3)
+
+  dropped <- Nestimate::casedrop_reliability(by_day, iter = 100, seed = 2026)
+  expect_output(print(dropped), "weekday     238       6 0.3")
+  expect_output(print(dropped), "weekend     233       6 0.5")
+})
+
+test_that("plot on a grouped model draws exactly one selected group", {
+  skip_if_not_installed("Nestimate")
+  skip_if_not_installed("cograph")
+  skip_if_not_installed("igraph")
+  by_day <- gt_grouped()
+  output <- tempfile(fileext = ".pdf")
+  grDevices::pdf(output)
+  on.exit({
+    grDevices::dev.off()
+    unlink(output)
+  }, add = TRUE)
+
+  expect_invisible(plot(by_day, group = "weekday", type = "network"))
+  expect_invisible(plot(by_day, group = "weekend", type = "network"))
+  expect_error(plot(by_day), "exactly one")
+  expect_error(plot(by_day, group = "missing"), "Unknown group")
 })

@@ -1,3 +1,43 @@
+# tsn 1.4.0
+
+## Breaking changes
+
+- The bundled example data sets have been replaced. `steps` and `motivation`
+  (which carried no usable provenance) are gone; in their place the package
+  ships two data sets with full provenance owned by the package authors:
+  - **`srl`** — a balanced daily panel of 36 students reporting nine
+    self-regulated-learning indicators for 156 occasions on 0-100 scales,
+    the companion data of *Advanced Learning Analytics Methods* (CC BY-NC-SA
+    4.0; see the `COPYRIGHTS` file). Identical to the copy in the authors'
+    'idiographic' package.
+  - **`esm_srl`** — the authors' own fully anonymized experience-sampling
+    study: 41 students, momentary self-regulation/motivation/anxiety on
+    0-100 scales, fictional identifiers and constant-shifted dates. The tsn
+    copy adds a derived `day_type` (weekday/weekend) factor so grouped
+    models need no caller-side preparation.
+  Code that referenced `steps` or `motivation` must switch data sets.
+- The internal `R/sysdata.rda` copy of the old data sets (an unused
+  leftover that silently re-shipped them inside the namespace) is removed.
+
+## Documentation
+
+- Every vignette, example, and the README were rebuilt on the new data, with
+  all reported numbers recomputed:
+  - `vignette("pleasure-all-functions")` is now
+    `vignette("constructing-time-series-networks")`, following one student's
+    momentary anxiety series through every exported verb.
+  - `vignette("nestimate-workflow")` runs on the `srl` effort panel (fixed
+    breaks at 40/70), one student's series for segmentation, a
+    first-versus-second-half course comparison, and the weekday/weekend
+    grouped model.
+  - `vignette("group-models")` compares weekday and weekend effort dynamics
+    end to end, including the welding and threshold failure modes of
+    hand-subsetting.
+  - `vignette("nestimate-compatibility")` maps the Nestimate verb surface on
+    the `srl` effort model.
+  - `vignette("plotting-time-series-networks")` draws the same plot tour on
+    the momentary anxiety series.
+
 # tsn 1.3.0
 
 ## New features

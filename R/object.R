@@ -289,11 +289,11 @@ as.data.frame.ts_tna <- function(x, row.names = NULL, optional = FALSE,
 #' @return A base data frame whose first column is `group`.
 #' @seealso [ts_tna()] for the `group` argument that builds these models.
 #' @examplesIf requireNamespace("Nestimate", quietly = TRUE)
-#' data(motivation)
+#' data(esm_srl)
 #' networks <- ts_tna(
-#'   motivation,
-#'   series = "pleasure", group = "task_context_type",
-#'   labels = c("low", "mid", "high")
+#'   subset(esm_srl, !is.na(effort)),
+#'   value = "effort", id = "name", time = "occasion",
+#'   group = "day_type", labels = c("low", "mid", "high")
 #' )
 #' as.data.frame(networks, what = "groups")
 #' head(as.data.frame(networks))

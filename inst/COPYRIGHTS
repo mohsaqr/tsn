@@ -1,0 +1,28 @@
+The R code and documentation in tsn are Copyright (C) 2026 Mohammed Saqr
+and Sonsoles Lopez-Pernas and are distributed under the MIT license (see
+the LICENSE file).
+
+The bundled `srl` data set is the companion data of "Advanced Learning
+Analytics Methods: AI, Precision and Complexity" (Mohammed Saqr and
+Sonsoles Lopez-Pernas, editors), created and owned by the package authors
+and distributed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International license
+(CC BY-NC-SA 4.0):
+
+  https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+Source and attribution:
+
+  Mohammed Saqr and Sonsoles Lopez-Pernas (editors), Advanced Learning
+  Analytics Methods: AI, Precision and Complexity, companion data,
+  https://github.com/lamethods/data2/tree/main/srl
+
+The `srl` rows are ordered by student and occasion; the data values are
+unchanged.
+
+The bundled `esm_srl` data set is the package authors' own
+experience-sampling study, fully anonymized before distribution: the
+participant identifiers are fictional names and the calendar dates were
+shifted by a constant offset, preserving within-person spacing while
+removing all real dates and identities. The copy in this package adds a
+`day_type` column derived from the anonymized dates.

@@ -122,14 +122,14 @@
 #' # Sliding lag-1 pairs keep every transition and the exact estimate:
 #' ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
 #'
-#' # One network per context, on a shared alphabet:
-#' data(motivation)
-#' by_context <- ts_tna(
-#'   motivation,
-#'   series = "pleasure", group = "task_context_type",
-#'   labels = c("low", "mid", "high")
+#' # One network per day type, on a shared alphabet:
+#' data(esm_srl)
+#' by_day <- ts_tna(
+#'   subset(esm_srl, !is.na(effort)),
+#'   value = "effort", id = "name", time = "occasion",
+#'   group = "day_type", labels = c("low", "mid", "high")
 #' )
-#' as.data.frame(by_context, what = "groups")
+#' as.data.frame(by_day, what = "groups")
 #' @export
 ts_tna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
                    discretization = "quantile", n_states = 3L, breaks = NULL,
@@ -935,14 +935,14 @@ plot.tsn_series_networks <- function(x, y = NULL, series = NULL, ...) {
 #' @seealso [ts_tna()] for the `group` argument;
 #'   [as.data.frame.ts_tna_group()] for the tidy views of the collection.
 #' @examplesIf requireNamespace("Nestimate", quietly = TRUE) && requireNamespace("cograph", quietly = TRUE)
-#' data(motivation)
+#' data(esm_srl)
 #' networks <- ts_tna(
-#'   motivation,
-#'   series = "pleasure", group = "task_context_type",
-#'   labels = c("low", "mid", "high")
+#'   subset(esm_srl, !is.na(effort)),
+#'   value = "effort", id = "name", time = "occasion",
+#'   group = "day_type", labels = c("low", "mid", "high")
 #' )
-#' plot(networks, group = "Home")
-#' plot(networks, group = "Work", type = "network")
+#' plot(networks, group = "weekday")
+#' plot(networks, group = "weekend", type = "network")
 #' @export
 plot.ts_tna_group <- function(x, y = NULL, group = NULL, ...) {
   stopifnot(inherits(x, "ts_tna_group"), is.null(y), !is.null(names(x)))

@@ -1,16 +1,16 @@
-test_that("all discretizers use packaged steps through direct tsn calls", {
-  data("steps", package = "tsn")
+test_that("all discretizers use packaged srl through direct tsn calls", {
+  data("srl", package = "tsn")
   methods <- c(
     "threshold", "width", "quantile", "kde", "kmeans", "gaussian",
     "hclust"
   )
   networks <- setNames(lapply(methods, function(discretization_method) {
     arguments <- list(
-      steps,
-      value = "steps",
-      id = "id",
+      srl,
+      value = "effort",
+      id = "name",
       time = "day",
-      series = 536,
+      series = "Erik",
       unit = "state",
       visibility = "horizontal",
       discretization = discretization_method
@@ -18,7 +18,7 @@ test_that("all discretizers use packaged steps through direct tsn calls", {
     # `breaks` is only consumed by "threshold" and `seed` only by the
     # stochastic discretizers; supplying them elsewhere is an error.
     if (discretization_method == "threshold") {
-      arguments$breaks <- c(10000, 16500)
+      arguments$breaks <- c(40, 70)
     }
     if (discretization_method %in% c("kmeans", "gaussian")) {
       arguments$seed <- 1707L
@@ -29,9 +29,9 @@ test_that("all discretizers use packaged steps through direct tsn calls", {
   expect_true(all(vapply(networks, inherits, logical(1L), what = "tsn")))
   expect_true(all(vapply(networks, function(network) {
     source <- as.data.frame(network, what = "series")
-    nrow(source) == 265L &&
-      identical(unique(source[["id"]]), "536") &&
-      inherits(source[["time"]], "Date") &&
+    nrow(source) == 156L &&
+      identical(unique(source[["id"]]), "Erik") &&
+      is.numeric(source[["time"]]) &&
       identical(sort(unique(as.character(source[["state"]]))),
                 as.character(1:3)) &&
       !anyNA(source[["state"]])
@@ -75,26 +75,27 @@ test_that("series selects long IDs and wide columns inside tsn", {
   expect_error(tsn(1:5, series = "a"), "selection requires")
 })
 
-test_that("motivation supports direct one-line wide selection", {
-  data("motivation", package = "tsn")
-  mood <- tsn(
-    motivation,
-    series = "mood",
+test_that("esm_srl supports direct one-line wide selection", {
+  data("esm_srl", package = "tsn")
+  hana <- subset(esm_srl, name == "Hana")
+  anxiety <- tsn(
+    hana,
+    series = "anxiety",
     unit = "state",
     visibility = "horizontal",
     discretization = "gaussian",
     seed = 1707L
   )
   variables <- tsn(
-    motivation,
-    series = c("autonomy", "competence", "relatedness", "mood"),
+    hana,
+    series = c("planning", "monitoring", "effort", "anxiety"),
     method = "distance",
     distance = "correlation"
   )
 
-  expect_s3_class(mood, "tsn")
-  expect_equal(nrow(as.data.frame(mood, what = "series")), nrow(motivation))
-  expect_false(anyNA(as.data.frame(mood, what = "series")[["state"]]))
+  expect_s3_class(anxiety, "tsn")
+  expect_equal(nrow(as.data.frame(anxiety, what = "series")), nrow(hana))
+  expect_false(anyNA(as.data.frame(anxiety, what = "series")[["state"]]))
   expect_identical(variables$nodes$label,
-                   c("autonomy", "competence", "relatedness", "mood"))
+                   c("planning", "monitoring", "effort", "anxiety"))
 })

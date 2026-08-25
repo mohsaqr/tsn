@@ -84,20 +84,22 @@ edges. `ts_tna()` estimates transition probabilities, `ts_ftna()` raw
 transition frequencies, `ts_cna()` co-occurrences, and `ts_atna()`
 attention-weighted transitions.
 
-The packaged `steps` dataset records daily step counts. Because participant 35
-has missing days, we model the complete observations for two participants:
+The packaged `srl` dataset records nine self-regulated-learning indicators
+for 36 students over 156 daily occasions, on 0-100 scales. Because a few
+reports are missing, we model the complete `effort` observations for two
+students:
 
 ```{r transitions, message = FALSE}
-data(steps)
+data(srl)
 
-complete <- subset(steps, !is.na(steps))
+complete <- subset(srl, !is.na(effort))
 
 model <- ts_tna(
   complete,
-  value = "steps",
-  id = "id",
+  value = "effort",
+  id = "name",
   time = "day",
-  series = c(536, 88),
+  series = c("Erik", "Eve"),
   n_states = 3,
   labels = c("low", "moderate", "high")
 )
@@ -105,11 +107,12 @@ model <- ts_tna(
 model
 ```
 
-The transition matrix is strongly diagonal: in the pooled model a `low` day
-is followed by another `low` day with probability 0.578, and a `high` day by
-another `high` day with probability 0.605, so days tend to persist in their
-state. Because the state alphabet is learned from both series jointly, the two
-participants are placed on a common scale. `series_networks()` then splits the
+The diagonal of the transition matrix is only mildly elevated: a `low` day is
+followed by another `low` day with probability 0.381 and a `high` day by
+another `high` day with probability 0.398, against roughly 0.3 for every
+alternative, so these students' daily effort persists, but weakly. Because
+the state alphabet is learned from both series jointly, the two students are
+placed on a common scale. `series_networks()` then splits the
 pooled model into one network per series:
 
 ```{r per-series}
@@ -118,10 +121,10 @@ series_networks(model)
 
 The resulting collection supports `print()`, `summary()`, `as.data.frame()`,
 and `plot()` directly (`plot()` takes `series = "<name>"` when the collection
-holds more than one model). The combined plot places each participant's shaded
+holds more than one model). The combined plot places each student's shaded
 series alongside their own transition network:
 
-```{r transition-plot, fig.width = 9, fig.height = 5.5, fig.alt = "Two rows, one per participant: each shows the daily step series with a state ribbon strip underneath and that participant's three-state transition network beside it, with edge weights printed on the arrows."}
+```{r transition-plot, fig.width = 9, fig.height = 5.5, fig.alt = "Two rows, one per student: each shows the daily effort series with a state ribbon strip underneath and that student's three-state transition network beside it, with edge weights printed on the arrows."}
 plot(model, ribbon = TRUE, overlay = "none")
 ```
 
@@ -134,15 +137,16 @@ for a model estimated from a single sequence.
 ## From values to states: `discretize()` and `trend()`
 
 `discretize()` is the bridge from a numeric series to a state sequence. Using
-the same `steps` data, participant 536 contributes 265 complete days:
+the same `srl` data, the student recorded as Erik contributes 156 daily
+reports:
 
 ```{r discretize}
 states <- discretize(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   method = "quantile",
   n_states = 3,
   labels = c("low", "moderate", "high")
@@ -164,11 +168,11 @@ classifies each observation by the slope of a rolling regression.
 
 ```{r trend}
 movement <- trend(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   window = 14
 )
 
@@ -180,28 +184,29 @@ summary(movement)
 A visibility graph (Lacasa et al., 2008) maps a single series onto a network
 of its observations: two time points are connected when an unobstructed
 straight sightline over the intervening values joins them. The packaged
-`motivation` dataset holds 4,871 experience-sampling measurements; the first
-60 pleasure ratings suffice to illustrate the construction.
+`esm_srl` dataset holds 2,820 momentary experience-sampling reports from 41
+students; the first 60 anxiety ratings of one student suffice to illustrate
+the construction.
 
 ```{r visibility}
-data(motivation)
+data(esm_srl)
 
-pleasure <- head(motivation, 60)
-network <- vg(pleasure, series = "pleasure")
+anxiety <- head(subset(esm_srl, name == "Jamal"), 60)
+network <- vg(anxiety, series = "anxiety")
 
 summary(network)
 ```
 
-The 60 observations become 60 nodes joined by 143 sightlines. Every network
+The 60 observations become 60 nodes joined by 144 sightlines. Every network
 offers two complementary views: `plot(x)` draws the network itself through
 `cograph`, and `plot(x, "series")` shows the source series from which it was
 built.
 
-```{r visibility-network, fig.alt = "Natural visibility graph of sixty pleasure ratings, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the graph traces a near-linear backbone with side branches, and a few high-degree hubs correspond to peak observations that see far along the series."}
+```{r visibility-network, fig.alt = "Natural visibility graph of sixty anxiety ratings, drawn with a Fruchterman-Reingold layout and nodes sized by degree; the graph traces a near-linear backbone with side branches, and a few high-degree hubs correspond to peak observations that see far along the series."}
 plot(network, layout = "fr", node_size_range = c(1.4, 4.5))
 ```
 
-```{r visibility-series, fig.height = 3, fig.alt = "The sixty pleasure ratings the visibility graph was built from, plotted as a line over observation order."}
+```{r visibility-series, fig.height = 3, fig.alt = "The sixty anxiety ratings the visibility graph was built from, plotted as a line over observation order."}
 plot(network, "series")
 ```
 
@@ -222,11 +227,11 @@ pair.
 
 ```{r state-network}
 state_network <- tsn(
-  steps,
-  value = "steps",
-  id = "id",
+  srl,
+  value = "effort",
+  id = "name",
   time = "day",
-  series = 536,
+  series = "Erik",
   unit = "state",
   discretization = "quantile",
   n_states = 3
@@ -238,7 +243,7 @@ summary(state_network)
 The series view shades the states over the raw values, either as horizontal
 value bands (`overlay = "horizontal"`) or as vertical runs along time:
 
-```{r state-overlay, fig.height = 3.2, fig.alt = "Daily step counts for participant 536 with horizontal shading marking the three quantile state bands across the y-axis."}
+```{r state-overlay, fig.height = 3.2, fig.alt = "Daily effort reports for the student Erik with horizontal shading marking the three quantile state bands across the y-axis."}
 plot(state_network, "series", overlay = "horizontal")
 ```
 
@@ -246,25 +251,28 @@ plot(state_network, "series", overlay = "horizontal")
 
 Under `method = "distance"`, nodes are whole series (or sliding windows) and
 edge weights are similarities, so that larger weights indicate closer series.
-Comparing five motivation variables as complete series is a single call:
+Comparing five of one student's momentary indicators as complete series is a
+single call:
 
 ```{r distance-series}
-affect <- tsn(
-  motivation,
-  series = c("pleasure", "autonomy", "competence", "relatedness", "mood"),
+hana <- subset(esm_srl, name == "Hana")
+
+regulation <- tsn(
+  hana,
+  series = c("planning", "monitoring", "effort", "motivated", "anxiety"),
   method = "distance",
   distance = "correlation"
 )
 
-summary(affect)
+summary(regulation)
 ```
 
-```{r distance-network, fig.height = 5, fig.alt = "Correlation-distance network of five motivation variables, drawn with labeled nodes; all ten pairs are connected and autonomy and competence form the strongest tie."}
-plot(affect, labels = TRUE)
+```{r distance-network, fig.height = 5, fig.alt = "Correlation-distance network of five momentary self-regulation indicators, drawn with labeled nodes; all ten pairs are connected and planning and effort form the strongest tie."}
+plot(regulation, labels = TRUE)
 ```
 
 All ten pairs are connected because the default connectivity rule is
-`connect = "full"`; autonomy and competence form the closest pair. Fifteen
+`connect = "full"`; planning and effort form the closest pair. Fifteen
 distance measures are available (`euclidean`, `manhattan`, `maximum`,
 `canberra`, `minkowski`, `binary`, `cosine`, `correlation`, `spearman`,
 `dtw`, `ccf`, `nmi`, `voi`, `event_sync`, `van_rossum`), and `connect`
@@ -276,8 +284,8 @@ trajectory into a network of its own epochs:
 
 ```{r distance-windows}
 windows <- tsn(
-  pleasure,
-  series = "pleasure",
+  anxiety,
+  series = "anxiety",
   method = "distance",
   distance = "dtw",
   window = 12,
@@ -290,7 +298,7 @@ summary(windows)
 ```
 
 The 60 ratings yield 13 overlapping windows; retaining each window's two
-nearest neighbours keeps 17 of the 78 possible dyads. The default `window` is
+nearest neighbours keeps 16 of the 78 possible dyads. The default `window` is
 10% of the series length, so `step` should be chosen relative to the series
 length. Further options include `chain = TRUE` (connect only consecutive
 windows or series), `directed = TRUE`, and `normalize = TRUE`.
@@ -321,9 +329,13 @@ overrides them, for example `plot(network, layout = "circle", labels = TRUE)`.
   series and tests it with `Nestimate`: bootstrap confidence intervals,
   centrality stability, a Markov-order test, and a permutation test comparing
   two periods.
-- `vignette("pleasure-all-functions")` applies every exported `tsn` function
-  to the packaged `motivation` pleasure series, building each network
-  representation in turn.
+- `vignette("constructing-time-series-networks")` applies every exported
+  `tsn` function to one packaged momentary anxiety series, building each
+  network representation in turn.
+- `vignette("group-models")` builds one transition network per condition on a
+  shared state alphabet and compares them.
+- `vignette("nestimate-compatibility")` maps, verb by verb, which Nestimate
+  analyses accept a `tsn` model directly.
 - `vignette("plotting-time-series-networks")` documents the plotting surface:
   the network and source-series views, state overlays, and transition-model
   plots.

@@ -38,11 +38,11 @@ than a set of objects you have to reach into one at a time.
 }
 \examples{
 \dontshow{if (requireNamespace("Nestimate", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-data(motivation)
+data(esm_srl)
 networks <- ts_tna(
-  motivation,
-  series = "pleasure", group = "task_context_type",
-  labels = c("low", "mid", "high")
+  subset(esm_srl, !is.na(effort)),
+  value = "effort", id = "name", time = "occasion",
+  group = "day_type", labels = c("low", "mid", "high")
 )
 as.data.frame(networks, what = "groups")
 head(as.data.frame(networks))

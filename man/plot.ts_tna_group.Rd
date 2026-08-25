@@ -29,14 +29,14 @@ every \code{cograph::splot()} option.
 }
 \examples{
 \dontshow{if (requireNamespace("Nestimate", quietly = TRUE) && requireNamespace("cograph", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-data(motivation)
+data(esm_srl)
 networks <- ts_tna(
-  motivation,
-  series = "pleasure", group = "task_context_type",
-  labels = c("low", "mid", "high")
+  subset(esm_srl, !is.na(effort)),
+  value = "effort", id = "name", time = "occasion",
+  group = "day_type", labels = c("low", "mid", "high")
 )
-plot(networks, group = "Home")
-plot(networks, group = "Work", type = "network")
+plot(networks, group = "weekday")
+plot(networks, group = "weekend", type = "network")
 \dontshow{\}) # examplesIf}
 }
 \seealso{

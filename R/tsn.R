@@ -153,13 +153,13 @@
 #' tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "ordinal")
 #' tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "distance")
 #'
-#' data(steps)
+#' data(srl)
 #' tsn(
-#'   steps,
-#'   value = "steps",
-#'   id = "id",
+#'   srl,
+#'   value = "effort",
+#'   id = "name",
 #'   time = "day",
-#'   series = 536,
+#'   series = "Erik",
 #'   unit = "state",
 #'   discretization = "gaussian"
 #' )

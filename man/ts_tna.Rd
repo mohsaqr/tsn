@@ -230,13 +230,13 @@ ts_tna(long, segment = 10, labels = c("low", "mid", "high"))
 # Sliding lag-1 pairs keep every transition and the exact estimate:
 ts_tna(long, segment = 2, overlap = TRUE, labels = c("low", "mid", "high"))
 
-# One network per context, on a shared alphabet:
-data(motivation)
-by_context <- ts_tna(
-  motivation,
-  series = "pleasure", group = "task_context_type",
-  labels = c("low", "mid", "high")
+# One network per day type, on a shared alphabet:
+data(esm_srl)
+by_day <- ts_tna(
+  subset(esm_srl, !is.na(effort)),
+  value = "effort", id = "name", time = "occasion",
+  group = "day_type", labels = c("low", "mid", "high")
 )
-as.data.frame(by_context, what = "groups")
+as.data.frame(by_day, what = "groups")
 \dontshow{\}) # examplesIf}
 }

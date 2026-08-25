@@ -543,28 +543,28 @@ summary.tsn_states <- function(object, ...) {
 #' @param ... Reserved for future options.
 #' @return `x`, invisibly.
 #' @examples
-#' data(steps)
-#' complete <- subset(steps, !is.na(steps))
+#' data(srl)
+#' complete <- subset(srl, !is.na(effort))
 #' states <- discretize(
 #'   complete,
-#'   value = "steps", id = "id", time = "day",
+#'   value = "effort", id = "name", time = "day",
 #'   method = "quantile", n_states = 3
 #' )
-#' plot(states, series = "536")
-#' plot(states, series = "536", overlay = "vertical", lines = "horizontal")
-#' plot(states, "ribbon", series = "536", points = FALSE)
+#' plot(states, series = "Erik")
+#' plot(states, series = "Erik", overlay = "vertical", lines = "horizontal")
+#' plot(states, "ribbon", series = "Erik", points = FALSE)
 #' plot(states, "heatmap", max_series = 12, sort = "mean")
 #' plot(states, "heatmap", palette = "viridis", max_series = 12)
 #'
 #' # Stack: original series read against the states of its rolling volatility.
-#' one <- subset(complete, id == 536)
-#' volatility <- abs(c(0, diff(one$steps)))
+#' one <- subset(complete, name == "Erik")
+#' volatility <- abs(c(0, diff(one$effort)))
 #' vol_states <- discretize(
-#'   data.frame(id = one$id, day = one$day, vol = volatility),
-#'   value = "vol", id = "id", time = "day",
+#'   data.frame(name = one$name, day = one$day, vol = volatility),
+#'   value = "vol", id = "name", time = "day",
 #'   method = "quantile", n_states = 3
 #' )
-#' plot(vol_states, "stack", with = one$steps, with_label = "Steps",
+#' plot(vol_states, "stack", with = one$effort, with_label = "Effort",
 #'      ylab = "Volatility")
 #' @export
 plot.tsn_states <- function(x, type = c("overlay", "ribbon", "heatmap",

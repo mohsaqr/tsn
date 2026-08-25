@@ -1,13 +1,13 @@
-data("steps", package = "tsn", envir = environment())
+data("srl", package = "tsn", envir = environment())
 
-seg_one <- subset(subset(steps, !is.na(steps)), id == 193)
-seg_labels <- c("sedentary", "moderate", "active")
+seg_one <- subset(subset(srl, !is.na(effort)), name == "Erik")
+seg_labels <- c("low", "moderate", "high")
 
 seg_build <- function(data, ...) {
   ts_tna(
     data,
-    value = "steps", time = "day",
-    discretization = "threshold", breaks = c(5000, 10000),
+    value = "effort", time = "day",
+    discretization = "threshold", breaks = c(40, 70),
     labels = seg_labels,
     ...
   )
@@ -20,7 +20,7 @@ test_that("segment cuts one series into the expected number of sequences", {
   expect_identical(nrow(seg_build(seg_one)$data), 1L)
   # Partitioning n observations into blocks of 10 gives ceiling(n / 10)
   # sequences, minus a trailing block of one observation if there is one.
-  expect_identical(nrow(seg_build(seg_one, segment = 10)$data), 30L)
+  expect_identical(nrow(seg_build(seg_one, segment = 10)$data), 16L)
   # Sliding a width-2 window gives one block per transition.
   expect_identical(
     nrow(seg_build(seg_one, segment = 2, overlap = TRUE)$data),
@@ -54,8 +54,8 @@ test_that("partitioning loses the transition at each cut", {
   kept_duplets <- sum(
     ts_ftna(
       seg_one,
-      value = "steps", time = "day", segment = 2,
-      discretization = "threshold", breaks = c(5000, 10000),
+      value = "effort", time = "day", segment = 2,
+      discretization = "threshold", breaks = c(40, 70),
       labels = seg_labels
     )$weights
   )
@@ -79,18 +79,18 @@ test_that("segmentation runs after discretization, so the alphabet is unchanged"
 
 test_that("blocks never span an ID boundary", {
   skip_if_not_installed("Nestimate")
-  two <- subset(subset(steps, !is.na(steps)), id %in% c(193, 238))
+  two <- subset(subset(srl, !is.na(effort)), name %in% c("Erik", "Eve"))
   model <- ts_tna(
     two,
-    value = "steps", id = "id", time = "day", segment = 50,
-    discretization = "threshold", breaks = c(5000, 10000), labels = seg_labels
+    value = "effort", id = "name", time = "day", segment = 50,
+    discretization = "threshold", breaks = c(40, 70), labels = seg_labels
   )
 
   # Every generated sequence is named "<participant>.<block>", so the origin
   # survives segmentation and blocks are provably confined to one participant.
   produced <- summary(series_networks(model))
   origins <- sub("\\..*$", "", as.character(produced$series))
-  expect_setequal(origins, c("193", "238"))
+  expect_setequal(origins, c("Erik", "Eve"))
   expect_identical(nrow(produced), nrow(model$data))
 })
 
@@ -110,24 +110,22 @@ test_that("segmenting gives sequence-based inference something to resample", {
   expect_true(all(edges$ci_upper > edges$ci_lower))
 })
 
-test_that("sliding blocks give narrower intervals than partitioned ones", {
+test_that("the two segmentation schemes trade units against the estimate as documented", {
   skip_if_not_installed("Nestimate")
-  width <- function(model) {
-    edges <- summary(
-      suppressWarnings(
-        Nestimate::bootstrap_network(model, iter = 300, seed = 2024)
-      )
-    )
-    mean(edges$ci_upper - edges$ci_lower)
-  }
+  partitioned <- seg_build(seg_one, segment = 10)
+  sliding <- seg_build(seg_one, segment = 2, overlap = TRUE)
 
-  # Sliding blocks share observations, so they understate uncertainty relative
-  # to a partition. The vignette warns about this; if it ever reversed, that
-  # warning would be wrong.
-  expect_lt(
-    width(seg_build(seg_one, segment = 2, overlap = TRUE)),
-    width(seg_build(seg_one, segment = 10))
-  )
+  # Sliding yields one block per transition, an order of magnitude more units
+  # than partitioning, and preserves the unsegmented estimate exactly. (On
+  # this series the two schemes yield near-identical interval widths, which
+  # is exactly what the vignette reports; neither direction is a theorem, so
+  # no ordering of the widths is asserted here.)
+  expect_identical(nrow(sliding$data), nrow(seg_one) - 1L)
+  expect_gt(nrow(sliding$data), 5L * nrow(partitioned$data))
+  expect_true(isTRUE(all.equal(
+    as.matrix(sliding),
+    as.matrix(seg_build(seg_one))
+  )))
 })
 
 test_that("segment rejects widths that cannot carry a transition", {

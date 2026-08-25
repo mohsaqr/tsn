@@ -1,17 +1,17 @@
-data("motivation", package = "tsn", envir = environment())
+data("esm_srl", package = "tsn", envir = environment())
 
-plotting_pleasure <- utils::head(motivation, 60L)
-plotting_short <- utils::head(plotting_pleasure, 25L)
+plotting_anxiety <- utils::head(subset(esm_srl, name == "Jamal"), 60L)
+plotting_short <- utils::head(plotting_anxiety, 25L)
 
 test_that("plotting vignette state and trend objects are stable", {
   states <- discretize(
-    plotting_pleasure,
-    series = "pleasure",
+    plotting_anxiety,
+    series = "anxiety",
     labels = c("Low", "Middle", "High")
   )
   directions <- trend(
-    plotting_pleasure,
-    series = "pleasure"
+    plotting_anxiety,
+    series = "anxiety"
   )
 
   expect_s3_class(states, "tsn_states")
@@ -25,12 +25,12 @@ test_that("plotting vignette network objects match the documented counts", {
   visibility <- vg(
     data = plotting_short,
     type = "horizontal",
-    series = "pleasure"
+    series = "anxiety"
   )
   windows <- tsn(
     data = plotting_short,
     method = "distance",
-    series = "pleasure",
+    series = "anxiety",
     step = 2L,
     connect = "nearest",
     neighbors = 2L
@@ -38,10 +38,10 @@ test_that("plotting vignette network objects match the documented counts", {
 
   expect_s3_class(visibility, "tsn")
   expect_identical(visibility$n_nodes, 25L)
-  expect_identical(visibility$n_edges, 43L)
+  expect_identical(visibility$n_edges, 41L)
   expect_s3_class(windows, "tsn")
   expect_identical(windows$n_nodes, 12L)
-  expect_identical(windows$n_edges, 18L)
+  expect_identical(windows$n_edges, 15L)
 })
 
 test_that("plotting vignette network figures render through cograph", {
@@ -51,12 +51,12 @@ test_that("plotting vignette network figures render through cograph", {
   visibility <- vg(
     data = plotting_short,
     type = "horizontal",
-    series = "pleasure"
+    series = "anxiety"
   )
   windows <- tsn(
     data = plotting_short,
     method = "distance",
-    series = "pleasure",
+    series = "anxiety",
     step = 2L,
     connect = "nearest",
     neighbors = 2L

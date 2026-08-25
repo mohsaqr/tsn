@@ -9,6 +9,24 @@ navbar:
     left:  [intro, reference, articles, news]
     right: [search, github]
 
+articles:
+- title: Time-series networks
+  desc: >
+    The construction surface — every exported verb on one series, and the
+    plotting system end to end.
+  contents:
+  - pleasure-all-functions
+  - plotting-time-series-networks
+
+- title: Transition-network modelling with Nestimate
+  desc: >
+    From raw series to tested transition models — the complete workflow, one
+    network per condition, and the verb-by-verb compatibility map.
+  contents:
+  - nestimate-workflow
+  - group-models
+  - nestimate-compatibility
+
 reference:
 - title: Package
   contents:
@@ -51,6 +69,7 @@ reference:
   - plot.tsn_states
   - plot.tsn_trend
   - plot.ts_tna
+  - plot.ts_tna_group
   - print.tsn
   - print.tsn_states
   - print.tsn_trend

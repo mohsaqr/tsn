@@ -1,0 +1,642 @@
+---
+title: "The Nestimate Compatibility Map"
+author: "tsn package authors"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{The Nestimate Compatibility Map}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5,
+  dpi = 110,
+  out.width = "100%"
+)
+library(tsn)
+has_nestimate <- requireNamespace("Nestimate", quietly = TRUE)
+has_cograph <- requireNamespace("cograph", quietly = TRUE) &&
+  requireNamespace("igraph", quietly = TRUE)
+```
+
+# One object, two packages
+
+A `ts_tna()` model is not exported *to* Nestimate; it *is* a Nestimate
+object. This vignette maps what that buys, verb by verb: which parts of
+Nestimate's analysis surface accept a tsn transition model directly, what
+question each verb answers, what each result draws, and which parts do not
+apply and why. The companion vignette
+`vignette("nestimate-workflow", package = "tsn")` runs a single analysis end
+to end; this one is the reference you consult when deciding which verb to
+reach for.
+
+The running example is the model from that workflow: 151 participants' daily
+step counts, cut at 5,000 and 10,000 steps so the states mean something
+outside the sample.
+
+```{r build, eval=has_nestimate}
+library(tsn)
+library(Nestimate)
+
+data(steps)
+walkers <- subset(steps, !is.na(steps))
+
+walk_model <- ts_tna(
+  walkers,
+  value = "steps",
+  id = "id",
+  time = "day",
+  discretization = "threshold",
+  breaks = c(5000, 10000),
+  labels = c("sedentary", "moderate", "active")
+)
+
+class(walk_model)
+```
+
+The class chain is the whole compatibility story. `ts_tna` is the tsn layer
+(it remembers the source series and discretization), `netobject` is what
+every Nestimate verb dispatches on, and `cograph_network` is what
+`cograph::splot()` renders. Nestimate's own validator agrees:
+
+```{r validate, eval=has_nestimate}
+validate_netobject(walk_model)
+```
+
+And because the object is a `cograph_network`, the model itself is one
+`plot()` away:
+
+```{r plot-model, eval=has_nestimate && has_cograph, fig.width=6.5, fig.height=5, fig.alt="Directed transition network with sedentary, moderate, and active nodes; edge labels show transition probabilities, with the heaviest self-loop on the active state."}
+plot(walk_model, type = "network")
+```
+
+The strong diagonal is the first substantive fact: every state prefers
+itself, `active` most of all at 0.62.
+
+# Reading the model as data
+
+Both packages provide accessors, and they answer slightly different
+questions. tsn's `as.data.frame()` returns every state pair including
+self-transitions; `as.matrix()` returns the row-stochastic weight matrix.
+
+```{r tsn-accessors, eval=has_nestimate}
+head(as.data.frame(walk_model))
+```
+
+Nestimate's extractors return the same estimates in its own shapes:
+
+```{r extract, eval=has_nestimate}
+extract_transition_matrix(walk_model)
+
+extract_initial_probs(walk_model)
+
+extract_edges(walk_model)
+```
+
+One difference matters for transition networks: `extract_edges()` **excludes
+self-transitions** — it returns the six between-state edges, sorted by
+weight, and omits the diagonal. For this model the diagonal is where most of
+the probability lives, so use `as.data.frame()` or
+`extract_transition_matrix()` whenever persistence is part of the question,
+and `extract_edges()` when only between-state movement is.
+
+The initial-state probabilities say the panel starts active: 57.6% of
+participants' first recorded day is an `active` day, 11.3% a `sedentary`
+one.
+
+# Where the process spends its time
+
+`state_distribution()` and `state_frequencies()` count observations per
+state — the marginal composition, before any dynamics.
+
+```{r distribution, eval=has_nestimate}
+state_distribution(walk_model)
+
+state_frequencies(walk_model)
+```
+
+Active days make up 44.8% of the panel and sedentary days 14.0%. Three
+displays draw the composition from different angles. The mosaic is the
+proportion bar:
+
+```{r mosaic, eval=has_nestimate, fig.width=6.5, fig.height=4, fig.alt="Mosaic plot of the step-count model's state composition, with active and moderate days forming most of the area and sedentary days a narrow band."}
+mosaic_plot(walk_model)
+```
+
+`sequence_plot()` is the sequence carpet — one row per participant, one
+coloured cell per day:
+
+```{r carpet, eval=has_nestimate, fig.width=7, fig.height=5, fig.alt="Sequence heatmap with one row per participant and one coloured cell per day, showing long same-state spells as horizontal streaks of colour."}
+sequence_plot(walk_model)
+```
+
+The streaks are persistence made visible: participants hold a state for
+spells, not single days. `distribution_plot()` stacks the day-by-day state
+mix of the whole panel:
+
+```{r composition-time, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Stacked area chart of the panel's state proportions across the study days, with bands for sedentary, moderate, and active days."}
+distribution_plot(walk_model)
+```
+
+This is composition over calendar time — the view in which the seasonal
+shift quantified in the workflow vignette (active days falling from 46.9% to
+42.8% after November) lives. `plot_state_frequencies()` offers a fourth,
+marimekko-style variant of the same information.
+
+# Which states and edges carry the structure?
+
+`net_centrality()` ranks states. Self-transitions are excluded by default —
+for a transition network the diagonal would otherwise dominate every
+strength measure.
+
+```{r centrality, eval=has_nestimate}
+walk_centrality <- net_centrality(walk_model)
+
+walk_centrality
+```
+
+```{r centrality-plot, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Centrality chart of the three states showing moderate with the highest in-strength and betweenness."}
+plot(walk_centrality)
+```
+
+`moderate` is the hub: the highest in-strength (0.77) and the only state
+with nonzero betweenness. That is the staircase structure — traffic between
+`sedentary` and `active` routes through the middle.
+
+`net_edge_betweenness()` asks the same question of edges:
+
+```{r betweenness, eval=has_nestimate}
+walk_betweenness <- net_edge_betweenness(walk_model)
+
+walk_betweenness
+```
+
+```{r betweenness-plot, eval=has_nestimate, fig.width=6.5, fig.height=4.5, fig.alt="Edge-betweenness network view with the moderate-to-sedentary and active-to-moderate edges carrying the highest loads."}
+plot(walk_betweenness)
+```
+
+The heaviest-loaded edges (betweenness 2) are `moderate → sedentary` and
+`active → moderate`: the descending staircase. Movement down the activity
+scale routes through the middle state.
+
+# How the process moves
+
+## Mean first passage times
+
+`passage_time()` converts the transition matrix into expected travel times
+between states (Kemeny & Snell, 1976).
+
+```{r passage, eval=has_nestimate}
+walk_passage <- passage_time(walk_model)
+
+walk_passage
+```
+
+```{r passage-plot, eval=has_nestimate, fig.width=6.5, fig.height=4.5, fig.alt="Heatmap of mean first passage times between the three states, with long times into the sedentary state and short times into moderate and active."}
+plot(walk_passage)
+```
+
+A `moderate` or `active` day is reached from anywhere within two to four
+days on average; a `sedentary` day takes seven to ten. Low activity is the
+state this panel visits reluctantly, not a basin it falls into. The
+stationary distribution — 14% sedentary, 41% moderate, 45% active — is where
+the chain settles regardless of its start.
+
+## Persistence, return, and sojourn
+
+`markov_stability()` summarizes each state's dynamics in one row: the
+self-transition probability, the stationary share, the mean recurrence time,
+and the mean sojourn (how long a visit lasts once entered).
+
+```{r markov-stability, eval=has_nestimate}
+walk_spells <- markov_stability(walk_model)
+
+walk_spells
+```
+
+```{r markov-stability-plot, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Bar panels of persistence, stationary probability, return time, and sojourn time for the three states."}
+plot(walk_spells)
+```
+
+An active spell lasts 2.6 days on average and recurs every 2.2; a sedentary
+spell lasts 1.6 days and recurs only every 7.1. Persistence and prevalence
+line up here, but they are logically distinct columns — a rare state can
+still be sticky.
+
+## Is the chain well-behaved?
+
+`chain_structure()` reports the Markov-chain diagnostics that other verbs
+quietly assume: irreducibility (every state reachable from every other),
+aperiodicity, and reversibility.
+
+```{r chain, eval=has_nestimate}
+summary(chain_structure(walk_model))
+```
+
+The chain is irreducible, aperiodic, and regular, so the stationary
+distribution above is well-defined and unique. It is *not* reversible: the
+forward process is statistically distinguishable from its time reversal,
+which is itself a substantive fact about behavior change — the routes up and
+the routes down are not mirror images.
+
+# How predictable is the process?
+
+`transition_entropy()` gives the point estimate; `entropy_bayes()` adds a
+posterior credible interval by placing a Dirichlet prior on each row.
+
+```{r entropy, eval=has_nestimate}
+transition_entropy(walk_model)
+```
+
+```{r entropy-bayes, eval=has_nestimate}
+set.seed(2026)
+walk_entropy <- entropy_bayes(walk_model)
+
+walk_entropy
+```
+
+```{r entropy-bayes-plot, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Posterior distributions of the entropy rate, stationary entropy, and redundancy, each a narrow density around its point estimate."}
+plot(walk_entropy)
+```
+
+The entropy rate is 1.346 bits against a ceiling of `log2(3) = 1.585` —
+0.849 on the normalised scale — with a credible interval two hundredths
+wide: with 30,000 transitions, the *uncertainty* about how unpredictable the
+process is, is itself tiny. The redundancy of 0.098 bits is the gap between
+the marginal entropy and the conditional one: knowing today's state removes
+about 7% of tomorrow's uncertainty.
+
+`entropy_network()` maps the same quantity onto the edges — each entry is an
+edge's contribution to the row's unpredictability — and returns a network of
+the same class, so it can be plotted or pruned like any other:
+
+```{r entropy-network, eval=has_nestimate}
+entropy_network(walk_model)
+```
+
+# Does history beyond one step matter?
+
+The model assumes the next state depends only on the current one.
+`markov_order_test()` (Anderson & Goodman, 1957) tests that assumption.
+
+```{r markov-order, eval=has_nestimate}
+set.seed(2026)
+walk_order <- markov_order_test(walk_model)
+
+walk_order
+```
+
+```{r markov-order-plot, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Model-selection chart of log-likelihood, AIC, and BIC across Markov orders zero to three, all favouring orders above one."}
+plot(walk_order)
+```
+
+BIC, AIC, and the permutation LRT all select order 3: yesterday carries
+information about tomorrow beyond today. `path_dependence()` says how much:
+
+```{r path-dependence, eval=has_nestimate}
+walk_history <- path_dependence(walk_model)
+
+walk_history
+```
+
+```{r path-dependence-plot, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Bar chart of the KL divergence contributed by each two-step context, all values below 0.17 bits."}
+plot(walk_history)
+```
+
+The weighted divergence is 0.035 bits: history shifts the next-step
+distribution by a few hundredths of a bit and flips the modal prediction in
+only two of nine contexts. This is the pair of numbers that reconciles a
+decisively significant order test with the continued use of a first-order
+model — detectable is not the same as large. The first-order network remains
+a fair one-step summary; it is not the full process.
+
+`path_counts()` is the raw material — every observed two-step path with its
+count:
+
+```{r path-counts, eval=has_nestimate}
+path_counts(walk_model)
+```
+
+`active → active` alone is 27.8% of all transitions. And when the order test
+demands more than one step, `build_hon()` estimates a higher-order network
+under its own per-node promotion rule:
+
+```{r hon, eval=has_nestimate}
+hon <- build_hon(walk_model, max_order = 2)
+
+pathways(hon)
+```
+
+HON promotes no node here — no single context shifts the next-step
+distribution enough to justify splitting a state — which is why `pathways()`
+comes back empty. Two criteria disagreeing is a result, not a bug: the
+likelihood test sees aggregate improvement, HON asks a stricter per-node
+question. Report both.
+
+# Simplifying the model
+
+`net_prune()` removes weak edges and returns the same class;
+`net_pruning_details()` is the audit trail; `net_deprune()` undoes it.
+
+```{r prune, eval=has_nestimate}
+pruned <- net_prune(walk_model, method = "threshold", threshold = 0.3)
+
+net_pruning_details(pruned)
+```
+
+Three edges fall: the two routes *into* sedentary and the direct
+`sedentary → active` leap. Because pruning is recorded rather than
+destructive, the original model is one call away:
+
+```{r deprune, eval=has_nestimate}
+net_deprune(pruned)
+```
+
+# How sure are we about the estimates?
+
+Nestimate offers several answers resting on different machinery: sequence
+resampling, node resampling, case dropping, sample splitting, and a
+posterior.
+
+## Sequence bootstrap
+
+`bootstrap_network()` resamples the 151 sequences and re-estimates.
+
+```{r bootstrap, eval=has_nestimate}
+walk_boot <- bootstrap_network(walk_model, iter = 200, seed = 2026)
+
+walk_boot
+```
+
+`summary()` is the tidy one-row-per-edge table:
+
+```{r bootstrap-summary, eval=has_nestimate}
+head(summary(walk_boot), 3)
+```
+
+All nine edges survive, with confidence intervals a few hundredths wide —
+what 151 sequences buy.
+
+## Bayesian edge certainty
+
+`certainty()` reaches the same verdict from a Dirichlet posterior on each
+row, with no resampling.
+
+```{r certainty, eval=has_nestimate}
+set.seed(2026)
+certainty(walk_model)
+```
+
+All nine edges are certain. `summary()` returns the per-edge table with
+posterior means, intervals, and flags.
+
+## Whole-network statistics: the vertex bootstrap
+
+`vertex_bootstrap()` implements the Snijders–Borgatti (1999) vertex
+bootstrap for network-level statistics.
+
+```{r vertex-boot, eval=has_nestimate}
+vertex_bootstrap(walk_model, iter = 100, seed = 2026)
+```
+
+The mean edge weight carries a wide interval ([0.15, 0.35]) despite the huge
+sample, because the vertex bootstrap resamples *nodes* and there are only
+three — a deliberately conservative design for small node sets.
+
+## Case dropping, in two flavours
+
+`centrality_stability()` tracks the centrality *ordering* as sequences are
+dropped; `casedrop_reliability()` tracks the edge weights themselves. Both
+report the CS-coefficient of Epskamp, Borsboom & Fried (2018).
+
+```{r stability, eval=has_nestimate}
+set.seed(2026)
+centrality_stability(walk_model, iter = 100)
+```
+
+```{r casedrop, eval=has_nestimate}
+walk_reliability <- casedrop_reliability(walk_model, iter = 100,
+                                         seed = 2026)
+
+walk_reliability
+```
+
+```{r casedrop-plot, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Case-dropping stability curve showing the correlation between full-sample and subsampled edge weights staying above 0.95 even when 90 percent of sequences are dropped."}
+plot(walk_reliability)
+```
+
+Both CS-coefficients are 0.90 — the orderings and the weights survive
+dropping 90% of the participants, far above the 0.7 bar for excellent. Even
+at a 90% drop the mean edge-weight correlation with the full model is 0.957.
+
+## Split-half reliability
+
+```{r reliability, eval=has_nestimate}
+set.seed(2026)
+network_reliability(walk_model)
+```
+
+Randomly halving the panel 1,000 times yields two models that correlate at
+0.99 with a mean absolute edge difference of 0.02. Every verb in this
+section agrees: with 151 sequences, this network is estimated about as
+precisely as a 3-state model can be.
+
+# Comparing two models
+
+Any two models on the same alphabet can be compared. The pair here splits
+the panel at the start of November — the warm and cold seasons — with the
+same fixed `breaks`, so both models sit on one alphabet.
+
+```{r seasons, eval=has_nestimate}
+cutoff <- as.Date("2019-11-01")
+
+early <- ts_tna(
+  subset(walkers, as.Date(day) < cutoff),
+  value = "steps", id = "id", time = "day",
+  discretization = "threshold", breaks = c(5000, 10000),
+  labels = c("sedentary", "moderate", "active")
+)
+
+late <- ts_tna(
+  subset(walkers, as.Date(day) >= cutoff),
+  value = "steps", id = "id", time = "day",
+  discretization = "threshold", breaks = c(5000, 10000),
+  labels = c("sedentary", "moderate", "active")
+)
+```
+
+## The difference itself
+
+`subtract_networks()` returns the edge-by-edge difference as an object
+cograph can draw:
+
+```{r subtract, eval=has_nestimate}
+season_difference <- subtract_networks(early, late)
+
+season_difference
+```
+
+```{r subtract-plot, eval=has_nestimate && has_cograph, fig.width=6.5, fig.height=5, fig.alt="Difference network of the two seasonal models, edges coloured by the sign of the seasonal change and all magnitudes small."}
+cograph::plot_difference(season_difference)
+```
+
+The largest seasonal gap on any edge is 0.042 (`active → active`).
+
+## The permutation test
+
+`permutation()` shuffles sequences between the two groups to build a null
+distribution per edge.
+
+```{r permutation, eval=has_nestimate}
+season_test <- permutation(early, late, iter = 1000, seed = 2026)
+
+summary(season_test)
+```
+
+No edge reaches significance; the smallest p-value is 0.07
+(`active → moderate`). The seasons differ in *composition* (the workflow
+vignette shows active days falling from 46.9% to 42.8%) while no evidence
+places the difference in the *dynamics*.
+
+## The metric panel
+
+```{r compare, eval=has_nestimate}
+season_panel <- compare_model(early, late)
+
+season_panel
+```
+
+```{r compare-plot, eval=has_nestimate, fig.width=7, fig.height=4.5, fig.alt="Comparison panel chart of the two seasonal models across weight-deviation, correlation, and similarity metrics, all indicating near-identity."}
+plot(season_panel)
+```
+
+A Pearson correlation of 0.995 between the two matrices: the seasons share
+their dynamics almost entirely.
+
+## The instructive disagreement
+
+`bayes_compare()` asks whether each edge difference is *credibly nonzero*:
+
+```{r bayes-compare, eval=has_nestimate}
+set.seed(2026)
+season_bayes <- bayes_compare(early, late)
+
+season_bayes
+```
+
+```{r bayes-compare-plot, eval=has_nestimate, fig.width=7, fig.height=4.5, fig.alt="Posterior difference intervals for the nine edges, four of which exclude zero while all magnitudes stay below 0.05."}
+plot(season_bayes)
+```
+
+Four of nine edges are credibly different, while the permutation test above
+found none significant. Both are right, about different questions. With
+roughly 30,000 transitions, differences of two to four hundredths are
+estimated precisely enough for the posterior to exclude zero (the
+credible-difference threshold here is 0.01) — but the sequence-level
+permutation null, which respects the fact that days are nested in people,
+absorbs them. Precision detects that the difference exists; it does not make
+0.04 large. Report the magnitude next to whichever test is used.
+
+`vertex_compare()` runs the node-resampling comparison at the level of
+whole-network statistics and, consistent with all of the above, finds
+nothing (all p ≥ 0.78):
+
+```{r vertex-compare, eval=has_nestimate}
+vertex_compare(early, late, iter = 200, seed = 2026)
+```
+
+# Link prediction
+
+`predict_links()` scores unobserved dyads by six structural predictors:
+
+```{r predict, eval=has_nestimate}
+predict_links(walk_model)
+```
+
+It runs, but a three-state transition network is fully connected between
+states, which leaves link prediction nothing to rank; it earns its place on
+larger, pruned alphabets, where a missing edge is a real hypothesis.
+
+# Grouped models
+
+When the comparison variable is a column of the data,
+`ts_tna(group = ...)` builds one network per level and returns a Nestimate
+`netobject_group`. The grouped verbs verified against it are
+`net_centrality()`, `state_distribution()`, `transition_entropy()`,
+`passage_time()`, `certainty()`, `net_prune()`, `compare_model()`,
+`permutation()`, `bootstrap_network()`, `markov_order_test()`,
+`centrality_stability()`, `casedrop_reliability()`, and `mosaic_plot()`;
+`summary()` and `as.data.frame()` return tidy per-group tables, and
+`plot()` draws one selected group. `net_edge_betweenness()` also runs, but
+its result drops back to a plain `netobject_group`. The dedicated vignette
+`vignette("group-models", package = "tsn")` works through all of it.
+
+# What does not apply, and why
+
+Three families of Nestimate verbs reject a transition model, each for a
+principled reason rather than a missing feature:
+
+* **Sequence-data verbs.** `frequencies()`, `mark_first_state()`,
+  `mark_terminal_state()`, `entropy_trajectory()`, `mosaic_analysis()`,
+  `plot_mosaic()`, and `as_htna()` operate on a raw wide data frame of
+  sequences, not on an estimated model. They belong *before* model
+  construction in a workflow, applied to sequence data you hold yourself.
+* **Psychometric-network verbs.** `predictability()` and the
+  `glasso`/`pcor`/`cor` estimator family need a precision or correlation
+  structure estimated from multivariate data. A transition matrix is a
+  conditional-probability object, not a conditional-independence one; the
+  quantities these verbs compute are undefined for it.
+* **Verbs that need extra structure.** `cluster_network()` and
+  `build_clusters()` require a chosen number of clusters and are aimed at
+  multi-sequence typologies; `wtna()` needs one-hot action data;
+  `sequence_compare()` wants sequence data plus a grouping vector. And
+  `as_tna()` is unnecessary by design — a tsn model needs no conversion,
+  which is the point of this vignette.
+
+# The compatibility map
+
+| Question | Verb | Tidy access | Plot | Notes |
+|---|---|---|---|---|
+| What are the estimates? | `as.data.frame()`, `as.matrix()`, `extract_transition_matrix()`, `extract_initial_probs()` | direct | via `plot()` on the model | tsn accessors include the diagonal |
+| Between-state edges only | `extract_edges()` | direct | — | **excludes self-transitions** |
+| Marginal composition | `state_distribution()`, `state_frequencies()` | data frame | `mosaic_plot()`, `plot_state_frequencies()` | |
+| Composition over time / carpet | `distribution_plot()`, `sequence_plot()` | — | draws directly | stacked area; sequence heatmap |
+| State/edge importance | `net_centrality()`, `net_edge_betweenness()` | data frame / network | `plot()` on both | loops excluded from centrality by default |
+| Travel times between states | `passage_time()` | print | `plot()` | Kemeny & Snell (1976) |
+| Persistence, recurrence, sojourn | `markov_stability()` | `$stability` table | `plot()` | |
+| Chain diagnostics | `chain_structure()` | `summary()` | `plot()` heatmap | irreducibility, reversibility |
+| Predictability | `transition_entropy()`, `entropy_bayes()`, `entropy_network()` | print / `summary()` | `plot()` on both entropy results | rate in bits; ceiling `log2(n_states)` |
+| History beyond one step | `markov_order_test()`, `path_dependence()`, `path_counts()`, `build_hon()` + `pathways()` | print / data frame | `plot()` on test and dependence | test the size, not only the p |
+| Simplification | `net_prune()`, `net_pruning_details()`, `net_deprune()` | same class back | via model `plot()` | prune after testing |
+| Edge uncertainty | `bootstrap_network()`, `certainty()` | `summary()` | — | resampling vs Bayesian |
+| Network-level uncertainty | `vertex_bootstrap()` | data frame | `plot()` | Snijders & Borgatti (1999) |
+| Sample-size reliability | `centrality_stability()`, `casedrop_reliability()`, `network_reliability()` | print | `plot()` on all three | CS-coefficient bar: 0.5 / 0.7 |
+| Two-model comparison | `permutation()`, `compare_model()`, `subtract_networks()`, `bayes_compare()`, `vertex_compare()` | `summary()` / data frame | `plot()`; `cograph::plot_difference()` | report magnitudes with tests |
+| Link prediction | `predict_links()` | print | — | needs a sparse alphabet to be informative |
+| Many-group comparison | `ts_tna(group=)` + grouped verbs | `as.data.frame()` | `plot(x, group=)`, `mosaic_plot()` | see `vignette("group-models")` |
+| Rendering | `plot()`, `cograph::splot()` | — | — | requires cograph |
+
+# References
+
+Anderson, T. W., & Goodman, L. A. (1957). Statistical inference about
+Markov chains. *The Annals of Mathematical Statistics*, 28(1), 89–110.
+
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological
+networks and their accuracy: A tutorial paper. *Behavior Research Methods*,
+50(1), 195–212.
+
+Kemeny, J. G., & Snell, J. L. (1976). *Finite Markov Chains*. Springer.
+
+Snijders, T. A. B., & Borgatti, S. P. (1999). Non-parametric standard
+errors and tests for network statistics. *Connections*, 22(2), 161–170.
+
+Xu, J., Wickramarathne, T. L., & Chawla, N. V. (2016). Representing
+higher-order dependencies in networks. *Science Advances*, 2(5), e1600028.

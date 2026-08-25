@@ -156,7 +156,14 @@
       stop(sprintf("Unknown series: %s.", paste(unknown, collapse = ", ")),
            call. = FALSE)
     }
-    return(data[as.character(data[[id]]) %in% requested, , drop = FALSE])
+    # Request order is authoritative for every input form: wide, matrix, and
+    # list selection index by the requested names, so long rows are reordered
+    # the same way (stably within each series) rather than keeping table
+    # order. Otherwise the same selection could reverse directed or chained
+    # edges depending on the input container.
+    rows <- which(as.character(data[[id]]) %in% requested)
+    position <- match(as.character(data[[id]])[rows], requested)
+    return(data[rows[order(position, seq_along(position))], , drop = FALSE])
   }
 
   if (is.data.frame(data) || is.matrix(data)) {
@@ -216,7 +223,11 @@
     stop(sprintf("Unknown series: %s.", paste(unknown, collapse = ", ")),
          call. = FALSE)
   }
-  data[as.character(data$id) %in% selected, , drop = FALSE]
+  # Same ordering contract as `.tsn_select_data()`: the requested order is
+  # authoritative, stably within each series.
+  rows <- which(as.character(data$id) %in% selected)
+  position <- match(as.character(data$id)[rows], selected)
+  data[rows[order(position, seq_along(position))], , drop = FALSE]
 }
 
 #' @noRd
@@ -386,11 +397,10 @@
 #' Construct point-level units (one node per time point)
 #' @noRd
 .tsn_point_units <- function(data) {
-  labels <- paste(data$id, as.character(data$time), sep = ":")
-  if (anyDuplicated(labels)) {
-    stop("Point-level distance networks require unique id-time labels.",
-         call. = FALSE)
-  }
+  # The same collision-safe encoder as the visibility family: `(id, time)`
+  # pairs whose display strings collide get length-prefixed labels instead of
+  # being rejected.
+  labels <- .tsn_node_labels(data$id, data$time)
   units <- as.list(data$value)
   names(units) <- labels
   position <- stats::ave(seq_len(nrow(data)), data$id, FUN = seq_along)

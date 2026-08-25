@@ -89,55 +89,107 @@
     return(empty_dyads)
   }
 
-  candidates <- utils::combn(seq_along(values), 2L)
-  temporal_distance <- times[candidates[2L, ]] - times[candidates[1L, ]]
-  within_limit <- if (is.null(limit)) {
-    rep.int(TRUE, length(temporal_distance))
-  } else {
-    temporal_distance <= limit
-  }
-  candidates <- candidates[, within_limit, drop = FALSE]
-  temporal_distance <- temporal_distance[within_limit]
-  if (ncol(candidates) == 0L) {
-    return(empty_dyads)
-  }
-
-  blocker_count <- vapply(
-    seq_len(ncol(candidates)),
-    function(candidate_index) {
-      left <- candidates[1L, candidate_index]
-      right <- candidates[2L, candidate_index]
-      if (right - left == 1L) {
-        return(0L)
-      }
-      intermediate <- seq.int(left + 1L, right - 1L)
-      boundary <- if (identical(method, "horizontal")) {
-        rep.int(min(values[left], values[right]), length(intermediate))
-      } else {
-        values[left] +
-          (values[right] - values[left]) *
-            (times[intermediate] - times[left]) /
-              (times[right] - times[left])
-      }
-      sum(values[intermediate] >= boundary)
-    },
-    integer(1L)
+  visible_to <- .tsn_visibility_candidates(
+    values = values,
+    times = times,
+    method = method,
+    limit = limit,
+    penetrable = penetrable
   )
-  visible <- blocker_count <= penetrable
-  if (!any(visible)) {
+  from_index <- rep.int(
+    seq_len(length(values) - 1L),
+    lengths(visible_to, use.names = FALSE)
+  )
+  to_index <- unlist(visible_to, use.names = FALSE)
+  if (length(to_index) == 0L) {
     return(empty_dyads)
   }
-
-  visible_candidates <- candidates[, visible, drop = FALSE]
-  visible_distance <- temporal_distance[visible]
+  temporal_distance <- times[to_index] - times[from_index]
   data.frame(
-    from = labels[visible_candidates[1L, ]],
-    to = labels[visible_candidates[2L, ]],
-    distance = as.numeric(visible_distance),
-    weight = exp(-decay * visible_distance),
-    connected = rep.int(TRUE, sum(visible)),
+    from = labels[from_index],
+    to = labels[to_index],
+    distance = as.numeric(temporal_distance),
+    weight = exp(-decay * temporal_distance),
+    connected = rep.int(TRUE, length(to_index)),
     stringsAsFactors = FALSE
   )
+}
+
+#' Enumerate Visible Partners for Every Anchor Point
+#'
+#' Quadratic-time visibility scan shared by the natural rule and the general
+#' (penetrable or limited) horizontal rule. For an anchor point `l` and a later
+#' candidate `j`, an intermediate `k` blocks the pair exactly when the
+#' intermediate's own candidate height reaches the candidate's height, where
+#' height means the slope from the anchor under the natural rule and
+#' `min(values[l], values[k])` under the horizontal rule. Each anchor is
+#' therefore one vectorized pass over its candidate heights instead of an
+#' all-pairs, all-intermediates enumeration.
+#'
+#' @param values Finite numeric time-series values.
+#' @param times Strictly increasing numeric time coordinates.
+#' @param method `"natural"` or `"horizontal"`.
+#' @param limit Optional maximum elapsed-time lag.
+#' @param penetrable Number of intermediate blockers allowed.
+#' @return A list with one integer vector of visible partner indices per
+#'   anchor `seq_len(length(values) - 1L)`.
+#' @noRd
+.tsn_visibility_candidates <- function(values, times, method, limit,
+                                       penetrable) {
+  n <- length(values)
+  lapply(seq_len(n - 1L), function(left) {
+    right <- seq.int(left + 1L, n)
+    if (!is.null(limit)) {
+      right <- right[(times[right] - times[left]) <= limit]
+      if (length(right) == 0L) {
+        return(integer())
+      }
+    }
+    heights <- if (identical(method, "horizontal")) {
+      pmin(values[left], values[right])
+    } else {
+      (values[right] - values[left]) / (times[right] - times[left])
+    }
+    keep <- if (penetrable == 0L) {
+      # A candidate is visible exactly when its height exceeds every earlier
+      # candidate's height, i.e. the running maximum of its predecessors.
+      heights > cummax(c(-Inf, heights[-length(heights)]))
+    } else {
+      .tsn_penetrable_scan(heights, penetrable)
+    }
+    right[keep]
+  })
+}
+
+#' Penetrable Visibility Scan over Candidate Heights
+#'
+#' A candidate with `penetrable` allowed blockers is visible exactly when
+#' fewer than `penetrable + 1` earlier candidates reach its height — that is,
+#' when the running `(penetrable + 1)`-th largest predecessor height stays
+#' below it.
+#'
+#' @param heights Candidate heights in temporal order.
+#' @param penetrable Positive number of allowed blockers.
+#' @return A logical vector marking the visible candidates.
+#' @noRd
+.tsn_penetrable_scan <- function(heights, penetrable) {
+  size <- as.integer(penetrable) + 1L
+  top <- numeric(0L)
+  keep <- logical(length(heights))
+  index <- 1L
+  # Sequential by nature: each decision depends on the running top-k heights
+  # of every earlier candidate, so the recurrence cannot be vectorized without
+  # materializing all pairs again.
+  while (index <= length(heights)) {
+    current <- heights[index]
+    keep[index] <- length(top) < size || top[size] < current
+    top <- sort(c(top, current), decreasing = TRUE)
+    if (length(top) > size) {
+      top <- top[seq_len(size)]
+    }
+    index <- index + 1L
+  }
+  keep
 }
 
 #' Construct a standard horizontal visibility graph in linearithmic time
@@ -301,6 +353,11 @@
     !is.na(directed)
   )
   aggregation <- match.arg(aggregation)
+  # Factor states carry the declared node order; canonical undirected pairs
+  # are coded on that order so `from`/`to` orientation follows it. Plain
+  # character states keep the historical first-appearance order.
+  state_levels <- if (is.factor(states)) levels(states) else
+    unique(as.character(states))
   states <- as.character(states)
   stopifnot(all(nzchar(states)))
 
@@ -322,7 +379,6 @@
   from_state <- states[from_index]
   to_state <- states[to_index]
 
-  state_levels <- unique(states)
   from_code <- match(from_state, state_levels)
   to_code <- match(to_state, state_levels)
   canonical_from <- if (directed) from_code else pmin(from_code, to_code)

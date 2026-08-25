@@ -554,3 +554,22 @@ test_that("a single-level group column still returns a collection", {
     as.data.frame(grouped, what = "groups")$observations, 120L
   )
 })
+
+test_that("plot on a grouped model draws exactly one selected group", {
+  skip_if_not_installed("Nestimate")
+  skip_if_not_installed("cograph")
+  skip_if_not_installed("igraph")
+  grouped <- grp_build(grp_panel(), group = "ph")
+  output <- tempfile(fileext = ".pdf")
+  grDevices::pdf(output)
+  on.exit({
+    grDevices::dev.off()
+    unlink(output)
+  }, add = TRUE)
+
+  expect_invisible(plot(grouped, group = "early"))
+  expect_invisible(plot(grouped, group = "late", type = "network"))
+  expect_error(plot(grouped), "exactly one")
+  expect_error(plot(grouped, group = "missing"), "Unknown group")
+  expect_error(plot(grouped, group = c("early", "late")), "exactly one")
+})

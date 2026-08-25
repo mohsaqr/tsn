@@ -100,12 +100,18 @@ data frame, or a \code{tsn_states} result from \code{\link[=discretize]{discreti
 \item{series}{Optional series IDs or wide-data column names to select.}
 
 \item{discretization}{Discretization method passed to \code{\link[=discretize]{discretize()}}
-(default \code{"quantile"}). Ignored when \code{data} is already a \code{tsn_states}.}
+(default \code{"quantile"}). When \code{data} is already a \code{tsn_states}, supplying
+this or any other discretization option (\code{value}, \code{id}, \code{time},
+\code{n_states}, \code{breaks}, \code{labels}, \code{transform}, \code{m}, \code{tau}, \code{seed}) is an
+error: the states are already fixed and the option could not take effect.}
 
-\item{n_states}{Number of states (default \code{3}).}
+\item{n_states}{Number of states (default \code{3}). Not consumed by
+\code{discretization = "ordinal"}, whose state count follows \code{m} and \code{tau};
+supplying both is an error.}
 
 \item{breaks}{Optional interior thresholds for
-\code{discretization = "threshold"}.}
+\code{discretization = "threshold"}. An error with any other discretizer,
+which computes its own boundaries.}
 
 \item{labels}{Optional state labels; these become the network's node
 names (e.g. \code{c("low", "mid", "high")}).}
@@ -143,7 +149,8 @@ contiguous run becomes its own sequence, so no transition is ever counted
 between observations that were not adjacent in time. The transition across
 a group change is dropped from both groups: it belongs to neither.}
 
-\item{seed}{Optional seed used by stochastic discretizers.}
+\item{seed}{Optional seed for the stochastic discretizers (\code{"kmeans"} and
+\code{"gaussian"}). An error with the deterministic discretizers.}
 
 \item{...}{Passed on to the corresponding Nestimate builder
 (\code{Nestimate::build_tna()} and friends), e.g. \code{start}, \code{end},

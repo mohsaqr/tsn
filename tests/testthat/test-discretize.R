@@ -7,7 +7,16 @@ test_that("every discretizer is reachable through the public verb", {
     "percentile_magnitude", "dtw", "ordinal"
   )
   results <- lapply(methods, function(method) {
-    discretize(values, method = method, n_states = 3L, seed = 1L)
+    arguments <- list(values, method = method)
+    # `n_states` is not consumed by ordinal and `seed` only by the stochastic
+    # discretizers; supplying either elsewhere is now an error by contract.
+    if (!identical(method, "ordinal")) {
+      arguments$n_states <- 3L
+    }
+    if (method %in% c("kmeans", "gaussian")) {
+      arguments$seed <- 1L
+    }
+    do.call(discretize, arguments)
   })
   expect_true(all(vapply(results, inherits, logical(1L), what = "tsn_states")))
 
@@ -24,9 +33,16 @@ test_that("discretize and tsn(unit = state) assign identical states", {
     "change_points", "entropy", "magnitude", "percentile_magnitude", "dtw"
   )
   invisible(lapply(methods, function(method) {
-    direct <- discretize(values, method = method, n_states = 3L, seed = 1L)
-    network <- tsn(values, method = "visibility", unit = "state",
-                   discretization = method, n_states = 3L, seed = 1L)
+    seeded <- method %in% c("kmeans", "gaussian")
+    direct_arguments <- list(values, method = method, n_states = 3L)
+    network_arguments <- list(values, method = "visibility", unit = "state",
+                              discretization = method, n_states = 3L)
+    if (seeded) {
+      direct_arguments$seed <- 1L
+      network_arguments$seed <- 1L
+    }
+    direct <- do.call(discretize, direct_arguments)
+    network <- do.call(tsn, network_arguments)
     network_states <- as.data.frame(network, what = "series")$state
     expect_identical(as.character(direct$state), as.character(network_states))
   }))
@@ -109,7 +125,9 @@ test_that("tsn state aggregation uses the same group-safe temporal states", {
   states <- discretize(series, method = "ordinal", m = 3)
   network <- tsn(series, "ordinal", m = 3)
 
-  expect_identical(network$source$state, as.character(states$state))
+  expect_s3_class(network$source$state, "factor")
+  expect_identical(as.character(network$source$state),
+                   as.character(states$state))
   expect_setequal(network$nodes$label, c("1", "2"))
 })
 

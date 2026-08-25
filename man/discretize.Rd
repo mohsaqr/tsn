@@ -37,10 +37,12 @@ data frame, or a \code{tsn} object (its source series are used).}
 \code{"symbolic"}, \code{"change_points"}, \code{"entropy"}, \code{"magnitude"},
 \code{"adaptive_magnitude"}, \code{"percentile_magnitude"}, or \code{"dtw"}.}
 
-\item{n_states}{Number of states. Ignored by \code{"ordinal"}, whose state count
-follows the embedding arguments \code{m} and \code{tau}.}
+\item{n_states}{Number of states. Not consumed by \code{"ordinal"}, whose state
+count follows the embedding arguments \code{m} and \code{tau}; supplying both is an
+error.}
 
-\item{breaks}{Optional interior thresholds for \code{method = "threshold"}.}
+\item{breaks}{Optional interior thresholds for \code{method = "threshold"}. An
+error with any other method, which computes its own boundaries.}
 
 \item{labels}{Optional custom state labels. Length must equal the number of
 states produced. When \code{NULL}, states are numbered consecutively.}
@@ -52,7 +54,8 @@ states produced. When \code{NULL}, states are numbered consecutively.}
 
 \item{tau}{Embedding lag for \code{method = "ordinal"} (default \code{1}).}
 
-\item{seed}{Optional seed used by stochastic discretizers.}
+\item{seed}{Optional seed for the stochastic discretizers (\code{"kmeans"} and
+\code{"gaussian"}). An error with the deterministic methods.}
 }
 \value{
 A tidy data frame of class \code{tsn_states} with columns \code{id}, \code{time},

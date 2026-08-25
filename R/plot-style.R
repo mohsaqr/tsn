@@ -107,7 +107,8 @@
 #' Resolves a palette specification to `n` colours. Accepts a preset name
 #' (`"default"`, `"okabe"`, `"viridis"`, `"cool"`, `"warm"`, `"pastel"`,
 #' `"dark"`), a vector of colours (recycled/truncated to `n`, names kept),
-#' or `NULL` for the default preset.
+#' or `NULL` for the default preset. `"okabe"` provides at most its nine
+#' colour-blind-safe colours and rejects larger requests.
 #'
 #' @param palette Palette specification.
 #' @param n Number of colours needed.
@@ -128,8 +129,20 @@
       palette,
       default = if (n <= length(tableau)) tableau[seq_len(n)] else
         grDevices::hcl.colors(n, palette = "Spectral"),
-      okabe = grDevices::palette.colors(max(2L, min(n, 9L)),
-                                        palette = "Okabe-Ito")[seq_len(n)],
+      okabe = {
+        # The Okabe-Ito palette has exactly nine colour-blind-safe colours;
+        # recycling or padding would silently break the safety guarantee.
+        if (n > 9L) {
+          stop(sprintf(
+            paste0(
+              "The \"okabe\" palette provides 9 colour-blind-safe colours, ",
+              "but %d are needed. Reduce the number of states or choose ",
+              "another palette."
+            ), n
+          ), call. = FALSE)
+        }
+        grDevices::palette.colors(max(2L, n), palette = "Okabe-Ito")[seq_len(n)]
+      },
       viridis = grDevices::hcl.colors(n, palette = "Viridis"),
       cool = grDevices::hcl.colors(n, palette = "Teal"),
       warm = grDevices::hcl.colors(n, palette = "Peach", rev = TRUE),

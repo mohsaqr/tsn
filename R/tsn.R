@@ -11,7 +11,10 @@
 #' @param id Optional series-ID column name for long data.
 #' @param time Optional time-column name for long data.
 #' @param series Optional series IDs for long data or numeric column names for
-#'   wide data. Selection happens inside `tsn()`.
+#'   wide data. Selection happens inside `tsn()`, and the requested order is
+#'   authoritative for every input form: long rows are reordered to it exactly
+#'   as wide, matrix, and list input are, so chained or directed edges do not
+#'   depend on the input container.
 #' @param method Network selector. The base families are `"distance"` and
 #'   `"visibility"`. Convenience shortcuts resolve to a family with sensible
 #'   defaults: `"nvg"`/`"natural"` (natural visibility graph), `"hvg"`/
@@ -66,9 +69,12 @@
 #'   `"hclust"`, `"ordinal"`, `"symbolic"`, `"change_points"`, `"entropy"`,
 #'   `"magnitude"`, `"adaptive_magnitude"`, `"percentile_magnitude"`, or
 #'   `"dtw"`.
-#' @param n_states Number of states. Ignored by `discretization = "ordinal"`,
-#'   whose state count follows the embedding arguments `m` and `tau`.
-#' @param breaks Optional internal thresholds when `discretization = "threshold"`.
+#' @param n_states Number of states. Not consumed by
+#'   `discretization = "ordinal"`, whose state count follows the embedding
+#'   arguments `m` and `tau`; supplying both is an error.
+#' @param breaks Optional internal thresholds when
+#'   `discretization = "threshold"`. An error with any other discretizer,
+#'   which computes its own boundaries.
 #' @param m Embedding dimension for `discretization = "ordinal"` (default `3`).
 #'   Only valid with the ordinal discretizer.
 #' @param tau Embedding lag for `discretization = "ordinal"` (default `1`). Only
@@ -89,7 +95,25 @@
 #'   `FALSE` (default) leaves distances unchanged; `TRUE` or `"max"` divides by
 #'   the maximum distance; `"minmax"` rescales to `[0, 1]`; `"quantile"`
 #'   rescales by the 5th-95th percentile range, clamped to `[0, 1]`.
-#' @param seed Optional seed used by stochastic discretizers.
+#' @param seed Optional seed for the stochastic discretizers (`"kmeans"` and
+#'   `"gaussian"`). An error with the deterministic discretizers.
+#' @details
+#' Every supplied argument must be consumed by the resolved configuration.
+#' An option that the selected `method`, `unit`, `distance`, `connect`, or
+#' `discretization` cannot use — for example `chain` on a visibility network,
+#' `limit` on a distance network, `p` without `distance = "minkowski"`, or
+#' `breaks` without `discretization = "threshold"` — is rejected with an
+#' error rather than silently ignored, so a typo or a misunderstood
+#' configuration cannot produce a plausible but unintended model. Shortcut
+#' methods (`"nvg"`, `"hvg"`, discretizer names) likewise reject granular
+#' arguments that contradict what the shortcut implies.
+#'
+#' For state networks, caller-supplied `state` values fix the node order:
+#' factors keep their declared level order (an unused level becomes a
+#' zero-degree node), and plain character states are ordered by first
+#' appearance. Discretized states follow the discretizer's numeric state
+#' order. The `state` column of the stored source series preserves this
+#' factor.
 #' @return A list-backed network object of class
 #'   `c("tsn", "netobject", "cograph_network")`. Its `$table` component is the
 #'   tidy dyad table; use `as.data.frame()` for that table,
@@ -152,6 +176,19 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
                 directed = FALSE, limit = NULL, penetrable = 0L,
                 decay = 0, aggregation = "sum", chain = FALSE,
                 normalize = FALSE, seed = NULL) {
+  supplied <- setdiff(names(match.call())[-1L], "")
+  # An explicitly passed NULL to a NULL-default argument means "the default":
+  # it carries no configuration, so it is not treated as supplied.
+  frame <- environment()
+  supplied <- supplied[!vapply(
+    supplied,
+    function(name) is.null(frame[[name]]),
+    logical(1L)
+  )]
+  .tsn_validate_shortcut_conflicts(
+    method = method, supplied = supplied, unit = unit,
+    visibility = visibility, discretization = discretization
+  )
   resolved <- .tsn_resolve_method(method, unit = unit, visibility = visibility,
                                   discretization = discretization)
   method <- resolved$method
@@ -192,6 +229,10 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
     state = state_values, directed = directed, limit = limit,
     penetrable = penetrable, decay = decay,
     discretization = discretization, m = m, tau = tau
+  )
+  .tsn_validate_argument_use(
+    supplied = supplied, method = method, unit = unit, distance = distance,
+    discretization = discretization
   )
 
   result <- if (method == "distance") {
@@ -407,12 +448,138 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   invisible(TRUE)
 }
 
+#' Reject Explicit Arguments That Contradict a Shortcut Method
+#'
+#' Shortcut method strings imply granular defaults. An explicitly supplied
+#' granular argument that contradicts its shortcut would otherwise be silently
+#' discarded by the resolution step.
+#'
+#' @param method The public `method` value, before resolution.
+#' @param supplied Names of the arguments the caller supplied.
+#' @param unit,visibility,discretization The granular arguments as supplied.
+#' @return `NULL`, invisibly.
+#' @noRd
+.tsn_validate_shortcut_conflicts <- function(method, supplied, unit,
+                                             visibility, discretization) {
+  stopifnot(is.character(method), length(method) == 1L, !is.na(method))
+  implied_visibility <- switch(
+    method,
+    nvg = ,
+    natural = "natural",
+    hvg = ,
+    horizontal = "horizontal",
+    NULL
+  )
+  if (!is.null(implied_visibility) && "visibility" %in% supplied &&
+        !identical(visibility, implied_visibility)) {
+    stop(sprintf(
+      "`method = \"%s\"` implies `visibility = \"%s\"`; it cannot be combined with `visibility = \"%s\"`.",
+      method, implied_visibility, as.character(visibility)[1L]
+    ), call. = FALSE)
+  }
+  discretizers <- c(
+    "threshold", "width", "quantile", "kde", "kmeans", "gaussian", "hclust",
+    "ordinal", "symbolic", "change_points", "entropy", "magnitude",
+    "adaptive_magnitude", "percentile_magnitude", "dtw"
+  )
+  if (method %in% discretizers) {
+    if ("discretization" %in% supplied && !identical(discretization, method)) {
+      stop(sprintf(
+        "`method = \"%s\"` implies `discretization = \"%s\"`; it cannot be combined with `discretization = \"%s\"`.",
+        method, method, as.character(discretization)[1L]
+      ), call. = FALSE)
+    }
+    if ("unit" %in% supplied && !identical(unit, "state")) {
+      stop(sprintf(
+        "`method = \"%s\"` builds a state network; it cannot be combined with `unit = \"%s\"`.",
+        method, as.character(unit)[1L]
+      ), call. = FALSE)
+    }
+  }
+  invisible(NULL)
+}
+
+#' Reject Explicitly Supplied Arguments the Resolved Network Cannot Consume
+#'
+#' The complete argument-consumption matrix for `tsn()`. Every argument the
+#' caller supplied by name must be consumed by the resolved method, unit,
+#' distance measure, and discretizer; an option that would be silently
+#' discarded is an error instead, because a typo or misunderstood
+#' configuration must not produce a plausible but unintended model.
+#'
+#' @param supplied Names of the arguments the caller supplied.
+#' @param method Resolved base method.
+#' @param unit Resolved node unit.
+#' @param distance Selected distance measure.
+#' @param discretization Resolved discretization method.
+#' @return `NULL`, invisibly.
+#' @noRd
+.tsn_validate_argument_use <- function(supplied, method, unit, distance,
+                                       discretization) {
+  reject <- function(arguments, reason) {
+    unusable <- intersect(supplied, arguments)
+    if (length(unusable) > 0L) {
+      stop(sprintf(
+        "%s cannot be used %s.",
+        paste0("`", unusable, "`", collapse = ", "), reason
+      ), call. = FALSE)
+    }
+  }
+  if (method == "visibility") {
+    reject(
+      c("distance", "connect", "window", "step", "neighbors", "threshold",
+        "percentile", "bandwidth", "p", "bins", "lag", "tolerance",
+        "similarity", "chain", "normalize"),
+      "with visibility networks"
+    )
+    state_arguments <- c("state", "discretization", "n_states", "breaks",
+                         "m", "tau", "aggregation", "seed")
+    if (unit != "state") {
+      reject(state_arguments, "unless `unit = \"state\"`")
+    } else if ("state" %in% supplied) {
+      reject(
+        c("discretization", "n_states", "breaks", "m", "tau", "seed"),
+        "together with caller-supplied `state` values, which bypass the internal discretizer"
+      )
+    } else {
+      if (!identical(discretization, "threshold")) {
+        reject("breaks", sprintf(
+          "with `discretization = \"%s\"`; only the \"threshold\" discretizer takes explicit boundaries",
+          discretization
+        ))
+      }
+      if (identical(discretization, "ordinal")) {
+        reject("n_states", "with `discretization = \"ordinal\"`, whose state count follows `m` and `tau`")
+      }
+      if (!discretization %in% c("kmeans", "gaussian")) {
+        reject("seed", sprintf(
+          "with `discretization = \"%s\"`; only the stochastic \"kmeans\" and \"gaussian\" discretizers are seeded",
+          discretization
+        ))
+      }
+    }
+  } else {
+    reject(
+      c("visibility", "state", "discretization", "n_states", "breaks",
+        "m", "tau", "limit", "penetrable", "decay", "aggregation", "seed"),
+      "with distance networks"
+    )
+    if (unit != "window") {
+      reject("step", "unless `unit = \"window\"`")
+    }
+    if (!identical(distance, "minkowski")) {
+      reject("p", "unless `distance = \"minkowski\"`")
+    }
+  }
+  invisible(NULL)
+}
+
 #' @noRd
 .tsn_build_visibility <- function(source, unit, visibility, state,
                                   discretization, n_states, breaks, m, tau,
                                   directed, limit,
                                   penetrable, decay, aggregation, seed) {
-  labels <- .tsn_visibility_labels(source$id, source$time)
+  labels <- .tsn_node_labels(source$id, source$time)
   source$.tsn_node_label <- labels
   groups <- split(
     source,
@@ -465,7 +632,10 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
       aggregation = aggregation,
       directed = directed
     )
-    nodes <- unique(as.character(states))
+    # Nodes follow the declared state order: factor levels for caller-supplied
+    # factors (an unused level stays a zero-degree node), numeric state order
+    # for discretized states, first-appearance order for plain characters.
+    nodes <- levels(states)
     metadata <- data.frame(node = nodes, start = NA_integer_, end = NA_integer_,
                            stringsAsFactors = FALSE)
   } else {
@@ -482,17 +652,18 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   )
 }
 
-#' Create Collision-Safe Visibility Node Labels
+#' Create Collision-Safe Point Node Labels
 #'
-#' Uses the familiar `id:time` form unless separate `(id, time)` pairs would
-#' collapse to the same text. In that rare case, length-prefixed components
-#' preserve both readability and uniqueness.
+#' Shared by visibility networks and point-level distance networks. Uses the
+#' familiar `id:time` form unless separate `(id, time)` pairs would collapse to
+#' the same text. In that rare case, length-prefixed components preserve both
+#' readability and uniqueness.
 #'
 #' @param id Series identifiers.
 #' @param time Observation times.
 #' @return A unique character vector.
 #' @noRd
-.tsn_visibility_labels <- function(id, time) {
+.tsn_node_labels <- function(id, time) {
   stopifnot(
     is.atomic(id), (is.atomic(time) || inherits(time, "POSIXt")),
     length(id) == length(time),
@@ -511,6 +682,19 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   labels
 }
 
+#' Resolve the Observation States for a State-Unit Network
+#'
+#' Returns a factor whose level order fixes the node order of the network.
+#' Caller-supplied factors keep their declared levels — including unused
+#' levels, which become zero-degree nodes — so an ordered scale like
+#' low/mid/high is never reordered by observation. Discretized states use the
+#' engine's numeric state order, and plain character states use
+#' first-appearance order.
+#'
+#' @param source Canonical long input.
+#' @param state `NULL`, a state-column name, or a state vector.
+#' @param discretization,n_states,breaks,m,tau,seed Discretizer configuration.
+#' @return A factor with one state per observation.
 #' @noRd
 .tsn_resolve_states <- function(source, state, discretization, n_states,
                                 breaks, m = NULL, tau = NULL, seed) {
@@ -525,7 +709,10 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
       seed = seed,
       groups = source$id
     )
-    return(as.character(fit$state))
+    return(factor(
+      as.character(fit$state),
+      levels = as.character(sort(unique(fit$state)))
+    ))
   }
   states <- if (is.character(state) && length(state) == 1L &&
                 state %in% names(source)) source[[state]] else state
@@ -533,7 +720,15 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
     stop("`state` must provide one non-missing value per observation.",
          call. = FALSE)
   }
-  as.character(states)
+  if (is.factor(states)) {
+    if (any(!nzchar(levels(states)))) {
+      stop("`state` factor levels must be non-empty labels.", call. = FALSE)
+    }
+    factor(as.character(states), levels = levels(states))
+  } else {
+    values <- as.character(states)
+    factor(values, levels = unique(values))
+  }
 }
 
 #' @noRd

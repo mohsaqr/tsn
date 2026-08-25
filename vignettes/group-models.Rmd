@@ -1,0 +1,475 @@
+---
+title: "Grouped Transition Models: One Network per Condition"
+author: "tsn package authors"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Grouped Transition Models: One Network per Condition}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5,
+  dpi = 110,
+  out.width = "100%"
+)
+library(tsn)
+has_nestimate <- requireNamespace("Nestimate", quietly = TRUE)
+has_cograph <- requireNamespace("cograph", quietly = TRUE) &&
+  requireNamespace("igraph", quietly = TRUE)
+```
+
+# The question
+
+Does the same person move between states differently under different
+conditions? The `motivation` study measured momentary pleasure up to seven
+times a day for almost three years, and each measurement records where it was
+taken: at home, at work, in personal time, or elsewhere. A single transition
+network estimated from all of it would answer how pleasure moves between
+`low`, `mid`, and `high` *on average* — and would erase exactly the
+distinction the context column exists to draw.
+
+The `group` argument of `ts_tna()` and its siblings answers the conditional
+question instead: one network per context, all cut from one shared state
+alphabet, packaged so that Nestimate's grouped verbs compare them directly.
+
+```{r libs, eval=has_nestimate}
+library(tsn)
+library(Nestimate)
+
+data(motivation)
+```
+
+# One call, one network per context
+
+`group` names a column of the data. Every level of that column becomes its
+own fully estimated `ts_tna` model.
+
+```{r grouped-full, eval=has_nestimate}
+by_context <- ts_tna(
+  motivation,
+  series = "pleasure",
+  group = "task_context_type",
+  labels = c("low", "mid", "high")
+)
+
+by_context
+```
+
+Four contexts, four networks, and one of them is already suspicious: `Other`
+carries a single edge with weight 1.000. `as.data.frame()` with
+`what = "groups"` is the tidy index of how much data stands behind each
+network, and it explains that edge.
+
+```{r grouped-index, eval=has_nestimate}
+as.data.frame(by_context, what = "groups")
+```
+
+`Other` holds three observations in two sequences — one transition in total.
+A transition probability estimated from one transition is not a result; it is
+a level of the column that happens to exist. Every grouped analysis should
+start by reading this table. Here the fix is to leave `Other` out and rebuild.
+
+```{r grouped, eval=has_nestimate}
+contexts <- subset(motivation, task_context_type != "Other")
+
+by_context <- ts_tna(
+  contexts,
+  series = "pleasure",
+  group = "task_context_type",
+  labels = c("low", "mid", "high")
+)
+
+as.data.frame(by_context, what = "groups")
+```
+
+Three contexts remain, each backed by 1,309 to 2,235 observations. The
+`sequences` column deserves attention before anything else is read, and the
+next two sections explain the two design rules that produce it.
+
+# Why not subset the data and build each model by hand?
+
+Subsetting looks equivalent: keep the `Home` rows, call `ts_tna()` on them,
+repeat per context. It is not equivalent, and it fails in two distinct ways.
+
+```{r home-alone, eval=has_nestimate}
+home_alone <- ts_tna(
+  subset(motivation, task_context_type == "Home"),
+  series = "pleasure",
+  labels = c("low", "mid", "high")
+)
+
+summary(series_networks(home_alone))
+```
+
+## First failure: the subset welds broken time back together
+
+The hand-built model holds all 1,324 home measurements as **one** sequence —
+the single row above. But the study alternates contexts from one beep to the
+next, so the home measurements are not consecutive: the grouped index showed
+them forming **832** separate runs. One unbroken sequence of 1,324
+observations contains 1,323 transitions; 832 runs of 1,324 observations
+contain only 1,324 − 832 = 492. The hand-built model therefore counts 831
+transitions — sixty-three percent of its total — between measurements that
+were never adjacent in time. Each one joins the end of one home visit to the
+start of the next, across an intervening trip to work or elsewhere, and each
+one is dynamics that never happened.
+
+The grouped model never counts them. A sequence is cut at every change of
+group, so a transition is only ever counted between genuinely consecutive
+measurements within one context. The transition *across* a context change is
+dropped from both groups, because it belongs to neither.
+
+## Second failure: each subset learns its own thresholds
+
+The second failure is quieter. The default `discretization = "quantile"`
+cuts at the tertiles of whatever data it is given, so the hand-built home
+model learns cut points from home measurements alone:
+
+```{r home-alone-dist, eval=has_nestimate}
+state_distribution(home_alone)
+```
+
+By construction, roughly a third of home measurements land in each state —
+37.3% `low`, 33.3% `high`. Now the same measurements inside the grouped
+model, which cut the states from the **pooled** series before splitting:
+
+```{r grouped-dist, eval=has_nestimate}
+state_distribution(by_context)
+```
+
+On the shared scale, home is not one-third `low`: it is **62.5%** `low` and
+only **6.6%** `high`. The hand-built model erased that fact by defining
+`low` as "low for a home measurement". The grouped model keeps one
+definition of `low` for everyone, which is the only definition under which
+"Home has more low pleasure than Personal" is even a well-formed claim.
+
+The comparison across the three contexts is now worth reading on its own:
+pleasure at home is `low` on 62.5% of measurements and `high` on 6.6%;
+personal time reverses the ordering (`high` 45.6%, `low` 19.3%); work sits
+between the two on all three states. The mosaic view draws that table:
+
+```{r mosaic, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Mosaic plot of state proportions by context: the low-pleasure band dominates the Home column, the high-pleasure band dominates the Personal column, and Work sits between them."}
+mosaic_plot(by_context)
+```
+
+The same discipline is available without `group` by passing explicit
+`breaks`, and that is the right tool when thresholds carry outside meaning
+(the companion vignette
+`vignette("nestimate-workflow", package = "tsn")` cuts step counts at 5,000
+and 10,000 steps for exactly that reason). `group` automates the discipline
+when the comparison, not the threshold, is the point.
+
+# The collection is data
+
+Every view of the grouped model is a data frame with a leading `group`
+column. The default view is the edge list:
+
+```{r edges, eval=has_nestimate}
+head(as.data.frame(by_context), 9)
+```
+
+Because all groups share one alphabet, a single edge can be read across
+contexts:
+
+```{r one-edge, eval=has_nestimate}
+subset(as.data.frame(by_context), from == "low" & to == "high")
+```
+
+The probability of jumping from `low` directly to `high` is 0.040 at home,
+0.351 in personal time, and 0.291 at work: at home, low pleasure almost
+never resolves upward in one step. `what = "series"` returns the
+per-observation table behind the networks, with the run-level sequence IDs.
+
+```{r series, eval=has_nestimate}
+head(as.data.frame(by_context, what = "series"))
+```
+
+`summary()` adds Nestimate's network-metric panel, one column per group:
+
+```{r summary, eval=has_nestimate}
+summary(by_context)
+```
+
+Most rows are structural constants for a full 3-state network, but one is
+not: the standard deviation of out-strength falls from 0.70 at home through
+0.45 in personal time to 0.21 at work. Home's outgoing probabilities are the
+most polarized — from any state, one destination dominates — while work's
+are the most evenly spread. That single row anticipates the entropy analysis
+below.
+
+# Drawing the networks
+
+There is no single picture of a grouped model; `plot()` draws one selected
+group with the full `plot.ts_tna()` surface.
+
+```{r plot-home, eval=has_nestimate && has_cograph, fig.width=6, fig.height=5, fig.alt="Transition network of the Home context: three nodes labelled low, mid, and high, with the heaviest directed edges pointing into the low state and a strong low-to-low self-loop."}
+plot(by_context, group = "Home", type = "network")
+```
+
+```{r plot-personal, eval=has_nestimate && has_cograph, fig.width=6, fig.height=5, fig.alt="Transition network of the Personal context: three nodes labelled low, mid, and high, with the heaviest directed edges pointing into the high state and a strong high-to-high self-loop."}
+plot(by_context, group = "Personal", type = "network")
+```
+
+```{r plot-work, eval=has_nestimate && has_cograph, fig.width=6, fig.height=5, fig.alt="Transition network of the Work context: three nodes labelled low, mid, and high, with edge weights spread more evenly than in the Home and Personal networks."}
+plot(by_context, group = "Work", type = "network")
+```
+
+Because the three networks share one node set, the figures are directly
+comparable: the heavy edges converge on `low` at home (`low → low` is
+0.762) and on `high` in personal time (`high → high` is 0.664), while the
+work network's weights are visibly more even — no edge above 0.518.
+
+# Dynamics, not composition alone
+
+The state distributions above describe *where* the contexts spend their
+time. The networks describe *how they move*, and the two can disagree.
+
+## Mean first passage times
+
+`passage_time()` reports, per group, the expected number of steps to reach
+each state from each other state (Kemeny & Snell, 1976).
+
+```{r passage, eval=has_nestimate}
+passage_time(by_context)
+```
+
+At home, `low` is reached from anywhere within about two steps, while
+`high` takes sixteen to eighteen — low pleasure at home is an attractor.
+Personal time is the mirror image: `high` is two to three steps away from
+everything, `low` seven to ten. Work reaches `high` in about three steps.
+The stationary distributions agree with the composition table, which they
+should — but the passage times add the direction of pull, not only the
+destination.
+
+## Entropy: how predictable is each context?
+
+```{r entropy, eval=has_nestimate}
+transition_entropy(by_context)
+```
+
+The entropy rate is in bits, with `log2(3) = 1.585` as the ceiling for three
+states. Home, at 1.09, is the most predictable context: knowing the current
+state says a lot about the next one (mostly, that it will be `low` again).
+Work, at 1.51, runs close to the ceiling — from any state, the next work
+measurement is nearly a three-way coin toss. Structure and pleasantness are
+different axes: home is the most *predictable* context and also the least
+pleasant one.
+
+## Centrality per group
+
+```{r centrality, eval=has_nestimate}
+context_centrality <- net_centrality(by_context)
+
+context_centrality
+```
+
+The in-strength ordering flips between contexts: `low` dominates at home
+(0.92), `high` dominates in personal time (0.79). The message printed above
+the tables matters for any transition network: self-transitions are excluded
+by default, because the diagonal is usually the largest entry and would
+otherwise drown the between-state structure. The result has its own plot
+method, which puts the three groups on one panel per measure:
+
+```{r centrality-plot, eval=has_nestimate, fig.width=7, fig.height=4.5, fig.alt="Faceted centrality chart comparing in-strength, betweenness, and diffusion of the three states across the Home, Personal, and Work networks, showing the in-strength ordering reversing between Home and Personal."}
+plot(context_centrality)
+```
+
+## Edge betweenness
+
+`net_edge_betweenness()` scores each edge by the shortest paths that cross
+it. On a grouped model it runs group-wise:
+
+```{r betweenness, eval=has_nestimate}
+net_edge_betweenness(by_context)
+```
+
+Home and Personal each concentrate their traffic on five edges while Work
+spreads it across six with uniform load — the betweenness restatement of the
+polarized-versus-even pattern. One caveat: this verb returns a plain
+`netobject_group` (the `ts_tna_group` subclass is dropped), so apply tsn's
+tidy accessors before this step, not after it.
+
+# Are the differences real?
+
+## Pairwise permutation tests
+
+`permutation()` on a grouped model runs every pairwise comparison, shuffling
+sequences between the two groups to build a null distribution per edge.
+
+```{r permutation, eval=has_nestimate}
+comparison <- permutation(by_context, iter = 1000, seed = 2026)
+
+comparison
+```
+
+`summary()` is the tidy edge-level table across all three pairs:
+
+```{r permutation-summary, eval=has_nestimate}
+summary(comparison)
+```
+
+The pattern is sharp. Home differs from Personal on eight of nine edges and
+from Work on eight of nine, most at the smallest p-value the permutation
+resolution allows (0.001). Personal and Work are much closer: only three
+edges separate them, and the largest of those differences is the retention
+of `high` — `high → high` is 0.66 in personal time against 0.52 at work
+(p = 0.001). The conclusion is not "everything differs from everything":
+home has genuinely distinct dynamics, while personal time and work share
+most of their structure except how long a good state lasts.
+
+## A metric panel for one pair
+
+`compare_model()` picks two groups by name and returns a panel of matrix
+comparison metrics.
+
+```{r compare, eval=has_nestimate}
+compare_model(by_context, i = "Home", j = "Personal")
+```
+
+The Pearson correlation between the two weight matrices is **−0.54**: the
+home and personal-time networks are not merely different, they are inversely
+related — the transitions that are strong in one are weak in the other. The
+mean absolute edge difference is 0.30 and the largest single gap is 0.52
+(the `high → high` retention). Always name `i` and `j`: with more than two
+groups there is no meaningful default pair.
+
+## Bootstrap and Bayesian certainty per group
+
+`bootstrap_network()` on the collection resamples sequences within each
+group; `certainty()` reaches a similar verdict from a Dirichlet posterior,
+without resampling.
+
+```{r bootstrap, eval=has_nestimate}
+bootstrap_network(by_context, iter = 200, seed = 2026)
+```
+
+```{r certainty, eval=has_nestimate}
+set.seed(2026)
+certainty(by_context)
+```
+
+Work, with 976 sequences and 2,235 observations, keeps eight of nine
+bootstrap edges and all nine posterior-certain ones; Home and Personal keep
+three to four under either criterion. The groups table from the start of
+this vignette predicted this: equal-looking observation counts do not buy
+equal precision when the observations arrive in short runs, because
+resampling operates on runs, not measurements. Reading `sequences` first is
+not a formality.
+
+## Is first order enough, per group?
+
+Each group's network assumes the next state depends only on the current one.
+`markov_order_test()` (after Anderson & Goodman, 1957) checks that
+assumption group by group.
+
+```{r markov, eval=has_nestimate}
+set.seed(2026)
+markov_order_test(by_context)
+```
+
+Home and Personal select order 1 on BIC and the permutation LRT; Work's
+permutation test flags order 2 while BIC still prefers 1. The first-order
+models above are adequate summaries for home and personal time; for work,
+yesterday's state carries some extra information, so its network should be
+read as a one-step summary rather than the full process.
+
+# Pruning and stability
+
+`net_prune()` applies group-wise and returns the same class, so a pruned
+collection flows back into every verb above.
+
+```{r prune, eval=has_nestimate}
+net_prune(by_context, method = "threshold", threshold = 0.3)
+```
+
+Each context keeps six of its nine edges at a 0.3 threshold. Prune after
+testing, not before: the permutation table above is exactly the kind of
+result a premature prune would have deleted edges from.
+
+Two stability checks ask whether the results would survive a smaller sample.
+`centrality_stability()` tracks the centrality *ordering* under case
+dropping; `casedrop_reliability()` tracks the edge weights themselves (both
+follow the case-drop logic of Epskamp, Borsboom & Fried, 2018).
+
+```{r stability, eval=has_nestimate}
+set.seed(2026)
+centrality_stability(by_context, iter = 100)
+```
+
+```{r casedrop, eval=has_nestimate}
+context_reliability <- casedrop_reliability(by_context, iter = 100,
+                                            seed = 2026)
+
+context_reliability
+```
+
+```{r casedrop-plot, eval=has_nestimate, fig.width=7, fig.height=4, fig.alt="Case-dropping stability curves for the three context networks, showing the correlation between full-sample and subsampled edge weights declining as larger fractions of sequences are dropped."}
+plot(context_reliability)
+```
+
+In-strength and out-strength orderings hold at 0.6 to 0.8 across groups, and
+every group's edge weights carry a CS-coefficient of 0.6 — above the 0.5 bar
+for acceptable, short of the 0.7 bar for excellent. Work's betweenness
+column is `NA` because its betweenness scores are degenerate (the centrality
+table above showed zeros); a coefficient cannot be computed for an ordering
+that does not exist. The verdict across both checks: these grouped estimates
+tolerate losing roughly half their sequences, and claims resting on finer
+distinctions than that should not be made from this sample.
+
+# What to watch for
+
+Four failure modes, all of which announce themselves:
+
+* **A level with almost no data.** `Other` above: it gets a network because
+  it is a level, and the network means nothing. The `groups` table is the
+  guard; read `sequences` and `observations` before edges.
+* **A group column that alternates too fast.** Every change of group cuts a
+  sequence, so a column that flips at almost every observation leaves runs
+  of length one and no transitions at all. In the extreme case — a group
+  whose observations are *never* adjacent — the model warns that the group's
+  network is empty. This study's contexts alternate heavily (about 2,630
+  runs across 4,868 observations) and still leave 487 to 1,259 transitions
+  per context; a faster-alternating column would not.
+* **A group whose rows do not survive discretization.** Temporal
+  discretizers such as `ordinal` drop tail rows that cannot fill an
+  embedding window. If that removes a group entirely, the model warns that
+  the group was lost to discretization. A group you excluded yourself via
+  `series` is not warned about — it was your decision.
+* **Comparing a grouped model with a hand-subset model.** The two are not
+  estimates of the same thing, for both reasons in the section above.
+
+# When to use which
+
+* **`group`** — the condition already exists as a column, there may be more
+  than two levels, and the comparison itself is the point. Pooled
+  discretization and boundary-safe sequence cutting come built in.
+* **Two models plus `permutation(x, y)`** — the split is not a column but a
+  derived rule (a date cutoff, an external roster), and there are exactly
+  two sides. Fix the state alphabet yourself with explicit `breaks`, or the
+  comparison inherits the threshold artifact. The companion vignette
+  `vignette("nestimate-workflow", package = "tsn")` runs this design on the
+  step-count data.
+* **`series_networks()`** — the unit of comparison is the individual series
+  (one network per participant), not a condition shared across series.
+* **A single pooled model** — no conditioning variable at all; the average
+  dynamics are the question.
+
+# References
+
+Anderson, T. W., & Goodman, L. A. (1957). Statistical inference about
+Markov chains. *The Annals of Mathematical Statistics*, 28(1), 89–110.
+
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological
+networks and their accuracy: A tutorial paper. *Behavior Research Methods*,
+50(1), 195–212.
+
+Kemeny, J. G., & Snell, J. L. (1976). *Finite Markov Chains*. Springer.

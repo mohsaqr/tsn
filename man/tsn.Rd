@@ -61,7 +61,10 @@ granular arguments (\code{unit}, \code{visibility}, \code{discretization}) still
 \item{time}{Optional time-column name for long data.}
 
 \item{series}{Optional series IDs for long data or numeric column names for
-wide data. Selection happens inside \code{tsn()}.}
+wide data. Selection happens inside \code{tsn()}, and the requested order is
+authoritative for every input form: long rows are reordered to it exactly
+as wide, matrix, and list input are, so chained or directed edges do not
+depend on the input container.}
 
 \item{unit}{Node unit. Distance networks use \code{"series"}, \code{"window"}, or
 \code{"time"} (one node per time point); visibility networks use \code{"time"} or
@@ -127,10 +130,13 @@ weights: \code{"inverse"} (the default weight rule, \code{1 / (1 + d)}),
 \code{"magnitude"}, \code{"adaptive_magnitude"}, \code{"percentile_magnitude"}, or
 \code{"dtw"}.}
 
-\item{n_states}{Number of states. Ignored by \code{discretization = "ordinal"},
-whose state count follows the embedding arguments \code{m} and \code{tau}.}
+\item{n_states}{Number of states. Not consumed by
+\code{discretization = "ordinal"}, whose state count follows the embedding
+arguments \code{m} and \code{tau}; supplying both is an error.}
 
-\item{breaks}{Optional internal thresholds when \code{discretization = "threshold"}.}
+\item{breaks}{Optional internal thresholds when
+\code{discretization = "threshold"}. An error with any other discretizer,
+which computes its own boundaries.}
 
 \item{m}{Embedding dimension for \code{discretization = "ordinal"} (default \code{3}).
 Only valid with the ordinal discretizer.}
@@ -161,7 +167,8 @@ or windows (a transition chain) instead of all pairs.}
 the maximum distance; \code{"minmax"} rescales to \verb{[0, 1]}; \code{"quantile"}
 rescales by the 5th-95th percentile range, clamped to \verb{[0, 1]}.}
 
-\item{seed}{Optional seed used by stochastic discretizers.}
+\item{seed}{Optional seed for the stochastic discretizers (\code{"kmeans"} and
+\code{"gaussian"}). An error with the deterministic discretizers.}
 }
 \value{
 A list-backed network object of class
@@ -175,6 +182,24 @@ and \code{as.matrix()} for the weighted adjacency matrix.
 geometry. It builds distance networks between complete series or sliding
 windows, and natural or horizontal visibility networks between time points
 or discretized states.
+}
+\details{
+Every supplied argument must be consumed by the resolved configuration.
+An option that the selected \code{method}, \code{unit}, \code{distance}, \code{connect}, or
+\code{discretization} cannot use — for example \code{chain} on a visibility network,
+\code{limit} on a distance network, \code{p} without \code{distance = "minkowski"}, or
+\code{breaks} without \code{discretization = "threshold"} — is rejected with an
+error rather than silently ignored, so a typo or a misunderstood
+configuration cannot produce a plausible but unintended model. Shortcut
+methods (\code{"nvg"}, \code{"hvg"}, discretizer names) likewise reject granular
+arguments that contradict what the shortcut implies.
+
+For state networks, caller-supplied \code{state} values fix the node order:
+factors keep their declared level order (an unused level becomes a
+zero-degree node), and plain character states are ordered by first
+appearance. Discretized states follow the discretizer's numeric state
+order. The \code{state} column of the stored source series preserves this
+factor.
 }
 \examples{
 series <- list(

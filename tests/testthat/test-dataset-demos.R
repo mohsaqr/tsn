@@ -5,7 +5,7 @@ test_that("all discretizers use packaged steps through direct tsn calls", {
     "hclust"
   )
   networks <- setNames(lapply(methods, function(discretization_method) {
-    tsn(
+    arguments <- list(
       steps,
       value = "steps",
       id = "id",
@@ -13,10 +13,17 @@ test_that("all discretizers use packaged steps through direct tsn calls", {
       series = 536,
       unit = "state",
       visibility = "horizontal",
-      discretization = discretization_method,
-      breaks = if (discretization_method == "threshold") c(10000, 16500) else NULL,
-      seed = 1707L
+      discretization = discretization_method
     )
+    # `breaks` is only consumed by "threshold" and `seed` only by the
+    # stochastic discretizers; supplying them elsewhere is an error.
+    if (discretization_method == "threshold") {
+      arguments$breaks <- c(10000, 16500)
+    }
+    if (discretization_method %in% c("kmeans", "gaussian")) {
+      arguments$seed <- 1707L
+    }
+    do.call(tsn, arguments)
   }), methods)
 
   expect_true(all(vapply(networks, inherits, logical(1L), what = "tsn")))
@@ -25,7 +32,8 @@ test_that("all discretizers use packaged steps through direct tsn calls", {
     nrow(source) == 265L &&
       identical(unique(source[["id"]]), "536") &&
       inherits(source[["time"]], "Date") &&
-      identical(sort(unique(source[["state"]])), as.character(1:3)) &&
+      identical(sort(unique(as.character(source[["state"]]))),
+                as.character(1:3)) &&
       !anyNA(source[["state"]])
   }, logical(1L))))
   expect_true(all(vapply(networks, function(network) {

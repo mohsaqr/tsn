@@ -1,3 +1,87 @@
+# tsn 1.3.0
+
+## New features
+
+- Grouped transition models: `ts_tna()`, `ts_ftna()`, `ts_cna()`, and
+  `ts_atna()` gain a `group` argument naming a column of `data`. The result is
+  one network per group — a `ts_tna_group` (also a Nestimate
+  `netobject_group`) that Nestimate's compatible grouped verbs (`net_prune()`,
+  `state_distribution()`, `net_centrality()`, `compare_model()`,
+  `permutation()`) accept directly. States are discretized from the pooled
+  series before the split, so every group shares one alphabet and node set. A
+  sequence never spans a group boundary: contiguous runs of the group column
+  become their own sequences, so no transition is ever counted between
+  observations that were not adjacent in time. `as.data.frame()` on the
+  collection returns tidy `edges`, `series`, or `groups` tables.
+- `segment` and `overlap` on the `ts_*na()` family cut each series into
+  shorter sequences so sequence-based inference (bootstrap, permutation,
+  stability) has units to resample. Partitioned blocks are the conservative
+  default; `overlap = TRUE` slides the block one observation at a time and at
+  `segment = 2` reproduces the unsegmented estimate exactly.
+- New `as.matrix.ts_tna()` and `as.data.frame.ts_tna()` methods: the weight
+  matrix and a tidy one-row-per-state-pair edge table (plus
+  `what = "series"` for the per-observation source table).
+- New `vignette("nestimate-workflow")`: raw series to transition network to
+  the Nestimate inferential stack, including segmentation and grouped
+  comparison.
+- New `vignette("group-models")`: a full tutorial on grouped transition
+  models — why hand-subsetting both fabricates transitions and shifts the
+  state thresholds, how the pooled alphabet and boundary rule fix it, and
+  the descriptive and inferential comparison of groups end to end.
+- New `vignette("nestimate-compatibility")`: the verb-by-verb map of which
+  Nestimate analyses accept a tsn model directly — reading, composition,
+  dynamics, entropy, pruning, reliability, and model comparison — plus the
+  verbs that do not apply and why, ending in a compatibility table.
+- New `plot.ts_tna_group()` method: draws one selected network of a grouped
+  model (`plot(x, group = "Home")`) with the full `plot.ts_tna()` surface,
+  so a group can be rendered without reaching into the collection.
+
+## Breaking changes
+
+- Arguments that the selected configuration cannot consume are now rejected
+  with an error instead of being silently ignored — for example `chain` or
+  `normalize` on a visibility network, `limit`, `decay`, `penetrable`, or
+  `aggregation` on a distance network, `step` outside `unit = "window"`, `p`
+  without `distance = "minkowski"`, `breaks` without
+  `discretization = "threshold"`, `n_states` with the ordinal discretizer,
+  `seed` with a deterministic discretizer, and any discretization option when
+  `data` is already a `tsn_states`. Shortcut methods (`"nvg"`, `"hvg"`,
+  discretizer names) likewise reject granular arguments that contradict what
+  the shortcut implies. Previously these calls returned a plausible but
+  unintended model.
+- `summary()` density now uses a fixed possible-edge universe per network
+  family: state networks always count self-loops among the possible edges,
+  and series/window/time networks never do. Previously the denominator
+  depended on whether a loop happened to be observed, so densities were not
+  comparable across models. State networks without observed loops report a
+  lower (correct) density than before.
+- Caller-supplied factor `state` values now fix the node order by their level
+  order, unused factor levels are retained as zero-degree nodes, and the
+  stored source `state` column stays a factor. Discretized states order
+  nodes numerically (`"1"`, `"2"`, ...) instead of by first appearance.
+  Plain character states keep first-appearance order.
+- The `"okabe"` plot palette now rejects requests for more than its nine
+  colour-blind-safe colours instead of returning `NA` colours.
+
+## Bug fixes
+
+- `series` selection on long data now follows the requested series order,
+  exactly as wide, matrix, and list selection do. Previously the same
+  selection could reverse chained or directed edges depending on the input
+  container.
+- Point-level distance networks (`method = "distance", unit = "time"`) now
+  use the same collision-safe node labels as the visibility family, so valid
+  `(id, time)` pairs whose display strings collide are no longer rejected.
+- `ts_*na(series = ..., group = ...)` no longer warns that groups excluded by
+  the caller's own `series` selection were "lost to discretization".
+
+## Performance
+
+- Natural visibility construction now runs in quadratic instead of cubic
+  time (and no longer materializes all candidate pairs at once): a
+  1,000-observation series builds in well under a second. The same scan
+  accelerates horizontal visibility with `penetrable` or `limit` set.
+
 # tsn 1.2.0
 
 - `series_networks()` now returns a `tsn_series_networks` collection instead of

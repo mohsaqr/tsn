@@ -44,10 +44,16 @@
 #' @param time Optional time-column name for long data.
 #' @param series Optional series IDs or wide-data column names to select.
 #' @param discretization Discretization method passed to [discretize()]
-#'   (default `"quantile"`). Ignored when `data` is already a `tsn_states`.
-#' @param n_states Number of states (default `3`).
+#'   (default `"quantile"`). When `data` is already a `tsn_states`, supplying
+#'   this or any other discretization option (`value`, `id`, `time`,
+#'   `n_states`, `breaks`, `labels`, `transform`, `m`, `tau`, `seed`) is an
+#'   error: the states are already fixed and the option could not take effect.
+#' @param n_states Number of states (default `3`). Not consumed by
+#'   `discretization = "ordinal"`, whose state count follows `m` and `tau`;
+#'   supplying both is an error.
 #' @param breaks Optional interior thresholds for
-#'   `discretization = "threshold"`.
+#'   `discretization = "threshold"`. An error with any other discretizer,
+#'   which computes its own boundaries.
 #' @param labels Optional state labels; these become the network's node
 #'   names (e.g. `c("low", "mid", "high")`).
 #' @param transform Pre-discretization transform: `"none"`, `"log"`, or
@@ -78,7 +84,8 @@
 #'   contiguous run becomes its own sequence, so no transition is ever counted
 #'   between observations that were not adjacent in time. The transition across
 #'   a group change is dropped from both groups: it belongs to neither.
-#' @param seed Optional seed used by stochastic discretizers.
+#' @param seed Optional seed for the stochastic discretizers (`"kmeans"` and
+#'   `"gaussian"`). An error with the deterministic discretizers.
 #' @param ... Passed on to the corresponding Nestimate builder
 #'   (`Nestimate::build_tna()` and friends), e.g. `start`, `end`,
 #'   `scaling`, `threshold`.
@@ -133,7 +140,8 @@ ts_tna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
     data, type = "tna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, group = group, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed,
+    supplied = setdiff(names(match.call())[-1L], ""), ...
   )
 }
 
@@ -148,7 +156,8 @@ ts_ftna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
     data, type = "ftna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, group = group, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed,
+    supplied = setdiff(names(match.call())[-1L], ""), ...
   )
 }
 
@@ -163,7 +172,8 @@ ts_cna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
     data, type = "cna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, group = group, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed,
+    supplied = setdiff(names(match.call())[-1L], ""), ...
   )
 }
 
@@ -178,7 +188,8 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
     data, type = "atna", value = value, id = id, time = time, series = series,
     discretization = discretization, n_states = n_states, breaks = breaks,
     labels = labels, transform = transform, m = m, tau = tau,
-    segment = segment, overlap = overlap, group = group, seed = seed, ...
+    segment = segment, overlap = overlap, group = group, seed = seed,
+    supplied = setdiff(names(match.call())[-1L], ""), ...
   )
 }
 
@@ -190,17 +201,52 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 #'
 #' @param data Public input.
 #' @param type One of `"tna"`, `"ftna"`, `"cna"`, `"atna"`.
+#' @param supplied Names of the arguments the caller supplied to the public
+#'   verb, used to reject explicitly supplied options the call cannot consume.
 #' @inheritParams ts_tna
 #' @return A Nestimate `netobject`.
 #' @noRd
 .tsn_build_stna <- function(data, type, value, id, time, series,
                             discretization, n_states, breaks, labels,
                             transform, m, tau, segment = NULL,
-                            overlap = FALSE, group = NULL, seed, ...) {
+                            overlap = FALSE, group = NULL, seed,
+                            supplied = character(), ...) {
   if (!requireNamespace("Nestimate", quietly = TRUE)) {
     stop(
       sprintf("`ts_%s()` requires the Nestimate package. ", type),
       "Install it with install.packages(\"Nestimate\").",
+      call. = FALSE
+    )
+  }
+  # An explicitly passed NULL to a NULL-default argument means "the default":
+  # it carries no configuration, so it is not treated as supplied.
+  null_valued <- c(
+    value = is.null(value), id = is.null(id), time = is.null(time),
+    series = is.null(series), breaks = is.null(breaks),
+    labels = is.null(labels), m = is.null(m), tau = is.null(tau),
+    segment = is.null(segment), group = is.null(group), seed = is.null(seed)
+  )
+  supplied <- setdiff(supplied, names(null_valued)[null_valued])
+  if (inherits(data, "tsn_states")) {
+    # A tsn_states input already carries its states; the discretization
+    # options would be silently discarded, so an explicit one is an error.
+    unusable <- intersect(supplied, c(
+      "value", "id", "time", "discretization", "n_states", "breaks",
+      "labels", "transform", "m", "tau", "seed"
+    ))
+    if (length(unusable) > 0L) {
+      stop(sprintf(
+        paste0(
+          "%s cannot be used when `data` is already a `tsn_states` ",
+          "discretization; set these options in `discretize()` instead."
+        ),
+        paste0("`", unusable, "`", collapse = ", ")
+      ), call. = FALSE)
+    }
+  } else if ("n_states" %in% supplied && identical(discretization, "ordinal")) {
+    stop(
+      "`n_states` cannot be used with `discretization = \"ordinal\"`, whose ",
+      "state count follows `m` and `tau`.",
       call. = FALSE
     )
   }
@@ -221,11 +267,18 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   states <- if (inherits(data, "tsn_states")) {
     .tsn_select_canonical(data, series = series)
   } else {
-    discretize(
+    # `n_states` is forwarded only when the caller supplied it, so
+    # `discretize()` can tell an explicit value from its own default and
+    # apply its ordinal contract to the right party.
+    arguments <- list(
       measured, value = value, id = id, time = time, series = series,
-      method = discretization, n_states = n_states, breaks = breaks,
-      labels = labels, transform = transform, m = m, tau = tau, seed = seed
+      method = discretization, breaks = breaks, labels = labels,
+      transform = transform, m = m, tau = tau, seed = seed
     )
+    if ("n_states" %in% supplied) {
+      arguments$n_states <- n_states
+    }
+    do.call(discretize, arguments)
   }
   source <- .tsn_transition_source(states)
   settings <- list(
@@ -247,9 +300,21 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   labels_by_row <- .tsn_group_labels(
     source, data = data, group = group, id = id, time = time
   )
+  # The lost-to-discretization report compares against the groups that were
+  # eligible AFTER `series` selection; a group excluded by the caller's own
+  # selection was not "lost" and must not be warned about.
+  eligible <- if (inherits(data, "tsn_states")) {
+    .tsn_select_canonical(data, series = series)
+  } else if (is.data.frame(data) && !is.null(value)) {
+    .tsn_select_data(data, series = series, value = value, id = id)
+  } else {
+    # Wide data: `series` selects measurement columns, so every row (and
+    # therefore every group label) stays eligible.
+    data
+  }
   .tsn_grouped_networks(
     source, labels_by_row, settings = settings, dots = dots, group = group,
-    observed = unique(as.character(data[[group]]))
+    observed = unique(as.character(eligible[[group]]))
   )
 }
 
@@ -507,8 +572,10 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 #' @param settings The shared `meta$tsn` provenance list.
 #' @param dots Arguments forwarded to the Nestimate builder.
 #' @param group Name of the grouping column, recorded on the result.
-#' @param observed Every group label present in the input, used to report any
-#'   group that discretization removed before the split.
+#' @param observed Every group label eligible after `series` selection, used
+#'   to report any group that discretization removed before the split.
+#'   Groups excluded by the caller's own `series` selection are not listed
+#'   here and are therefore never reported as lost.
 #' @return A `ts_tna_group` collection.
 #' @noRd
 .tsn_grouped_networks <- function(source, labels, settings, dots, group,
@@ -844,6 +911,50 @@ plot.tsn_series_networks <- function(x, y = NULL, series = NULL, ...) {
   }
   if (length(selected) != 1L) {
     stop("Select exactly one model with `series` before plotting a collection.",
+         call. = FALSE)
+  }
+  plot(x[[selected]], ...)
+  invisible(x)
+}
+
+#' Plot One Network of a Grouped Transition Model
+#'
+#' A grouped model holds one complete `ts_tna` network per group, and there is
+#' no single picture of all of them, so one group is drawn at a time. The
+#' selected network is rendered by [plot.ts_tna()] with its full argument
+#' surface — combined series-plus-network views, state shading, ribbons, and
+#' every `cograph::splot()` option.
+#'
+#' @param x A `ts_tna_group` result from [ts_tna()] and friends, built with
+#'   their `group` argument.
+#' @param y Ignored.
+#' @param group Group label to draw. It may be omitted when the model holds
+#'   exactly one group.
+#' @param ... Passed to [plot.ts_tna()].
+#' @return `x`, invisibly.
+#' @seealso [ts_tna()] for the `group` argument;
+#'   [as.data.frame.ts_tna_group()] for the tidy views of the collection.
+#' @examplesIf requireNamespace("Nestimate", quietly = TRUE) && requireNamespace("cograph", quietly = TRUE)
+#' data(motivation)
+#' networks <- ts_tna(
+#'   motivation,
+#'   series = "pleasure", group = "task_context_type",
+#'   labels = c("low", "mid", "high")
+#' )
+#' plot(networks, group = "Home")
+#' plot(networks, group = "Work", type = "network")
+#' @export
+plot.ts_tna_group <- function(x, y = NULL, group = NULL, ...) {
+  stopifnot(inherits(x, "ts_tna_group"), is.null(y), !is.null(names(x)))
+  available <- names(x)
+  selected <- if (is.null(group)) available else unique(as.character(group))
+  unknown <- setdiff(selected, available)
+  if (length(unknown) > 0L) {
+    stop(sprintf("Unknown group: %s.", paste(unknown, collapse = ", ")),
+         call. = FALSE)
+  }
+  if (length(selected) != 1L) {
+    stop("Select exactly one network with `group` before plotting a grouped model.",
          call. = FALSE)
   }
   plot(x[[selected]], ...)

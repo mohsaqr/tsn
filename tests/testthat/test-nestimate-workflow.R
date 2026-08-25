@@ -86,9 +86,18 @@ test_that("the pooled step model carries one sequence per participant", {
 
 test_that("explicit breaks change the model, and are not silently ignored", {
   skip_if_not_installed("Nestimate")
-  # ts_tna() only honours `breaks` when discretization = "threshold"; with the
-  # quantile default it accepts and ignores them without warning. If that ever
-  # changes, or the wiring breaks, these two models would coincide.
+  # `breaks` is only consumed by discretization = "threshold"; with any other
+  # discretizer it is rejected outright rather than silently ignored.
+  expect_error(
+    ts_tna(
+      nw_walkers(),
+      value = "steps", id = "id", time = "day",
+      breaks = c(5000, 10000), labels = nw_labels
+    ),
+    "breaks"
+  )
+  # And when consumed, it must actually move the model: if the wiring broke,
+  # these two models would coincide.
   quantile_model <- ts_tna(
     nw_walkers(),
     value = "steps", id = "id", time = "day", labels = nw_labels

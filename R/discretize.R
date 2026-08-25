@@ -21,16 +21,19 @@
 #'   `"quantile"`, `"kde"`, `"kmeans"`, `"gaussian"`, `"hclust"`, `"ordinal"`,
 #'   `"symbolic"`, `"change_points"`, `"entropy"`, `"magnitude"`,
 #'   `"adaptive_magnitude"`, `"percentile_magnitude"`, or `"dtw"`.
-#' @param n_states Number of states. Ignored by `"ordinal"`, whose state count
-#'   follows the embedding arguments `m` and `tau`.
-#' @param breaks Optional interior thresholds for `method = "threshold"`.
+#' @param n_states Number of states. Not consumed by `"ordinal"`, whose state
+#'   count follows the embedding arguments `m` and `tau`; supplying both is an
+#'   error.
+#' @param breaks Optional interior thresholds for `method = "threshold"`. An
+#'   error with any other method, which computes its own boundaries.
 #' @param labels Optional custom state labels. Length must equal the number of
 #'   states produced. When `NULL`, states are numbered consecutively.
 #' @param transform Pre-discretization transform: `"none"` (default), `"log"`
 #'   (uses `log1p(abs(x))`), or `"zscore"` (standardized values).
 #' @param m Embedding dimension for `method = "ordinal"` (default `3`).
 #' @param tau Embedding lag for `method = "ordinal"` (default `1`).
-#' @param seed Optional seed used by stochastic discretizers.
+#' @param seed Optional seed for the stochastic discretizers (`"kmeans"` and
+#'   `"gaussian"`). An error with the deterministic methods.
 #' @return A tidy data frame of class `tsn_states` with columns `id`, `time`,
 #'   `value`, `state` (a factor), and `probability`. The discretization model
 #'   and any bin boundaries are stored in the `model` and `breaks` attributes.
@@ -62,6 +65,32 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
     "adaptive_magnitude", "percentile_magnitude", "dtw"
   ))
   transform <- match.arg(transform, c("none", "log", "zscore"))
+  # Options a method cannot consume are rejected rather than silently
+  # discarded: a typo or misunderstood configuration must not produce a
+  # plausible but unintended discretization.
+  if (!is.null(breaks) && !identical(method, "threshold")) {
+    stop(sprintf(
+      paste0(
+        "`breaks` cannot be used with `method = \"%s\"`; only the ",
+        "\"threshold\" discretizer takes explicit boundaries."
+      ), method
+    ), call. = FALSE)
+  }
+  if (!missing(n_states) && identical(method, "ordinal")) {
+    stop(
+      "`n_states` cannot be used with `method = \"ordinal\"`, whose state ",
+      "count follows `m` and `tau`.",
+      call. = FALSE
+    )
+  }
+  if (!is.null(seed) && !method %in% c("kmeans", "gaussian")) {
+    stop(sprintf(
+      paste0(
+        "`seed` cannot be used with `method = \"%s\"`; only the stochastic ",
+        "\"kmeans\" and \"gaussian\" discretizers are seeded."
+      ), method
+    ), call. = FALSE)
+  }
 
   source <- if (inherits(data, "tsn")) {
     .tsn_select_canonical(

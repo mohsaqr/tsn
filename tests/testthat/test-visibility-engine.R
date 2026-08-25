@@ -96,7 +96,7 @@ test_that("visibility node labels cannot collide across id-time pairs", {
     tz = "UTC"
   )
   expect_identical(
-    .tsn_visibility_labels(c("a", "a"), timestamps),
+    .tsn_node_labels(c("a", "a"), timestamps),
     paste("a", as.character(timestamps), sep = ":")
   )
 })

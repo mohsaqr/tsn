@@ -117,19 +117,32 @@ print.tsn <- function(x, ...) {
 #'
 #' @param object A `tsn` result.
 #' @param ... Ignored.
-#' @return A one-row data frame.
+#' @return A one-row data frame with columns `method`, `unit`, `nodes`,
+#'   `dyads`, `edges`, `density`, `minimum_weight`, `maximum_weight`, and
+#'   `directed`. `density` divides the connected edges by the number of
+#'   possible edges for the network family: state networks
+#'   (`unit = "state"`) always count self-loops among the possible edges,
+#'   because a state can follow itself, while series, window, and time-point
+#'   networks never do, because their units cannot pair with themselves. The
+#'   denominator therefore depends only on the network type, never on which
+#'   edges happen to be observed, so densities are comparable across models
+#'   of the same family.
 #' @export
 summary.tsn <- function(object, ...) {
   stopifnot(inherits(object, "tsn"))
   parameters <- object$parameters
   table <- object$table
   connected_weights <- table$weight[table$connected]
-  self_loops <- any(table$connected & table$from == table$to)
+  # Loops are part of the possible-edge universe exactly when the network
+  # family permits them (a state can follow itself); whether any loop was
+  # observed must not change the denominator, or densities stop being
+  # comparable between models of the same family.
+  loops_possible <- identical(parameters$unit, "state")
   n_nodes <- object$n_nodes
   possible <- if (parameters$directed) {
-    n_nodes * (n_nodes - 1L + as.integer(self_loops))
+    n_nodes * (n_nodes - 1L) + if (loops_possible) n_nodes else 0L
   } else {
-    choose(n_nodes, 2L) + as.integer(self_loops) * n_nodes
+    choose(n_nodes, 2L) + if (loops_possible) n_nodes else 0L
   }
   data.frame(
     method = parameters$method,

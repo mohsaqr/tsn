@@ -12,7 +12,16 @@
 \item{...}{Ignored.}
 }
 \value{
-A one-row data frame.
+A one-row data frame with columns \code{method}, \code{unit}, \code{nodes},
+\code{dyads}, \code{edges}, \code{density}, \code{minimum_weight}, \code{maximum_weight}, and
+\code{directed}. \code{density} divides the connected edges by the number of
+possible edges for the network family: state networks
+(\code{unit = "state"}) always count self-loops among the possible edges,
+because a state can follow itself, while series, window, and time-point
+networks never do, because their units cannot pair with themselves. The
+denominator therefore depends only on the network type, never on which
+edges happen to be observed, so densities are comparable across models
+of the same family.
 }
 \description{
 Summarize a TSN network

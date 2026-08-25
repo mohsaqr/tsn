@@ -86,8 +86,8 @@ and anxiety on 0-100 scales, and each report carries a
 <code>day_type</code> label: weekday or weekend. A single transition
 network estimated from all of it would answer how momentary
 <code>effort</code> moves between <code>low</code>, <code>mid</code>,
-and <code>high</code> <em>on average</em> — and would erase exactly the
-distinction the day-type column exists to draw.</p>
+and <code>high</code> <em>on average</em>, and in doing so would erase
+exactly the distinction the day-type column exists to draw.</p>
 <p>The <code>group</code> argument of <code><a href="../reference/ts_tna.html">ts_tna()</a></code> and its
 siblings answers the conditional question instead: one network per day
 type, both cut from one shared state alphabet, packaged so that
@@ -132,16 +132,17 @@ start.</p>
 <span><span class="co">#&gt; 1 weekday  tna       238         2033      3     9</span></span>
 <span><span class="co">#&gt; 2 weekend  tna       233          783      3     9</span></span></code></pre></div>
 <p>The weekday network rests on 2,033 observations in 238 sequences, the
-weekend network on 783 in 233. The <code>sequences</code> column repays
-attention: a sequence is cut at every change of student <em>and</em> at
-every change of day type, so a working week of roughly two reports a day
-forms one sequence of eight to ten observations, while a weekend forms
-one of three to four. The two cut rules are not the same. A change of
-student separates measurements that were never consecutive; a change of
-day type falls between two genuinely adjacent measurements, and the
-transition across it — Friday evening to Saturday morning — is excluded
-from both networks, because it belongs to neither day type. The next
-section shows what goes wrong without that rule.</p>
+weekend network on 783 in 233. The <code>sequences</code> column is the
+one to read closely: a sequence is cut at every change of student
+<em>and</em> at every change of day type, so a working week of roughly
+two reports a day forms one sequence of eight to ten observations, while
+a weekend forms one of three to four. The two cut rules are not the
+same. A change of student separates measurements that were never
+consecutive; a change of day type falls between two genuinely adjacent
+measurements, and the transition across it, from Friday evening to
+Saturday morning, is excluded from both networks because it belongs to
+neither day type. The next section shows what goes wrong without that
+rule.</p>
 </div>
 <div class="section level2">
 <h2 id="why-not-subset-the-data-and-build-each-model-by-hand">Why not subset the data and build each model by hand?<a class="anchor" aria-label="anchor" href="#why-not-subset-the-data-and-build-each-model-by-hand"></a>
@@ -167,16 +168,16 @@ equivalent, and it fails in two distinct ways.</p>
 <h3 id="first-failure-the-subset-welds-broken-time-back-together">First failure: the subset welds broken time back together<a class="anchor" aria-label="anchor" href="#first-failure-the-subset-welds-broken-time-back-together"></a>
 </h3>
 <p>The hand-built model holds each student’s weekend reports as
-<strong>one</strong> sequence — the first student’s 15 weekend reports
+<strong>one</strong> sequence. The first student’s 15 weekend reports
 above span many separate weekends, yet they form a single unbroken
 series. Across all 41 students the 783 weekend observations become 41
 sequences carrying 742 transitions. The grouped index showed the truth:
 those observations form <strong>233</strong> separate weekend runs,
 which contain only 783 − 233 = 550 genuine transitions. The hand-built
-model therefore counts 192 transitions — about a quarter of its total —
+model therefore counts 192 transitions, about a quarter of its total,
 between measurements that were never adjacent in time. Each one joins
-the end of one weekend to the start of the next, across an entire
-intervening week, and each one is dynamics that never happened.</p>
+the end of one weekend to the start of the next across an entire
+intervening week, and each is a transition that never occurred.</p>
 <p>The grouped model never counts them. A sequence is cut at every
 change of group, so a transition is only ever counted between genuinely
 consecutive measurements within one day type.</p>
@@ -203,7 +204,7 @@ points from weekend reports alone:</p>
 <span><span class="co">#&gt; 2   mid   261  0.3333333   63.07903</span></span>
 <span><span class="co">#&gt; 3  high   261  0.3333333   86.32532</span></span></code></pre></div>
 <p>By construction, exactly a third of weekend reports land in each
-state — 261 apiece — so the weekend composition can carry no information
+state (261 apiece), so the weekend composition can carry no information
 at all. The grouped model cuts the states from the
 <strong>pooled</strong> series before splitting, and its weekend column
 reports the real composition on the shared scale:</p>
@@ -220,11 +221,11 @@ reports the real composition on the shared scale:</p>
 weekend effort sit at nearly the same level (means of 58.5 and 59.2):
 the shared scale puts each weekend state within a percentage point or
 two of a third. That mildness is a property of these data, not of the
-method. For groups that differ in level — a clinical and a control
-cohort, a high- and a low-workload term — per-subset tertiles redefine
-the states inside each group, and the artifact grows with the very
-difference under study. The grouped model makes the safe construction
-the default; explicit <code>breaks</code> (as in
+method. For groups that differ in level, such as a clinical against a
+control cohort or a high- against a low-workload term, per-subset
+tertiles redefine the states inside each group, and the artifact grows
+with the very difference under study. The grouped model makes the safe
+construction the default; explicit <code>breaks</code> (as in
 <code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow", package = "tsn")</a></code>) achieve
 the same discipline by hand.</p>
 </div>
@@ -251,11 +252,11 @@ across them:</p>
 <span><span class="co">#&gt; 6  weekday high mid 0.2538071</span></span>
 <span><span class="co">#&gt; 15 weekend high mid 0.3419689</span></span></code></pre></div>
 <p>The probability that a high-effort report softens to <code>mid</code>
-is 0.254 on weekdays and 0.342 on weekends — the edge the inference
-section below puts to the test. <code>what = "series"</code> returns the
-per-observation table behind the networks, with the run-level sequence
-IDs, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds Nestimate’s network-metric panel,
-one column per group:</p>
+is 0.254 on weekdays and 0.342 on weekends. This is the edge the
+inference section below puts to the test. <code>what = "series"</code>
+returns the per-observation table behind the networks, with the
+run-level sequence IDs, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds Nestimate’s
+network-metric panel, one column per group:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network metrics by group:</span></span>
@@ -286,10 +287,16 @@ evenly; weekend rows are the more polarized ones.</p>
 </h3>
 <p>The state distributions above showed both day types holding close to
 a third of reports in each state. The mosaic view draws the transition
-structure itself, one panel per group:</p>
+structure itself, one panel per group, with tile area encoding
+transition probability:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span></code></pre></div>
 <p><img src="group-models_files/figure-html/mosaic-1.png" class="r-plt" alt="Mosaic panels of the weekday and weekend effort transition networks, in which tile area encodes transition probability; the weekend high-to-mid tile is visibly larger than its weekday counterpart." width="100%" style="display: block; margin: auto;"></p>
+<p>The two mosaics differ mainly at the <code>high</code> state: the
+weekend network routes more probability from <code>high</code> to
+<code>mid</code> (0.342 against 0.254) and retains less in
+<code>high</code> (0.534 against 0.631). This is the same softening the
+edge table reported, now shown as tile area rather than as a number.</p>
 </div>
 <div class="section level3">
 <h3 id="mean-first-passage-times">Mean first passage times<a class="anchor" aria-label="anchor" href="#mean-first-passage-times"></a>
@@ -324,8 +331,8 @@ of steps to reach each state from each other state (Kemeny &amp; Snell,
 <span><span class="co">#&gt; Stationary distribution:</span></span>
 <span><span class="co">#&gt;    low    mid   high </span></span>
 <span><span class="co">#&gt; 0.3549 0.3666 0.2785</span></span></code></pre></div>
-<p>The travel times are broadly similar — every state is reachable
-within three to seven steps on either day type — but the stationary
+<p>The travel times are broadly similar, since every state is reachable
+within three to seven steps on either day type, but the stationary
 distributions tilt: the weekday chain settles with 33.2% of its time in
 <code>high</code>, the weekend chain with 27.9%. Since the observed
 compositions are nearly identical, that tilt is carried by the dynamics,
@@ -342,8 +349,8 @@ effort less firmly.</p>
 <span><span class="co">#&gt; Entropy rate per group:</span></span>
 <span><span class="co">#&gt; weekday weekend </span></span>
 <span><span class="co">#&gt;  1.3650  1.3853</span></span></code></pre></div>
-<p>Both day types run near the <code>log2(3) = 1.585</code> ceiling —
-1.37 and 1.39 bits — so momentary effort is weakly predictable
+<p>Both day types run near the <code>log2(3) = 1.585</code> ceiling, at
+1.37 and 1.39 bits, so momentary effort is weakly predictable
 everywhere; neither day type is a regime of rigid habit.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">day_centrality</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">by_day</span><span class="op">)</span></span>
@@ -369,9 +376,9 @@ everywhere; neither day type is a regime of rigid habit.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">day_centrality</span><span class="op">)</span></span></code></pre></div>
 <p><img src="group-models_files/figure-html/centrality-plot-1.png" class="r-plt" alt="Faceted centrality chart comparing in-strength, betweenness, and diffusion of the three states across the weekday and weekend networks, with the mid state carrying the highest in-strength and all betweenness in both." width="100%" style="display: block; margin: auto;"></p>
-<p><code>mid</code> is the hub of both networks — the highest
-in-strength (0.54 weekday, 0.62 weekend) and the only state with nonzero
-betweenness — because movement between <code>low</code> and
+<p><code>mid</code> is the hub of both networks. It carries the highest
+in-strength (0.54 weekday, 0.62 weekend) and is the only state with
+nonzero betweenness, because movement between <code>low</code> and
 <code>high</code> routes through the middle of the scale. The message
 printed above the tables matters for any transition network:
 self-transitions are excluded by default, or the diagonal would drown
@@ -438,15 +445,15 @@ between the groups to build a null distribution per edge.</p>
 <span><span class="co">#&gt; 7 0.77822178 FALSE</span></span>
 <span><span class="co">#&gt; 8 0.02297702  TRUE</span></span>
 <span><span class="co">#&gt; 9 0.04595405  TRUE</span></span></code></pre></div>
-<p>One difference is robust: <code>high -&gt; mid</code> (0.254 weekday,
-0.342 weekend, p = 0.023). Its mirror image — weekend
-<code>high -&gt; high</code> retention falling from 0.631 to 0.534 —
-sits exactly on the significance boundary (p = 0.046) and moves around
-0.05 under other seeds, so it should be read as suggestive, not
-established. Together they tell one coherent story: on weekends, a
-high-effort spell is more likely to soften into the mid range and less
-likely to hold. The other seven edges do not differ; weekday and weekend
-self-regulation share most of their structure.</p>
+<p>One difference holds up under the null: <code>high -&gt; mid</code>
+(0.254 weekday, 0.342 weekend, p = 0.023). Its mirror image, the fall in
+<code>high -&gt; high</code> retention from 0.631 on weekdays to 0.534
+on weekends, sits exactly on the significance boundary (p = 0.046) and
+moves around 0.05 under other seeds, so it should be read as suggestive
+rather than established. Together they tell one coherent story: on
+weekends, a high-effort spell is more likely to soften into the mid
+range and less likely to hold. The other seven edges do not differ, so
+weekday and weekend self-regulation share most of their structure.</p>
 </div>
 <div class="section level3">
 <h3 id="the-metric-panel">The metric panel<a class="anchor" aria-label="anchor" href="#the-metric-panel"></a>
@@ -501,7 +508,7 @@ matrix-comparison metrics.</p>
 a maximum absolute difference of 0.097 on the
 <code>high -&gt; high</code> retention: close networks whose one real
 gap is how long high effort lasts. Always name <code>i</code> and
-<code>j</code> — with more than two groups there is no meaningful
+<code>j</code>, because with more than two groups there is no meaningful
 default pair.</p>
 </div>
 <div class="section level3">
@@ -543,9 +550,9 @@ Dirichlet posterior, without resampling.</p>
 of nine bootstrap edges and all nine posterior-certain ones; the weekend
 network, with 783, keeps four and seven. Equal sequence counts (238
 against 233) do not buy equal precision when the sequences differ in
-length — a weekend run is a third as long as a weekday run, so the
-weekend estimates simply rest on less data. Reading the index table
-first is not a formality.</p>
+length: a weekend run is about a third as long as a weekday run, so the
+weekend estimates rest on less data. Reading the index table first is
+not a formality.</p>
 </div>
 <div class="section level3">
 <h3 id="is-first-order-enough-per-group">Is first order enough, per group?<a class="anchor" aria-label="anchor" href="#is-first-order-enough-per-group"></a>
@@ -587,11 +594,11 @@ checks the Markov assumption group by group.</p>
 <span><span class="co">#&gt;      3 -720.22 1546.44 1792.63 26  28.57   0.630738523 3.311396e-01       FALSE</span></span></code></pre></div>
 <p>The weekday test prefers a higher order (BIC selects 2, AIC and the
 permutation LRT select 3): within a working week, yesterday’s effort
-carries information beyond today’s. The weekend test is more temperate —
-BIC keeps order 1 and the LRT stops at 2 — though its shorter runs give
-order-3 contexts little data to show up in. Read both networks as
-one-step summaries, with the weekday summary the more visibly incomplete
-of the two.</p>
+carries information beyond today’s. The weekend test is more temperate,
+since BIC keeps order 1 and the LRT stops at 2, though its shorter runs
+give order-3 contexts little data in which to show up. Read both
+networks as one-step summaries, with the weekday summary the more
+visibly incomplete of the two.</p>
 </div>
 <div class="section level3">
 <h3 id="stability-under-case-dropping">Stability under case dropping<a class="anchor" aria-label="anchor" href="#stability-under-case-dropping"></a>
@@ -621,9 +628,9 @@ weights themselves (both after Epskamp, Borsboom &amp; Fried, 2018).</p>
 <p>The verdicts are mixed, and the mixture is the point. The centrality
 orderings are serviceable (coefficients of 0.5 to 0.9), but the
 edge-weight CS-coefficients come back at 0.3 for weekdays and 0.5 for
-weekends — at or below the 0.5 bar for acceptable. Individual edge
-weights from this panel should be reported with their intervals, not as
-point values, and the permutation result above should carry the
+weekends, at or below the 0.5 bar for acceptable stability. Individual
+edge weights from this panel should be reported with their intervals,
+not as point values, and the permutation result above should carry the
 inferential weight. A stability check that returns an uncomfortable
 number has done its job.</p>
 </div>
@@ -642,7 +649,7 @@ class, so a pruned collection flows back into every verb above.</p>
 <span><span class="co">#&gt;   weekend  3      5      [0.085, 0.633]</span></span></code></pre></div>
 <p>Each day type keeps five of its nine edges at a 0.3 threshold. Prune
 after testing, not before: the <code>high -&gt; mid</code> edge that
-carries the weekend difference sits at 0.254 on weekdays — a premature
+carries the weekend difference sits at 0.254 on weekdays, so a premature
 prune would have deleted one side of the finding.</p>
 </div>
 <div class="section level2">
@@ -659,7 +666,7 @@ grouping column gets a network, however little stands behind it. The
 <strong>A group column that alternates too fast.</strong> Every
 change of group cuts a sequence, so a column that flips at almost every
 observation leaves runs of length one and no transitions at all. In the
-extreme case — a group whose observations are <em>never</em> adjacent —
+extreme case, a group whose observations are <em>never</em> adjacent,
 the model warns that the group’s network is empty. Day type is a
 well-behaved grouping variable precisely because it changes only twice a
 week.</li>
@@ -668,8 +675,8 @@ week.</li>
 Temporal discretizers such as <code>ordinal</code> drop tail rows that
 cannot fill an embedding window. If that removes a group entirely, the
 model warns that the group was lost to discretization. A group you
-excluded yourself via <code>series</code> is not warned about — it was
-your decision.</li>
+excluded yourself via <code>series</code> is not warned about, because
+that exclusion was your decision.</li>
 <li>
 <strong>Comparing a grouped model with a hand-subset model.</strong>
 The two are not estimates of the same thing, for both reasons in the
@@ -681,24 +688,24 @@ section above.</li>
 </h2>
 <ul>
 <li>
-<strong><code>group</code></strong> — the condition already exists
-as a column, there may be more than two levels, and the comparison
-itself is the point. Pooled discretization and boundary-safe sequence
-cutting come built in.</li>
+<strong><code>group</code>.</strong> The condition already exists as
+a column, there may be more than two levels, and the comparison itself
+is the point. Pooled discretization and boundary-safe sequence cutting
+come built in.</li>
 <li>
-<strong>Two models plus <code>permutation(x, y)</code></strong> —
-the split is not a column but a derived rule (an occasion cutoff, an
+<strong>Two models plus <code>permutation(x, y)</code>.</strong> The
+split is not a column but a derived rule (an occasion cutoff, an
 external roster), and there are exactly two sides. Fix the state
 alphabet yourself with explicit <code>breaks</code>, or the comparison
 inherits the threshold artifact. The companion vignette
 <code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow", package = "tsn")</a></code> runs this
 design on the <code>srl</code> panel’s course halves.</li>
 <li>
-<strong><code><a href="../reference/series_networks.html">series_networks()</a></code></strong> — the unit of
+<strong><code><a href="../reference/series_networks.html">series_networks()</a></code>.</strong> The unit of
 comparison is the individual student (one network per person), not a
 condition shared across students.</li>
 <li>
-<strong>A single pooled model</strong> — no conditioning variable at
+<strong>A single pooled model.</strong> No conditioning variable at
 all; the average dynamics are the question.</li>
 </ul>
 </div>

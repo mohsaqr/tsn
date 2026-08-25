@@ -2,16 +2,20 @@
 
 ## Introduction
 
-A numeric time series records the level of a quantity over time. A
-transition network records something different: how a system moves
-between a small number of qualitative *states*, with nodes for the
-states and directed edges for the probability of passing from one to the
-next. The two descriptions answer different questions. The series says
-how high a measurement was; the network says what a measurement is
-likely to be followed by. Recovering the second from the first takes two
-steps, reducing the continuous series to a sequence of states and
-estimating the state-to-state transitions, and then a third that is easy
-to skip: deciding what such a model may legitimately claim.
+A student rates their momentary anxiety on a 0-100 scale, again and
+again over a term. That record is a numeric time series: one quantity,
+measured repeatedly in time. A transition network asks a different
+question of the same record. Once the continuous scale is reduced to a
+few qualitative *states* such as `low`, `mid`, and `high`, the network’s
+nodes are those states and its directed edges the probability of passing
+from one to the next. The series says how high a measurement was; the
+network says what a measurement is likely to be followed by.
+
+Recovering the network from the series takes two steps: reducing the
+continuous series to a sequence of states, and estimating the
+state-to-state transitions. There is a third step that is easy to skip,
+and it is the one this vignette keeps in view: deciding what the fitted
+model may legitimately claim.
 
 The **tsn** package performs the first two steps in a single call and
 hands the result to **Nestimate**, which supplies the third.
@@ -87,8 +91,8 @@ whose entry *(i, j)* is the probability of moving to state *j* given
 that the system is currently in state *i*, together with the
 initial-state distribution. Each row sums to one because from any state
 the process must go somewhere. One entry already rewards reading: after
-a high-anxiety report, the most likely next state is `low` (0.423) — for
-this student, high anxiety resolves sharply rather than escalating.
+a high-anxiety report, the most likely next state is `low` (0.423), so
+for this student high anxiety resolves sharply rather than escalating.
 
 ### The bridge: this object *is* a Nestimate model
 
@@ -218,8 +222,8 @@ bootstrap_network(blocks, iter = 500, seed = 2026)
 
 Sixteen sequences, and the bootstrap now runs. Partitioning is not free:
 every cut destroys the transition that straddles it, so sixteen blocks
-cost fifteen of the 155 transitions — about ten percent — and the
-estimate shifts slightly.
+cost fifteen of the 155 transitions, about ten percent, and the estimate
+shifts slightly.
 
 Sliding the window instead of partitioning keeps all of them. At
 `segment = 2, overlap = TRUE` the blocks are the consecutive lag-1
@@ -256,17 +260,17 @@ The two schemes trade the point estimate against independence. Sliding
 blocks preserve the estimate exactly and yield the most units;
 partitioned blocks respect whatever dependence exists inside a block, at
 the price of the boundary transitions lost to the cuts. On this series
-the two run neck and neck — mean interval widths of 0.253 for the
+the two run neck and neck: mean interval widths of 0.253 for the
 partitioned blocks against 0.254 for the lag-1 pairs, with a single edge
 crossing the stability criterion under partitioning and none under
 sliding. That is the real lesson of the exercise: 156 volatile
 observations of one person yield intervals a quarter of a probability
 unit wide however they are resampled. Where the two schemes do differ,
 prefer partitioning, because resampling lag-1 pairs assumes exactly the
-first-order Markov property the model itself assumes — an assumption the
-Markov-order test below rejects for these data. Blocks of 10 to 30
-retain roughly 90% to 97% of the transitions, which is usually the right
-trade; blocks of 2 retain only half and are better avoided.
+first-order Markov property the model itself assumes, and the
+Markov-order test below rejects that property for these data. Blocks of
+10 to 30 retain roughly 90% to 97% of the transitions, which is usually
+the right trade; blocks of 2 retain only half and are better avoided.
 
 None of this manufactures information. Segmenting a single series asks
 how stable one person’s own dynamics are, and says nothing about anyone
@@ -280,8 +284,8 @@ each of the three states to hold a third of the observations, so the
 state sizes carry no information, by construction. That is why every
 model built from the `srl` panel uses fixed thresholds of 40 and 70 on
 the 0-100 effort scale instead. Fixed breaks make the states
-interpretable outside the sample — below 40 is low effort wherever it
-occurs — and they give every model one shared alphabet, which is what
+interpretable outside the sample, since below 40 is low effort wherever
+it occurs, and they give every model one shared alphabet, which is what
 makes the period comparison below legitimate. (The grouped `esm_srl`
 model at the end keeps the quantile default; grouping pools the series
 before cutting it, so its groups share an alphabet without breaks being
@@ -330,8 +334,8 @@ state_distribution(effort_model)
 
 High effort is the panel’s most common state at 41.7% of the days, and
 it is also the most persistent: the `high -> high` probability of 0.575
-is the largest entry in the matrix. Effort, once high, tends to continue
-— and the asymmetry runs one way, since a low-effort day returns to
+is the largest entry in the matrix. Effort, once high, tends to
+continue, and the asymmetry runs one way: a low-effort day returns to
 `low` at only 0.415.
 
 ### One network per person
@@ -444,13 +448,14 @@ net_prune(effort_model, method = "threshold", threshold = 0.3)
 Four edges fall below the threshold, and they are not a random four:
 every *descending* route (`moderate -> low`, `high -> low`,
 `high -> moderate`) disappears, together with the direct `low -> high`
-leap. What survives is the ascending ladder — `low -> moderate` at
-0.314, `moderate -> high` at 0.329 — and the three persistence loops.
-Effort climbs stepwise and decays only weakly.
+leap. What survives is the ascending ladder (`low -> moderate` at 0.314,
+`moderate -> high` at 0.329) and the three persistence loops. Effort
+climbs stepwise and decays only weakly.
 
 Prune after testing rather than before, however. A threshold ranks edges
 by size, and size is not the same as interest: a small but reliably
-estimated edge can matter more than a large but uncertain one.
+estimated edge can matter more than a large but uncertain one. The
+bootstrap in the next section shows exactly this happening.
 
 ## Bootstrap: which edges survive resampling?
 
@@ -505,13 +510,23 @@ summary(boot)
 #> 9 0.6534180 0.4311532 0.7185886
 ```
 
-Five of the nine edges survive resampling — the three persistence loops
-and the two ascending steps, precisely the edges pruning kept. The other
-four, all descending routes or the `low -> high` leap, move too much
-across resamples of the 36 students to clear the stability criterion.
-This is what a moderate panel buys: the backbone is firm, the weaker
-cross-currents are not, and the two verdicts (pruning by size, bootstrap
-by stability) agreeing on the same five edges is itself informative.
+Five of the nine edges clear the stability criterion, and four of them
+are edges pruning also kept: the `moderate` and `high` persistence loops
+and the two ascending steps, `low -> moderate` and `moderate -> high`.
+The fifth is where the two verdicts part. The bootstrap keeps
+`high -> moderate` (0.260), a single step down from the top of the scale
+that pruning had discarded as too small, and it drops `low -> low`
+(0.415), the large loop pruning kept. `low -> low` is the outgoing edge
+of the rarest state (`low` fills 24.4% of the days), so it rests on the
+fewest transitions and just misses the criterion (p = 0.060). This is
+the pruning caution made concrete: ranking edges by size and ranking
+them by stability need not agree, and here they trade one edge in each
+direction. The four edges that fail resampling are the long-range moves,
+the `low -> high` leap and the two descents into `low`
+(`moderate -> low`, `high -> low`), together with the `low -> low` near
+miss. This is what a moderate panel buys: the ascending backbone and the
+strong loops are firm, while the rarest-state and long-range edges are
+not.
 
 ## Stability: would the same states rank first in a smaller study?
 
@@ -533,8 +548,8 @@ centrality_stability(effort_model, iter = 100)
 #>     OutStrength      0.40
 ```
 
-The in-strength ordering holds to a 0.60 drop — acceptable, against
-conventional bars of 0.5 for acceptable and 0.7 for excellent — but the
+The in-strength ordering holds to a 0.60 drop, acceptable against the
+conventional bars of 0.5 for acceptable and 0.7 for excellent, but the
 out-strength ordering fails the bar at 0.40. With 36 sequences, claims
 about which state *sends* the most between-state traffic should not be
 made from this panel; claims about which state receives it are on firmer
@@ -689,7 +704,7 @@ High-effort days make up 42.0% of the first half and 41.5% of the
 second; every proportion moves by less than a percentage point. Level
 and dynamics are both stationary across the course: whatever effort
 habits these students have, they are set before the midpoint and do not
-drift. A null this uniform is a finding — it licenses pooling the whole
+drift. A null this uniform is a finding: it licenses pooling the whole
 course into the single model above, which a real first-to-second-half
 shift would have forbidden.
 
@@ -781,11 +796,11 @@ state_distribution(by_day)
 #> 6 weekend   low   253  0.3231162
 ```
 
-The compositions are nearly identical — each state holds close to a
-third of the reports on both day types, as pooled quantile cutting
-guarantees for the whole panel though not for each group. Whatever
-distinguishes weekends, it is not how much high-effort time they
-contain. The difference, if any, must live in the dynamics, and the
+The compositions are nearly identical: each state holds close to a third
+of the reports on both day types, which pooled quantile cutting
+guarantees for the whole panel, though not for each group taken alone.
+Whatever distinguishes weekends, it is not how much high-effort time
+they contain. The difference, if any, must live in the dynamics, and the
 shared alphabet is what makes that question answerable:
 
 ``` r
@@ -815,18 +830,19 @@ summary(day_comparison)
 #> 9 0.04595405  TRUE
 ```
 
-One robust difference emerges: `high -> mid` runs at 0.254 on weekdays
-and 0.342 on weekends (p = 0.023). Its mirror image, weekend
+One difference holds up under the null: `high -> mid` runs at 0.254 on
+weekdays and 0.342 on weekends (p = 0.023). Its mirror image, weekend
 `high -> high` retention falling to 0.534 from 0.631, sits exactly on
 the boundary (p = 0.046) and should be read as suggestive rather than
 established. Read together, the pattern is coherent: on weekends a
 high-effort spell is more likely to soften into the mid range and less
-likely to hold. This is the reverse of the seasonal result above —
+likely to hold. This is the reverse of the two-period result above:
 there, composition was free to move and nothing moved; here, composition
-is pinned by construction and the dynamics carry the difference.
+is pinned by construction, so the dynamics carry the difference.
 
 A mosaic plot shows both transition structures at a glance, one panel
-per day type:
+per day type, with the weekend `high -> mid` cell visibly the larger of
+the pair:
 
 ``` r
 
@@ -889,9 +905,9 @@ compare_model(by_day, i = "weekday", j = "weekend")
 ```
 
 A Pearson correlation of 0.966 with a maximum absolute difference of
-0.097 — the `high -> high` retention gap — confirms the same reading:
-the two networks are close, and where they part is in how long high
-effort lasts.
+0.097, the `high -> high` retention gap, confirms the same reading: the
+two networks are close, and where they part is in how long high effort
+lasts.
 
 Pruning applies group-wise and returns a grouped model, so the
 collection can be carried through a workflow without being taken apart:

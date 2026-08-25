@@ -63,8 +63,8 @@ edge labels show transition probabilities, with the heaviest self-loop
 on the high
 state.](nestimate-compatibility_files/figure-html/plot-model-1.png)
 
-The strong diagonal is the first substantive fact: every state prefers
-itself, `high` most of all at 0.575.
+The strong diagonal is the first substantive fact: every state’s most
+likely successor is itself, `high` most strongly of all at 0.575.
 
 ## Reading the model as data
 
@@ -117,9 +117,9 @@ extract_edges(effort_model)
 
 One difference matters for transition networks:
 [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.html)
-**excludes self-transitions** — it returns the six between-state edges,
-sorted by weight, and omits the diagonal. For this model the diagonal is
-where most of the probability lives (`high → high` is 0.575), so use
+**excludes self-transitions**, returning the six between-state edges
+sorted by weight and omitting the diagonal. For this model the diagonal
+is where most of the probability lives (`high → high` is 0.575), so use
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) or
 [`extract_transition_matrix()`](https://saqr.me/Nestimate/reference/extract_transition_matrix.html)
 whenever persistence is part of the question, and
@@ -134,7 +134,7 @@ students’ first recorded day is a `high`-effort day, 19.4% a `low` one.
 [`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html)
 and
 [`state_frequencies()`](https://saqr.me/Nestimate/reference/state_frequencies.html)
-count observations per state — the marginal composition, before any
+count observations per state, the marginal composition before any
 dynamics.
 
 ``` r
@@ -160,7 +160,7 @@ moderate days forming most of the area and low days a narrower
 band.](nestimate-compatibility_files/figure-html/mosaic-1.png)
 
 [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.html)
-is the sequence carpet — one row per student, one coloured cell per day:
+is the sequence carpet, one row per student, one coloured cell per day:
 
 ``` r
 
@@ -185,8 +185,8 @@ distribution_plot(effort_model)
 course days, with bands for low, moderate, and high
 effort.](nestimate-compatibility_files/figure-html/composition-time-1.png)
 
-This is composition over course time — the view in which a
-first-to-second half shift would appear, and the workflow vignette’s
+This is composition over course time, the view in which a
+first-to-second-half shift would appear, and the workflow vignette’s
 period comparison shows there is none.
 [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.html)
 offers a fourth, marimekko-style variant of the same information.
@@ -194,7 +194,7 @@ offers a fourth, marimekko-style variant of the same information.
 ## Which states and edges carry the structure?
 
 [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html)
-ranks states. Self-transitions are excluded by default — for a
+ranks states. Self-transitions are excluded by default, because for a
 transition network the diagonal would otherwise dominate every strength
 measure.
 
@@ -253,7 +253,7 @@ load.](nestimate-compatibility_files/figure-html/betweenness-plot-1.png)
 
 Every between-state edge carries the same load of 1: each lies on
 exactly one shortest path, and none is a privileged route. That
-uniformity is itself a description — movement between effort states does
+uniformity is itself a description: movement between effort states does
 not funnel through any single corridor.
 
 ## How the process moves
@@ -293,7 +293,7 @@ state.](nestimate-compatibility_files/figure-html/passage-plot-1.png)
 A `moderate` or `high` day is reached from anywhere within about two to
 four days on average; a `low` day takes four to five and a half. Low
 effort is the state this panel visits reluctantly, not a basin it falls
-into. The stationary distribution — 24% low, 34% moderate, 42% high — is
+into. The stationary distribution (24% low, 34% moderate, 42% high) is
 where the chain settles regardless of its start.
 
 ### Persistence, return, and sojourn
@@ -331,7 +331,7 @@ states.](nestimate-compatibility_files/figure-html/markov-stability-plot-1.png)
 
 A high-effort spell lasts 2.4 days on average and recurs every 2.4; a
 low-effort spell lasts 1.7 days and recurs only every 4.1. Persistence
-and prevalence line up here, but they are logically distinct columns — a
+and prevalence line up here, but they are logically distinct columns: a
 rare state can still be sticky.
 
 ### Is the chain well-behaved?
@@ -360,7 +360,7 @@ summary(chain_structure(effort_model))
 The chain is irreducible, aperiodic, and regular, so the stationary
 distribution above is well-defined and unique. It is *not* reversible:
 the forward process is statistically distinguishable from its time
-reversal, which is itself a substantive fact about self-regulation — the
+reversal, which is itself a substantive fact about self-regulation: the
 routes up the effort scale and the routes down are not mirror images.
 
 ## How predictable is the process?
@@ -397,9 +397,9 @@ plot(effort_entropy)
 redundancy, each a narrow density around its point
 estimate.](nestimate-compatibility_files/figure-html/entropy-bayes-plot-1.png)
 
-The entropy rate is 1.478 bits against a ceiling of `log2(3) = 1.585` —
-0.93 on the normalised scale — with a credible interval three hundredths
-wide: with 5,600 daily reports, the *uncertainty* about how
+The entropy rate is 1.478 bits against a ceiling of `log2(3) = 1.585`,
+or 0.93 on the normalised scale, with a credible interval three
+hundredths wide: with 5,600 daily reports, the *uncertainty* about how
 unpredictable the process is, is itself small. The redundancy of 0.073
 bits is the gap between the marginal entropy and the conditional one:
 knowing today’s effort removes under 5% of tomorrow’s uncertainty. Daily
@@ -407,9 +407,9 @@ effort is mostly noise around a weak first-order signal, and every edge
 below should be read with that in mind.
 
 [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.html)
-maps the same quantity onto the edges — each entry is an edge’s
-contribution to the row’s unpredictability — and returns a network of
-the same class, so it can be plotted or pruned like any other:
+maps the same quantity onto the edges, each entry an edge’s contribution
+to the row’s unpredictability, and returns a network of the same class,
+so it can be plotted or pruned like any other:
 
 ``` r
 
@@ -519,12 +519,12 @@ The weighted divergence is 0.038 bits: history shifts the next-step
 distribution by a few hundredths of a bit and flips the modal prediction
 in only two of nine contexts. This is the pair of numbers that
 reconciles a decisively significant order test with the continued use of
-a first-order model — detectable is not the same as large. The
+a first-order model: detectable is not the same as large. The
 first-order network remains a fair one-step summary; it is not the full
 process.
 
 [`path_counts()`](https://saqr.me/Nestimate/reference/path_counts.html)
-is the raw material — every observed two-step path with its count:
+is the raw material, every observed two-step path with its count:
 
 ``` r
 
@@ -554,8 +554,8 @@ pathways(hon)
 #> character(0)
 ```
 
-HON promotes no node here — no single context shifts the next-step
-distribution enough to justify splitting a state — which is why
+HON promotes no node here, because no single context shifts the
+next-step distribution enough to justify splitting a state, which is why
 [`pathways()`](https://saqr.me/Nestimate/reference/pathways.html) comes
 back empty. Two criteria disagreeing is a result, not a bug: the
 likelihood test sees aggregate improvement, HON asks a stricter per-node
@@ -657,9 +657,17 @@ head(summary(effort_boot), 3)
 #> 3 0.3582807 0.2037445 0.3395742
 ```
 
-Five of nine edges survive — the three persistence loops and the two
-ascending steps — while the descending routes move too much across
-resamples of 36 students to clear the stability criterion.
+Five of nine edges clear the stability criterion: the `moderate` and
+`high` persistence loops, the two ascending steps `low -> moderate` and
+`moderate -> high`, and the single short descent `high -> moderate`. The
+four that fail are the `low -> high` leap, the two steep descents into
+`low` (`moderate -> low`, `high -> low`), and the `low -> low` loop,
+which just misses (p = 0.060) because `low` is the rarest state and its
+outgoing row rests on the fewest transitions. This is not quite the set
+that pruning kept: pruning discarded `high -> moderate` as too small and
+held the large `low -> low` loop, so ranking edges by size and ranking
+them by stability trade one edge in each direction, the caution the
+pruning section named.
 
 ### Bayesian edge certainty
 
@@ -692,13 +700,13 @@ wide. The two verbs disagree because they ask different questions:
 whether an edge’s posterior excludes instability given the pooled
 transitions, while the bootstrap asks whether the estimate survives
 swapping *students* in and out. An edge can be precisely estimated from
-the pooled data and still depend on who is in the panel — the four
-descending edges are exactly that kind.
+the pooled data and still depend on who is in the panel, which is
+exactly what befalls the four edges the bootstrap could not confirm.
 
 ### Whole-network statistics: the vertex bootstrap
 
 [`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.html)
-implements the Snijders–Borgatti (1999) vertex bootstrap for
+implements the Snijders and Borgatti (1999) vertex bootstrap for
 network-level statistics.
 
 ``` r
@@ -716,7 +724,7 @@ vertex_bootstrap(effort_model, iter = 100, seed = 2026)
 ```
 
 The mean edge weight carries an interval of \[0.23, 0.30\] because the
-vertex bootstrap resamples *nodes* and there are only three — a
+vertex bootstrap resamples *nodes* and there are only three, a
 deliberately conservative design for small node sets.
 
 ### Case dropping, in two flavours
@@ -790,7 +798,7 @@ network_reliability(effort_model)
 ```
 
 Randomly halving the panel 1,000 times yields two models that correlate
-at 0.85 on average with a mean absolute edge difference of 0.06 — real
+at 0.85 on average with a mean absolute edge difference of 0.06: real
 agreement, with real room for movement. All four verbs in this section
 tell the same story at different grain: the backbone of the model is
 solid, the weaker edges are not yet pinned down.
@@ -798,8 +806,8 @@ solid, the weaker edges are not yet pinned down.
 ## Comparing two models
 
 Any two models on the same alphabet can be compared. The pair here
-splits the panel at occasion 78 — the first and second halves of the
-course — with the same fixed `breaks`, so both models sit on one
+splits the panel at occasion 78, the first and second halves of the
+course, with the same fixed `breaks`, so both models sit on one
 alphabet, and the same 36 students on both sides.
 
 ``` r
@@ -960,8 +968,8 @@ different; the vertex comparison finds no network-level statistic moved
 (all p ≥ 0.67); and the permutation test in the workflow vignette finds
 nothing at the sequence level either. The course’s second half
 reproduces its first, in level and in dynamics. When the verbs
-*disagree* — a posterior flagging tiny-but-credible differences that a
-sequence-level permutation absorbs — report the magnitude next to
+*disagree*, a posterior flagging tiny-but-credible differences that a
+sequence-level permutation absorbs, report the magnitude next to
 whichever test is used; the grouped weekday/weekend comparison in
 [`vignette("group-models", package = "tsn")`](https://pak.dynasite.org/tsn/articles/group-models.md)
 shows what a real, localized difference looks like on these same
@@ -1046,7 +1054,7 @@ principled reason rather than a missing feature:
   [`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.html)
   wants sequence data plus a grouping vector. And
   [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.html) is
-  unnecessary by design — a tsn model needs no conversion, which is the
+  unnecessary by design: a tsn model needs no conversion, which is the
   point of this vignette.
 
 ## The compatibility map
@@ -1054,9 +1062,9 @@ principled reason rather than a missing feature:
 | Question | Verb | Tidy access | Plot | Notes |
 |----|----|----|----|----|
 | What are the estimates? | [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html), [`as.matrix()`](https://rdrr.io/r/base/matrix.html), [`extract_transition_matrix()`](https://saqr.me/Nestimate/reference/extract_transition_matrix.html), [`extract_initial_probs()`](https://saqr.me/Nestimate/reference/extract_initial_probs.html) | direct | via [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on the model | tsn accessors include the diagonal |
-| Between-state edges only | [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.html) | direct | — | **excludes self-transitions** |
+| Between-state edges only | [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.html) | direct | \- | **excludes self-transitions** |
 | Marginal composition | [`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html), [`state_frequencies()`](https://saqr.me/Nestimate/reference/state_frequencies.html) | data frame | [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html), [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.html) |  |
-| Composition over time / carpet | [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.html), [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.html) | — | draws directly | stacked area; sequence heatmap |
+| Composition over time / carpet | [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.html), [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.html) | \- | draws directly | stacked area; sequence heatmap |
 | State/edge importance | [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html), [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.html) | data frame / network | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on both | loops excluded from centrality by default |
 | Travel times between states | [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.html) | print | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Kemeny & Snell (1976) |
 | Persistence, recurrence, sojourn | [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.html) | `$stability` table | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) |  |
@@ -1064,13 +1072,13 @@ principled reason rather than a missing feature:
 | Predictability | [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.html), [`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.html), [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.html) | print / [`summary()`](https://rdrr.io/r/base/summary.html) | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on both entropy results | rate in bits; ceiling `log2(n_states)` |
 | History beyond one step | [`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.html), [`path_dependence()`](https://saqr.me/Nestimate/reference/path_dependence.html), [`path_counts()`](https://saqr.me/Nestimate/reference/path_counts.html), [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.html) + [`pathways()`](https://saqr.me/Nestimate/reference/pathways.html) | print / data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on test and dependence | test the size, not only the p |
 | Simplification | [`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html), [`net_pruning_details()`](https://saqr.me/Nestimate/reference/net_pruning_details.html), [`net_deprune()`](https://saqr.me/Nestimate/reference/net_deprune.html) | same class back | via model [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | prune after testing |
-| Edge uncertainty | [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.html), [`certainty()`](https://saqr.me/Nestimate/reference/certainty.html) | [`summary()`](https://rdrr.io/r/base/summary.html) | — | resampling vs Bayesian; they can disagree |
+| Edge uncertainty | [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.html), [`certainty()`](https://saqr.me/Nestimate/reference/certainty.html) | [`summary()`](https://rdrr.io/r/base/summary.html) | none | resampling vs Bayesian; they can disagree |
 | Network-level uncertainty | [`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.html) | data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Snijders & Borgatti (1999) |
 | Sample-size reliability | [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.html), [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.html), [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.html) | print | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on all three | CS-coefficient bar: 0.5 / 0.7 |
 | Two-model comparison | [`permutation()`](https://saqr.me/Nestimate/reference/permutation.html), [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html), [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.html), [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.html), [`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.html) | [`summary()`](https://rdrr.io/r/base/summary.html) / data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html); [`cograph::plot_difference()`](https://sonsoles.me/cograph/reference/plot_difference.html) | report magnitudes with tests |
-| Link prediction | [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.html) | print | — | needs a sparse alphabet to be informative |
+| Link prediction | [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.html) | print | none | needs a sparse alphabet to be informative |
 | Many-group comparison | `ts_tna(group=)` + grouped verbs | [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) | `plot(x, group=)`, [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html) | see [`vignette("group-models")`](https://pak.dynasite.org/tsn/articles/group-models.md) |
-| Rendering | [`plot()`](https://rdrr.io/r/graphics/plot.default.html), [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html) | — | — | requires cograph |
+| Rendering | [`plot()`](https://rdrr.io/r/graphics/plot.default.html), [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html) | none | none | requires cograph |
 
 ## References
 

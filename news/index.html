@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">tsn</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,18 @@
       <small>Source: <a href="https://github.com/mohsaqr/tsn/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.4.1" id="tsn-141">tsn 1.4.1<a class="anchor" aria-label="anchor" href="#tsn-141"></a></h2>
+<div class="section level3">
+<h3 id="documentation-1-4-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-4-1"></a></h3>
+<ul><li>All five vignettes now render their figures at <code>dpi = 110</code>. Three were at 150, which pushed the source tarball past CRAN’s 5 MB guidance; the package is materially smaller as a result (installed size 7.3 Mb to 5.8 Mb, of which <code>doc</code> falls from 5.9 Mb to 4.5 Mb) with no change to any reported number.</li>
+<li>Prose in <code><a href="../articles/group-models.html">vignette("group-models")</a></code>, <code><a href="../articles/nestimate-compatibility.html">vignette("nestimate-compatibility")</a></code> and <code><a href="../articles/nestimate-workflow.html">vignette("nestimate-workflow")</a></code> was copyedited, and the two Nestimate vignettes now name which edges survive the sequence bootstrap and which fail it, rather than only counting them.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-1-4-1">Internal<a class="anchor" aria-label="anchor" href="#internal-1-4-1"></a></h3>
+<ul><li>The tutorial test files pin the bootstrap edge identities, the <code>high -&gt; moderate</code> and <code>low -&gt; low</code> edge weights, the <code>low -&gt; low</code> p-value and the <code>low</code> state share, so a change that reshuffled which edges survive resampling can no longer pass while contradicting the vignette prose.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.4.0" id="tsn-140">tsn 1.4.0<a class="anchor" aria-label="anchor" href="#tsn-140"></a></h2>
 <div class="section level3">

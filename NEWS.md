@@ -1,3 +1,23 @@
+# tsn 1.4.1
+
+## Documentation
+
+- All five vignettes now render their figures at `dpi = 110`. Three were at
+  150, which pushed the source tarball past CRAN's 5 MB guidance; the package
+  is materially smaller as a result (installed size 7.3 Mb to 5.8 Mb, of which
+  `doc` falls from 5.9 Mb to 4.5 Mb) with no change to any reported number.
+- Prose in `vignette("group-models")`, `vignette("nestimate-compatibility")`
+  and `vignette("nestimate-workflow")` was copyedited, and the two Nestimate
+  vignettes now name which edges survive the sequence bootstrap and which fail
+  it, rather than only counting them.
+
+## Internal
+
+- The tutorial test files pin the bootstrap edge identities, the
+  `high -> moderate` and `low -> low` edge weights, the `low -> low` p-value
+  and the `low` state share, so a change that reshuffled which edges survive
+  resampling can no longer pass while contradicting the vignette prose.
+
 # tsn 1.4.0
 
 ## Breaking changes

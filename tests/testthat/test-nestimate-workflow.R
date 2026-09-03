@@ -19,6 +19,16 @@ nw_effort_model <- function(data = nw_students()) {
   )
 }
 
+# Edge lookups for the bootstrap claims below. Brackets stay inside these
+# helpers so the expectations read as `from -> to` the way the prose does.
+nw_edge_ids <- function(edges) paste0(edges$from, "->", edges$to)
+
+nw_edge <- function(edges, from, to) {
+  hit <- edges[edges$from == from & edges$to == to, , drop = FALSE]
+  stopifnot("edge not present in the bootstrap table" = nrow(hit) == 1L)
+  hit
+}
+
 test_that("ts_tna returns a Nestimate netobject, which is what the bridge relies on", {
   skip_if_not_installed("Nestimate")
   model <- ts_tna(nw_jamal, series = "anxiety", labels = nw_labels)
@@ -88,9 +98,16 @@ test_that("the pooled model carries one sequence per student and the documented 
   distribution <- Nestimate::state_distribution(model)
   expect_equal(subset(distribution, state == "high")$proportion,
                0.4174394, tolerance = 1e-6)
+  # The bootstrap section explains `low -> low` by `low` being the rarest
+  # state, filling 24.4% of the days.
+  expect_equal(subset(distribution, state == "low")$proportion,
+               0.2437589, tolerance = 1e-6)
   weights <- as.matrix(model)
   expect_equal(unname(weights["high", "high"]), 0.5748709, tolerance = 1e-6)
   expect_identical(max(weights), unname(weights["high", "high"]))
+  # "a low-effort day returns to `low` at only 0.415"
+  expect_equal(unname(weights["low", "low"]), 0.4148311, tolerance = 1e-6)
+  expect_lt(unname(weights["low", "low"]), unname(weights["high", "high"]))
 })
 
 test_that("fixed thresholds recover more structure than tertiles, as the prose reports", {
@@ -130,6 +147,31 @@ test_that("the seeded inference chunks match the vignette", {
 
   boot <- summary(Nestimate::bootstrap_network(model, iter = 200, seed = 2026))
   expect_identical(sum(boot$sig), 5L)
+
+  # The prose names which five survive and which four do not, so pin the
+  # identities, not only the count: the two ascending steps, the `moderate`
+  # and `high` loops, and the short descent `high -> moderate`.
+  stable <- nw_edge_ids(subset(boot, sig))
+  expect_setequal(
+    stable,
+    c("low->moderate", "moderate->moderate", "moderate->high",
+      "high->moderate", "high->high")
+  )
+  expect_setequal(
+    nw_edge_ids(subset(boot, !sig)),
+    c("low->low", "low->high", "moderate->low", "high->low")
+  )
+
+  # The vignettes call `high -> moderate` the edge pruning dropped but the
+  # bootstrap keeps (0.260), and `low -> low` the large loop that just misses
+  # the criterion (p = 0.060). Both are stated to three decimals.
+  expect_equal(nw_edge(boot, "high", "moderate")$weight, 0.2603270,
+               tolerance = 1e-6)
+  expect_identical(round(nw_edge(boot, "high", "moderate")$weight, 3), 0.260)
+  expect_equal(nw_edge(boot, "low", "low")$weight, 0.4148311, tolerance = 1e-6)
+  expect_identical(round(nw_edge(boot, "low", "low")$weight, 3), 0.415)
+  expect_equal(nw_edge(boot, "low", "low")$p_value, 0.05970149, tolerance = 1e-6)
+  expect_identical(round(nw_edge(boot, "low", "low")$p_value, 3), 0.060)
 
   set.seed(2026)
   stability <- Nestimate::centrality_stability(model, iter = 100)

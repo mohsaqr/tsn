@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
   fig.align = "center",
   fig.width = 7,
   fig.height = 4.5,
-  dpi = 150,
+  dpi = 110,
   out.width = "100%"
 )
 library(tsn)

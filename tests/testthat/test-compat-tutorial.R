@@ -72,6 +72,29 @@ test_that("the reliability verbs return the vignette's moderate verdicts", {
                                                seed = 2026))
   expect_identical(sum(boot$sig), 5L)
 
+  # The prose names the five survivors and the four failures, and reports the
+  # `low -> low` near miss at p = 0.060.
+  edge_id <- function(edges) paste0(edges$from, "->", edges$to)
+  expect_setequal(
+    edge_id(subset(boot, sig)),
+    c("low->moderate", "moderate->moderate", "moderate->high",
+      "high->moderate", "high->high")
+  )
+  expect_setequal(
+    edge_id(subset(boot, !sig)),
+    c("low->low", "low->high", "moderate->low", "high->low")
+  )
+  low_loop <- subset(boot, from == "low" & to == "low")
+  expect_equal(low_loop$p_value, 0.05970149, tolerance = 1e-6)
+  expect_identical(round(low_loop$p_value, 3), 0.060)
+
+  # The trade the prose describes: pruning keeps `low -> low` and drops
+  # `high -> moderate`; the bootstrap does the reverse.
+  pruned <- as.matrix(Nestimate::net_prune(effort_model, method = "threshold",
+                                           threshold = 0.3)$weights)
+  expect_gt(unname(pruned["low", "low"]), 0)
+  expect_identical(unname(pruned["high", "moderate"]), 0)
+
   dropped <- Nestimate::casedrop_reliability(effort_model, iter = 100,
                                              seed = 2026)
   expect_output(print(dropped), "CS-coefficient \\(r\\)    : 0.50")

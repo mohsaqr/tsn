@@ -116,7 +116,7 @@ is the tsn layer (it remembers the source series and discretization),
 <code>cograph_network</code> is what <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code>
 renders. Nestimate’s own validator agrees:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/validate_netobject.html" class="external-link">validate_netobject</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/validate_netobject.html" class="external-link">validate_netobject</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
 <p>And because the object is a <code>cograph_network</code>, the model
 itself is one <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> away:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -145,7 +145,7 @@ row-stochastic weight matrix.</p>
 <p>Nestimate’s extractors return the same estimates in its own
 shapes:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                low  moderate      high</span></span>
 <span><span class="co">#&gt; low      0.4148311 0.3135095 0.2716593</span></span>
 <span><span class="co">#&gt; moderate 0.2184517 0.4528102 0.3287381</span></span>
@@ -153,13 +153,13 @@ shapes:</p>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "nest_transition_matrix" "matrix"                 "array"</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_initial_probs.html" class="external-link">extract_initial_probs</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.html" class="external-link">extract_initial_probs</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       low  moderate      high </span></span>
 <span><span class="co">#&gt; 0.1944444 0.3888889 0.4166667 </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "nest_initial_probs" "numeric"</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/extract_edges.html" class="external-link">extract_edges</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       from       to    weight</span></span>
 <span><span class="co">#&gt; 1 moderate     high 0.3287381</span></span>
 <span><span class="co">#&gt; 2      low moderate 0.3135095</span></span>
@@ -168,13 +168,13 @@ shapes:</p>
 <span><span class="co">#&gt; 5 moderate      low 0.2184517</span></span>
 <span><span class="co">#&gt; 6     high      low 0.1648021</span></span></code></pre></div>
 <p>One difference matters for transition networks:
-<code><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code> <strong>excludes self-transitions</strong>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code> <strong>excludes self-transitions</strong>,
 returning the six between-state edges sorted by weight and omitting the
 diagonal. For this model the diagonal is where most of the probability
 lives (<code>high → high</code> is 0.575), so use
-<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> or <code><a href="https://saqr.me/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix()</a></code>
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> or <code><a href="https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix()</a></code>
 whenever persistence is part of the question, and
-<code><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code> when only between-state movement is.</p>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code> when only between-state movement is.</p>
 <p>The initial-state probabilities say the panel starts engaged: 41.7%
 of students’ first recorded day is a <code>high</code>-effort day, 19.4%
 a <code>low</code> one.</p>
@@ -182,11 +182,11 @@ a <code>low</code> one.</p>
 <div class="section level2">
 <h2 id="where-the-process-spends-its-time">Where the process spends its time<a class="anchor" aria-label="anchor" href="#where-the-process-spends-its-time"></a>
 </h2>
-<p><code><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code> and
-<code><a href="https://saqr.me/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies()</a></code> count observations per state, the
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code> and
+<code><a href="https://pak.dynasite.org/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies()</a></code> count observations per state, the
 marginal composition before any dynamics.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      state count proportion</span></span>
 <span><span class="co">#&gt; 1     high  2341     0.4174</span></span>
 <span><span class="co">#&gt; 2 moderate  1900     0.3388</span></span>
@@ -195,33 +195,33 @@ marginal composition before any dynamics.</p>
 24.4%. Three displays draw the composition from different angles. The
 mosaic is the proportion bar:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
 <p><img src="nestimate-compatibility_files/figure-html/mosaic-1.png" class="r-plt" alt="Mosaic plot of the effort model's state composition, with high and moderate days forming most of the area and low days a narrower band." width="100%" style="display: block; margin: auto;"></p>
-<p><code><a href="https://saqr.me/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot()</a></code> is the sequence carpet, one row per
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot()</a></code> is the sequence carpet, one row per
 student, one coloured cell per day:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
 <p><img src="nestimate-compatibility_files/figure-html/carpet-1.png" class="r-plt" alt="Sequence heatmap with one row per student and one coloured cell per day, showing same-state spells as horizontal streaks of colour." width="100%" style="display: block; margin: auto;"></p>
 <p>The streaks are persistence made visible: students hold a state for
-spells, not single days. <code><a href="https://saqr.me/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot()</a></code> stacks the
+spells, not single days. <code><a href="https://pak.dynasite.org/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot()</a></code> stacks the
 day-by-day state mix of the whole panel:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span></code></pre></div>
 <p><img src="nestimate-compatibility_files/figure-html/composition-time-1.png" class="r-plt" alt="Stacked area chart of the panel's state proportions across the 156 course days, with bands for low, moderate, and high effort." width="100%" style="display: block; margin: auto;"></p>
 <p>This is composition over course time, the view in which a
 first-to-second-half shift would appear, and the workflow vignette’s
 period comparison shows there is none.
-<code><a href="https://saqr.me/Nestimate/reference/plot_state_frequencies.html" class="external-link">plot_state_frequencies()</a></code> offers a fourth, marimekko-style
+<code><a href="https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.html" class="external-link">plot_state_frequencies()</a></code> offers a fourth, marimekko-style
 variant of the same information.</p>
 </div>
 <div class="section level2">
 <h2 id="which-states-and-edges-carry-the-structure">Which states and edges carry the structure?<a class="anchor" aria-label="anchor" href="#which-states-and-edges-carry-the-structure"></a>
 </h2>
-<p><code><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code> ranks states. Self-transitions are
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code> ranks states. Self-transitions are
 excluded by default, because for a transition network the diagonal would
 otherwise dominate every strength measure.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effort_centrality</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_centrality</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/net_centrality.html" class="external-link">net_centrality</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.</span></span>
 <span></span>
 <span><span class="va">effort_centrality</span></span>
@@ -237,10 +237,10 @@ between-state traffic (in-strengths of 0.60 and 0.57) while
 <code>low</code> receives markedly less (0.38); the betweenness column
 is uniformly zero because in a fully connected three-state network no
 state is an obligatory bridge.</p>
-<p><code><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> asks the same question of
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> asks the same question of
 edges:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effort_betweenness</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_betweenness</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_betweenness</span></span>
 <span><span class="co">#&gt; Network (method: edge_betweenness) [directed]</span></span>
@@ -265,10 +265,10 @@ not funnel through any single corridor.</p>
 <div class="section level3">
 <h3 id="mean-first-passage-times">Mean first passage times<a class="anchor" aria-label="anchor" href="#mean-first-passage-times"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code> converts the transition matrix into
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code> converts the transition matrix into
 expected travel times between states (Kemeny &amp; Snell, 1976).</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effort_passage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_passage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/passage_time.html" class="external-link">passage_time</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_passage</span></span>
 <span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
@@ -294,12 +294,12 @@ settles regardless of its start.</p>
 <div class="section level3">
 <h3 id="persistence-return-and-sojourn">Persistence, return, and sojourn<a class="anchor" aria-label="anchor" href="#persistence-return-and-sojourn"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/markov_stability.html" class="external-link">markov_stability()</a></code> summarizes each state’s dynamics in
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/markov_stability.html" class="external-link">markov_stability()</a></code> summarizes each state’s dynamics in
 one row: the self-transition probability, the stationary share, the mean
 recurrence time, and the mean sojourn (how long a visit lasts once
 entered).</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effort_spells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_stability.html" class="external-link">markov_stability</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_spells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/markov_stability.html" class="external-link">markov_stability</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_spells</span></span>
 <span><span class="co">#&gt; Markov Stability Analysis</span></span>
@@ -323,11 +323,11 @@ rare state can still be sticky.</p>
 <div class="section level3">
 <h3 id="is-the-chain-well-behaved">Is the chain well-behaved?<a class="anchor" aria-label="anchor" href="#is-the-chain-well-behaved"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/chain_structure.html" class="external-link">chain_structure()</a></code> reports the Markov-chain diagnostics
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/chain_structure.html" class="external-link">chain_structure()</a></code> reports the Markov-chain diagnostics
 that other verbs quietly assume: irreducibility (every state reachable
 from every other), aperiodicity, and reversibility.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://saqr.me/Nestimate/reference/chain_structure.html" class="external-link">chain_structure</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/chain_structure.html" class="external-link">chain_structure</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Chain structure summary  [3 states, 1 classes]</span></span>
 <span><span class="co">#&gt;   irreducible: TRUE   aperiodic: TRUE   regular: TRUE   reversible: FALSE</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -350,12 +350,12 @@ not mirror images.</p>
 <div class="section level2">
 <h2 id="how-predictable-is-the-process">How predictable is the process?<a class="anchor" aria-label="anchor" href="#how-predictable-is-the-process"></a>
 </h2>
-<p><code><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy()</a></code> gives the point estimate;
-<code><a href="https://saqr.me/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes()</a></code> adds a posterior credible interval by
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy()</a></code> gives the point estimate;
+<code><a href="https://pak.dynasite.org/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes()</a></code> adds a posterior credible interval by
 placing a Dirichlet prior on each row.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="va">effort_entropy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="va">effort_entropy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_entropy</span></span>
 <span><span class="co">#&gt; Bayesian Transition Entropy (3 states, bits; Dirichlet prior 0.5, 4000 draws)</span></span>
@@ -379,12 +379,12 @@ entropy and the conditional one: knowing today’s effort removes under 5%
 of tomorrow’s uncertainty. Daily effort is mostly noise around a weak
 first-order signal, and every edge below should be read with that in
 mind.</p>
-<p><code><a href="https://saqr.me/Nestimate/reference/entropy_network.html" class="external-link">entropy_network()</a></code> maps the same quantity onto the edges,
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/entropy_network.html" class="external-link">entropy_network()</a></code> maps the same quantity onto the edges,
 each entry an edge’s contribution to the row’s unpredictability, and
 returns a network of the same class, so it can be plotted or pruned like
 any other:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/entropy_network.html" class="external-link">entropy_network</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/entropy_network.html" class="external-link">entropy_network</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network (method: entropy) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [0.125, 0.211]  |  mean: 0.164</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -403,11 +403,11 @@ any other:</p>
 <h2 id="does-history-beyond-one-step-matter">Does history beyond one step matter?<a class="anchor" aria-label="anchor" href="#does-history-beyond-one-step-matter"></a>
 </h2>
 <p>The model assumes the next state depends only on the current one.
-<code><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code> (Anderson &amp; Goodman, 1957) tests
+<code><a href="https://pak.dynasite.org/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code> (Anderson &amp; Goodman, 1957) tests
 that assumption.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="va">effort_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="va">effort_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_order</span></span>
 <span><span class="co">#&gt; Markov Order Test  [within-w permutation, n_perm = 500, alpha = 0.050]</span></span>
@@ -430,9 +430,9 @@ that assumption.</p>
 <p><img src="nestimate-compatibility_files/figure-html/markov-order-plot-1.png" class="r-plt" alt="Model-selection chart of log-likelihood, AIC, and BIC across Markov orders zero to three, favouring orders above one." width="100%" style="display: block; margin: auto;"></p>
 <p>AIC and the permutation LRT select order 3 and BIC selects order 2:
 yesterday carries information about tomorrow beyond today.
-<code><a href="https://saqr.me/Nestimate/reference/path_dependence.html" class="external-link">path_dependence()</a></code> says how much:</p>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/path_dependence.html" class="external-link">path_dependence()</a></code> says how much:</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effort_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/path_dependence.html" class="external-link">path_dependence</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_history</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/path_dependence.html" class="external-link">path_dependence</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_history</span></span>
 <span><span class="co">#&gt; Path Dependence (order 2 vs order 1, bits)</span></span>
@@ -472,10 +472,10 @@ reconciles a decisively significant order test with the continued use of
 a first-order model: detectable is not the same as large. The
 first-order network remains a fair one-step summary; it is not the full
 process.</p>
-<p><code><a href="https://saqr.me/Nestimate/reference/path_counts.html" class="external-link">path_counts()</a></code> is the raw material, every observed
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/path_counts.html" class="external-link">path_counts()</a></code> is the raw material, every observed
 two-step path with its count:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/path_counts.html" class="external-link">path_counts</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/path_counts.html" class="external-link">path_counts</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                   path count proportion</span></span>
 <span><span class="co">#&gt; 1         high -&gt; high  1336     0.2398</span></span>
 <span><span class="co">#&gt; 2 moderate -&gt; moderate   854     0.1533</span></span>
@@ -487,30 +487,30 @@ two-step path with its count:</p>
 <span><span class="co">#&gt; 8          high -&gt; low   383     0.0687</span></span>
 <span><span class="co">#&gt; 9          low -&gt; high   370     0.0664</span></span></code></pre></div>
 <p><code>high → high</code> alone is 24.0% of all transitions. And when
-the order test demands more than one step, <code><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon()</a></code>
+the order test demands more than one step, <code><a href="https://pak.dynasite.org/Nestimate/reference/build_hon.html" class="external-link">build_hon()</a></code>
 estimates a higher-order network under its own per-node promotion
 rule:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon</a></span><span class="op">(</span><span class="va">effort_model</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">hon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/build_hon.html" class="external-link">build_hon</a></span><span class="op">(</span><span class="va">effort_model</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/pathways.html" class="external-link">pathways</a></span><span class="op">(</span><span class="va">hon</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/pathways.html" class="external-link">pathways</a></span><span class="op">(</span><span class="va">hon</span><span class="op">)</span></span>
 <span><span class="co">#&gt; character(0)</span></span></code></pre></div>
 <p>HON promotes no node here, because no single context shifts the
 next-step distribution enough to justify splitting a state, which is why
-<code><a href="https://saqr.me/Nestimate/reference/pathways.html" class="external-link">pathways()</a></code> comes back empty. Two criteria disagreeing is a
+<code><a href="https://pak.dynasite.org/Nestimate/reference/pathways.html" class="external-link">pathways()</a></code> comes back empty. Two criteria disagreeing is a
 result, not a bug: the likelihood test sees aggregate improvement, HON
 asks a stricter per-node question. Report both.</p>
 </div>
 <div class="section level2">
 <h2 id="simplifying-the-model">Simplifying the model<a class="anchor" aria-label="anchor" href="#simplifying-the-model"></a>
 </h2>
-<p><code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code> removes weak edges and returns the same
-class; <code><a href="https://saqr.me/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details()</a></code> is the audit trail;
-<code><a href="https://saqr.me/Nestimate/reference/net_deprune.html" class="external-link">net_deprune()</a></code> undoes it.</p>
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code> removes weak edges and returns the same
+class; <code><a href="https://pak.dynasite.org/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details()</a></code> is the audit trail;
+<code><a href="https://pak.dynasite.org/Nestimate/reference/net_deprune.html" class="external-link">net_deprune()</a></code> undoes it.</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pruned</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">effort_model</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">pruned</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/net_prune.html" class="external-link">net_prune</a></span><span class="op">(</span><span class="va">effort_model</span>, method <span class="op">=</span> <span class="st">"threshold"</span>, threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details</a></span><span class="op">(</span><span class="va">pruned</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details</a></span><span class="op">(</span><span class="va">pruned</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Pruning details</span></span>
 <span><span class="co">#&gt;   Method:  user-specified threshold (0.3)</span></span>
 <span><span class="co">#&gt;   Removed: 4 edges</span></span>
@@ -528,7 +528,7 @@ leap. What survives is the ascending ladder and the persistence loops.
 Because pruning is recorded rather than destructive, the original model
 is one call away:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/net_deprune.html" class="external-link">net_deprune</a></span><span class="op">(</span><span class="va">pruned</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/net_deprune.html" class="external-link">net_deprune</a></span><span class="op">(</span><span class="va">pruned</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [0.165, 0.575]  |  mean: 0.333</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -552,10 +552,10 @@ and a posterior.</p>
 <div class="section level3">
 <h3 id="sequence-bootstrap">Sequence bootstrap<a class="anchor" aria-label="anchor" href="#sequence-bootstrap"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code> resamples the 36 sequences and
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code> resamples the 36 sequences and
 re-estimates.</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effort_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">effort_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_boot</span></span>
 <span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
@@ -600,11 +600,11 @@ pruning section named.</p>
 <div class="section level3">
 <h3 id="bayesian-edge-certainty">Bayesian edge certainty<a class="anchor" aria-label="anchor" href="#bayesian-edge-certainty"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> reaches its verdict from a Dirichlet
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> reaches its verdict from a Dirichlet
 posterior on each row, with no resampling.</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/certainty.html" class="external-link">certainty</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Edge                   Mean     95% CI          p</span></span>
 <span><span class="co">#&gt;   -----------------------------------------------</span></span>
 <span><span class="co">#&gt;   high → high          0.575  [0.555, 0.595]  ***</span></span>
@@ -620,7 +620,7 @@ posterior on each row, with no resampling.</p>
 <span><span class="co">#&gt;   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span></code></pre></div>
 <p>All nine edges are posterior-certain, with intervals a few hundredths
 wide. The two verbs disagree because they ask different questions:
-<code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> asks whether an edge’s posterior excludes
+<code><a href="https://pak.dynasite.org/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code> asks whether an edge’s posterior excludes
 instability given the pooled transitions, while the bootstrap asks
 whether the estimate survives swapping <em>students</em> in and out. An
 edge can be precisely estimated from the pooled data and still depend on
@@ -630,10 +630,10 @@ bootstrap could not confirm.</p>
 <div class="section level3">
 <h3 id="whole-network-statistics-the-vertex-bootstrap">Whole-network statistics: the vertex bootstrap<a class="anchor" aria-label="anchor" href="#whole-network-statistics-the-vertex-bootstrap"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap()</a></code> implements the Snijders and Borgatti
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap()</a></code> implements the Snijders and Borgatti
 (1999) vertex bootstrap for network-level statistics.</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Vertex Bootstrap (Snijders &amp; Borgatti)</span></span>
 <span><span class="co">#&gt;   Nodes: 3 | Directed: TRUE | Replicates: 100</span></span>
 <span><span class="co">#&gt;   95% CIs (percentile method)</span></span>
@@ -650,14 +650,14 @@ deliberately conservative design for small node sets.</p>
 <div class="section level3">
 <h3 id="case-dropping-in-two-flavours">Case dropping, in two flavours<a class="anchor" aria-label="anchor" href="#case-dropping-in-two-flavours"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code> tracks the centrality
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code> tracks the centrality
 <em>ordering</em> as sequences are dropped;
-<code><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code> tracks the edge weights themselves.
+<code><a href="https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code> tracks the edge weights themselves.
 Both report the CS-coefficient of Epskamp, Borsboom &amp; Fried
 (2018).</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Centrality Stability (100 iterations, threshold = 0.7)</span></span>
 <span><span class="co">#&gt;   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -665,7 +665,7 @@ Both report the CS-coefficient of Epskamp, Borsboom &amp; Fried
 <span><span class="co">#&gt;     InStrength       0.60</span></span>
 <span><span class="co">#&gt;     OutStrength      0.40</span></span></code></pre></div>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effort_reliability</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span>,</span>
+<code class="sourceCode R"><span><span class="va">effort_reliability</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability</a></span><span class="op">(</span><span class="va">effort_model</span>, iter <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>                                           seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">effort_reliability</span></span>
@@ -696,7 +696,7 @@ above: report orderings and intervals, not bare point values.</p>
 </h3>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/network_reliability.html" class="external-link">network_reliability</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/network_reliability.html" class="external-link">network_reliability</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Split-Half Reliability (1000 iterations, split = 50%)</span></span>
 <span><span class="co">#&gt;   Mean Abs. Diff.     mean = 0.0578  sd = 0.0220</span></span>
 <span><span class="co">#&gt;   Median Abs. Diff.   mean = 0.0516  sd = 0.0240</span></span>
@@ -733,10 +733,10 @@ one alphabet, and the same 36 students on both sides.</p>
 <div class="section level3">
 <h3 id="the-difference-itself">The difference itself<a class="anchor" aria-label="anchor" href="#the-difference-itself"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks()</a></code> returns the edge-by-edge difference
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks()</a></code> returns the edge-by-edge difference
 as an object cograph can draw:</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">half_difference</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">half_difference</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">half_difference</span></span>
 <span><span class="co">#&gt; Network difference (x - y): 3 nodes, 9 differing edges</span></span>
@@ -761,13 +761,13 @@ as an object cograph can draw:</p>
 <div class="section level3">
 <h3 id="four-more-verdicts-on-the-same-pair">Four more verdicts on the same pair<a class="anchor" aria-label="anchor" href="#four-more-verdicts-on-the-same-pair"></a>
 </h3>
-<p><code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code> condenses the pair into a metric panel;
-<code><a href="https://saqr.me/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare()</a></code> asks whether each edge difference is
-credibly nonzero; <code><a href="https://saqr.me/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare()</a></code> tests the network-level
-statistics; and the workflow vignette’s <code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code> run
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code> condenses the pair into a metric panel;
+<code><a href="https://pak.dynasite.org/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare()</a></code> asks whether each edge difference is
+credibly nonzero; <code><a href="https://pak.dynasite.org/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare()</a></code> tests the network-level
+statistics; and the workflow vignette’s <code><a href="https://pak.dynasite.org/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code> run
 supplies the sequence-level test.</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">half_panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">half_panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/compare_model.html" class="external-link">compare_model</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">half_panel</span></span>
 <span><span class="co">#&gt; Network comparison</span></span>
@@ -817,13 +817,13 @@ supplies the sequence-level test.</p>
 <p><img src="nestimate-compatibility_files/figure-html/compare-plot-1.png" class="r-plt" alt="Comparison panel chart of the two half-course models across weight-deviation, correlation, and similarity metrics, all indicating near-identity." width="100%" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://saqr.me/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bayesian Dirichlet-Multinomial Comparison: Transition Network (relative probabilities) </span></span>
 <span><span class="co">#&gt;   Prior: Dirichlet(0.50)  |  Draws: 10000  |  CI: 95%</span></span>
 <span><span class="co">#&gt;   Thresholds: |mean diff| &gt; 0.010, nearest CI bound &gt; 0.001</span></span>
 <span><span class="co">#&gt;   Nodes: 3  |  Edges compared: 9  |  Credibly different: 0</span></span></code></pre></div>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare</a></span><span class="op">(</span><span class="va">first_half</span>, <span class="va">second_half</span>, iter <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Two-Network Vertex Bootstrap Comparison (Snijders &amp; Borgatti)</span></span>
 <span><span class="co">#&gt;   x (3 nodes) vs y (3 nodes) | 200 replicates each</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -855,10 +855,10 @@ real, localized difference looks like on these same students.</p>
 <div class="section level2">
 <h2 id="link-prediction">Link prediction<a class="anchor" aria-label="anchor" href="#link-prediction"></a>
 </h2>
-<p><code><a href="https://saqr.me/Nestimate/reference/predict_links.html" class="external-link">predict_links()</a></code> scores unobserved dyads by six
+<p><code><a href="https://pak.dynasite.org/Nestimate/reference/predict_links.html" class="external-link">predict_links()</a></code> scores unobserved dyads by six
 structural predictors:</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://saqr.me/Nestimate/reference/predict_links.html" class="external-link">predict_links</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://pak.dynasite.org/Nestimate/reference/predict_links.html" class="external-link">predict_links</a></span><span class="op">(</span><span class="va">effort_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Link Prediction  [directed | weighted | 3 nodes | 6 existing edges]</span></span>
 <span><span class="co">#&gt;   Methods: common_neighbors, resource_allocation, adamic_adar, jaccard, preferential_attachment, katz</span></span></code></pre></div>
 <p>It runs, but a three-state transition network is fully connected
@@ -872,16 +872,16 @@ hypothesis.</p>
 <p>When the comparison variable is a column of the data,
 <code>ts_tna(group = ...)</code> builds one network per level and
 returns a Nestimate <code>netobject_group</code>. The grouped verbs
-verified against it are <code><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code>, and <code><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>;
+verified against it are <code><a href="https://pak.dynasite.org/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code>, and <code><a href="https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>;
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> return tidy
 per-group tables, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws one selected group.
-<code><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> also runs, but its result drops back
+<code><a href="https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code> also runs, but its result drops back
 to a plain <code>netobject_group</code>. The dedicated vignette
 <code><a href="../articles/group-models.html">vignette("group-models", package = "tsn")</a></code> works through all
 of it on the <code>esm_srl</code> weekday/weekend split.</p>
@@ -893,16 +893,16 @@ of it on the <code>esm_srl</code> weekday/weekend split.</p>
 a principled reason rather than a missing feature:</p>
 <ul>
 <li>
-<strong>Sequence-data verbs.</strong> <code><a href="https://saqr.me/Nestimate/reference/frequencies.html" class="external-link">frequencies()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/mark_first_state.html" class="external-link">mark_first_state()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/mark_terminal_state.html" class="external-link">mark_terminal_state()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/entropy_trajectory.html" class="external-link">entropy_trajectory()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/mosaic_analysis.html" class="external-link">mosaic_analysis()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/plot_mosaic.html" class="external-link">plot_mosaic()</a></code>, and <code><a href="https://saqr.me/Nestimate/reference/as_htna.html" class="external-link">as_htna()</a></code> operate on a raw
+<strong>Sequence-data verbs.</strong> <code><a href="https://pak.dynasite.org/Nestimate/reference/frequencies.html" class="external-link">frequencies()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/mark_first_state.html" class="external-link">mark_first_state()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.html" class="external-link">mark_terminal_state()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.html" class="external-link">entropy_trajectory()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.html" class="external-link">mosaic_analysis()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/plot_mosaic.html" class="external-link">plot_mosaic()</a></code>, and <code><a href="https://pak.dynasite.org/Nestimate/reference/as_htna.html" class="external-link">as_htna()</a></code> operate on a raw
 wide data frame of sequences, not on an estimated model. They belong
 <em>before</em> model construction in a workflow, applied to sequence
 data you hold yourself.</li>
 <li>
 <strong>Psychometric-network verbs.</strong>
-<code><a href="https://saqr.me/Nestimate/reference/predictability.html" class="external-link">predictability()</a></code> and the
+<code><a href="https://pak.dynasite.org/Nestimate/reference/predictability.html" class="external-link">predictability()</a></code> and the
 <code>glasso</code>/<code>pcor</code>/<code>cor</code> estimator family
 need a precision or correlation structure estimated from multivariate
 data. A transition matrix is a conditional-probability object, not a
@@ -910,11 +910,11 @@ conditional-independence one; the quantities these verbs compute are
 undefined for it.</li>
 <li>
 <strong>Verbs that need extra structure.</strong>
-<code><a href="https://saqr.me/Nestimate/reference/cluster_network.html" class="external-link">cluster_network()</a></code> and <code><a href="https://saqr.me/Nestimate/reference/build_clusters.html" class="external-link">build_clusters()</a></code> require
+<code><a href="https://pak.dynasite.org/Nestimate/reference/cluster_network.html" class="external-link">cluster_network()</a></code> and <code><a href="https://pak.dynasite.org/Nestimate/reference/build_clusters.html" class="external-link">build_clusters()</a></code> require
 a chosen number of clusters and are aimed at multi-sequence typologies;
-<code><a href="https://saqr.me/Nestimate/reference/wtna.html" class="external-link">wtna()</a></code> needs one-hot action data;
-<code><a href="https://saqr.me/Nestimate/reference/sequence_compare.html" class="external-link">sequence_compare()</a></code> wants sequence data plus a grouping
-vector. And <code><a href="https://saqr.me/Nestimate/reference/as_tna.html" class="external-link">as_tna()</a></code> is unnecessary by design: a tsn model
+<code><a href="https://pak.dynasite.org/Nestimate/reference/wtna.html" class="external-link">wtna()</a></code> needs one-hot action data;
+<code><a href="https://pak.dynasite.org/Nestimate/reference/sequence_compare.html" class="external-link">sequence_compare()</a></code> wants sequence data plus a grouping
+vector. And <code><a href="https://pak.dynasite.org/Nestimate/reference/as_tna.html" class="external-link">as_tna()</a></code> is unnecessary by design: a tsn model
 needs no conversion, which is the point of this vignette.</li>
 </ul>
 </div>
@@ -941,8 +941,8 @@ needs no conversion, which is the point of this vignette.</li>
 <td>What are the estimates?</td>
 <td>
 <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/extract_initial_probs.html" class="external-link">extract_initial_probs()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.html" class="external-link">extract_transition_matrix()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.html" class="external-link">extract_initial_probs()</a></code>
 </td>
 <td>direct</td>
 <td>via <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on the model</td>
@@ -950,7 +950,7 @@ needs no conversion, which is the point of this vignette.</li>
 </tr>
 <tr class="even">
 <td>Between-state edges only</td>
-<td><code><a href="https://saqr.me/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code></td>
+<td><code><a href="https://pak.dynasite.org/Nestimate/reference/extract_edges.html" class="external-link">extract_edges()</a></code></td>
 <td>direct</td>
 <td>-</td>
 <td><strong>excludes self-transitions</strong></td>
@@ -958,20 +958,20 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="odd">
 <td>Marginal composition</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/state_distribution.html" class="external-link">state_distribution()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/state_frequencies.html" class="external-link">state_frequencies()</a></code>
 </td>
 <td>data frame</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/plot_state_frequencies.html" class="external-link">plot_state_frequencies()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.html" class="external-link">plot_state_frequencies()</a></code>
 </td>
 <td></td>
 </tr>
 <tr class="even">
 <td>Composition over time / carpet</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/distribution_plot.html" class="external-link">distribution_plot()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/sequence_plot.html" class="external-link">sequence_plot()</a></code>
 </td>
 <td>-</td>
 <td>draws directly</td>
@@ -980,8 +980,8 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="odd">
 <td>State/edge importance</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/net_centrality.html" class="external-link">net_centrality()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html" class="external-link">net_edge_betweenness()</a></code>
 </td>
 <td>data frame / network</td>
 <td>
@@ -990,14 +990,14 @@ needs no conversion, which is the point of this vignette.</li>
 </tr>
 <tr class="even">
 <td>Travel times between states</td>
-<td><code><a href="https://saqr.me/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code></td>
+<td><code><a href="https://pak.dynasite.org/Nestimate/reference/passage_time.html" class="external-link">passage_time()</a></code></td>
 <td>print</td>
 <td><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code></td>
 <td>Kemeny &amp; Snell (1976)</td>
 </tr>
 <tr class="odd">
 <td>Persistence, recurrence, sojourn</td>
-<td><code><a href="https://saqr.me/Nestimate/reference/markov_stability.html" class="external-link">markov_stability()</a></code></td>
+<td><code><a href="https://pak.dynasite.org/Nestimate/reference/markov_stability.html" class="external-link">markov_stability()</a></code></td>
 <td>
 <code>$stability</code> table</td>
 <td><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code></td>
@@ -1005,7 +1005,7 @@ needs no conversion, which is the point of this vignette.</li>
 </tr>
 <tr class="even">
 <td>Chain diagnostics</td>
-<td><code><a href="https://saqr.me/Nestimate/reference/chain_structure.html" class="external-link">chain_structure()</a></code></td>
+<td><code><a href="https://pak.dynasite.org/Nestimate/reference/chain_structure.html" class="external-link">chain_structure()</a></code></td>
 <td><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code></td>
 <td>
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> heatmap</td>
@@ -1014,8 +1014,8 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="odd">
 <td>Predictability</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/entropy_network.html" class="external-link">entropy_network()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/transition_entropy.html" class="external-link">transition_entropy()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/entropy_bayes.html" class="external-link">entropy_bayes()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/entropy_network.html" class="external-link">entropy_network()</a></code>
 </td>
 <td>print / <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
 </td>
@@ -1027,9 +1027,9 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="even">
 <td>History beyond one step</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/path_dependence.html" class="external-link">path_dependence()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/path_counts.html" class="external-link">path_counts()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/build_hon.html" class="external-link">build_hon()</a></code> +
-<code><a href="https://saqr.me/Nestimate/reference/pathways.html" class="external-link">pathways()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/markov_order_test.html" class="external-link">markov_order_test()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/path_dependence.html" class="external-link">path_dependence()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/path_counts.html" class="external-link">path_counts()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/build_hon.html" class="external-link">build_hon()</a></code> +
+<code><a href="https://pak.dynasite.org/Nestimate/reference/pathways.html" class="external-link">pathways()</a></code>
 </td>
 <td>print / data frame</td>
 <td>
@@ -1039,8 +1039,8 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="odd">
 <td>Simplification</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/net_deprune.html" class="external-link">net_deprune()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/net_prune.html" class="external-link">net_prune()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/net_pruning_details.html" class="external-link">net_pruning_details()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/net_deprune.html" class="external-link">net_deprune()</a></code>
 </td>
 <td>same class back</td>
 <td>via model <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
@@ -1050,7 +1050,7 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="even">
 <td>Edge uncertainty</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html" class="external-link">bootstrap_network()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/certainty.html" class="external-link">certainty()</a></code>
 </td>
 <td><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code></td>
 <td>none</td>
@@ -1058,7 +1058,7 @@ needs no conversion, which is the point of this vignette.</li>
 </tr>
 <tr class="odd">
 <td>Network-level uncertainty</td>
-<td><code><a href="https://saqr.me/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap()</a></code></td>
+<td><code><a href="https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.html" class="external-link">vertex_bootstrap()</a></code></td>
 <td>data frame</td>
 <td><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code></td>
 <td>Snijders &amp; Borgatti (1999)</td>
@@ -1066,9 +1066,9 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="even">
 <td>Sample-size reliability</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/network_reliability.html" class="external-link">network_reliability()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/centrality_stability.html" class="external-link">centrality_stability()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html" class="external-link">casedrop_reliability()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/network_reliability.html" class="external-link">network_reliability()</a></code>
 </td>
 <td>print</td>
 <td>
@@ -1078,9 +1078,9 @@ needs no conversion, which is the point of this vignette.</li>
 <tr class="odd">
 <td>Two-model comparison</td>
 <td>
-<code><a href="https://saqr.me/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks()</a></code>, <code><a href="https://saqr.me/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare()</a></code>,
-<code><a href="https://saqr.me/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare()</a></code>
+<code><a href="https://pak.dynasite.org/Nestimate/reference/permutation.html" class="external-link">permutation()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/compare_model.html" class="external-link">compare_model()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/subtract_networks.html" class="external-link">subtract_networks()</a></code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/bayes_compare.html" class="external-link">bayes_compare()</a></code>,
+<code><a href="https://pak.dynasite.org/Nestimate/reference/vertex_compare.html" class="external-link">vertex_compare()</a></code>
 </td>
 <td>
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> / data frame</td>
@@ -1091,7 +1091,7 @@ needs no conversion, which is the point of this vignette.</li>
 </tr>
 <tr class="even">
 <td>Link prediction</td>
-<td><code><a href="https://saqr.me/Nestimate/reference/predict_links.html" class="external-link">predict_links()</a></code></td>
+<td><code><a href="https://pak.dynasite.org/Nestimate/reference/predict_links.html" class="external-link">predict_links()</a></code></td>
 <td>print</td>
 <td>none</td>
 <td>needs a sparse alphabet to be informative</td>
@@ -1102,7 +1102,7 @@ needs no conversion, which is the point of this vignette.</li>
 <code>ts_tna(group=)</code> + grouped verbs</td>
 <td><code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code></td>
 <td>
-<code>plot(x, group=)</code>, <code><a href="https://saqr.me/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>
+<code>plot(x, group=)</code>, <code><a href="https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html" class="external-link">mosaic_plot()</a></code>
 </td>
 <td>see <code><a href="../articles/group-models.html">vignette("group-models")</a></code>
 </td>

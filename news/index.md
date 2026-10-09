@@ -82,11 +82,11 @@
   `group` argument naming a column of `data`. The result is one network
   per group — a `ts_tna_group` (also a Nestimate `netobject_group`) that
   Nestimate’s compatible grouped verbs
-  ([`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html),
-  [`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html),
-  [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html),
-  [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html),
-  [`permutation()`](https://saqr.me/Nestimate/reference/permutation.html))
+  ([`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.html),
+  [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.html),
+  [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.html),
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.html),
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.html))
   accept directly. States are discretized from the pooled series before
   the split, so every group shares one alphabet and node set. A sequence
   never spans a group boundary: contiguous runs of the group column

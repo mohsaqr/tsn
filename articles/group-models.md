@@ -258,7 +258,7 @@ the edge table reported, now shown as tile area rather than as a number.
 
 ### Mean first passage times
 
-[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.html)
+[`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.html)
 reports, per group, the expected number of steps to reach each state
 from each other state (Kemeny & Snell, 1976).
 
@@ -357,7 +357,7 @@ the middle of the scale. The message printed above the tables matters
 for any transition network: self-transitions are excluded by default, or
 the diagonal would drown the between-state structure.
 
-[`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.html)
+[`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html)
 runs group-wise as well, with one caveat: its result drops back to a
 plain `netobject_group`, so apply tsn’s tidy accessors before this step,
 not after it.
@@ -407,7 +407,7 @@ outflow to `mid` heavier on weekends.
 
 ### The permutation test
 
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.html)
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.html)
 on a grouped model shuffles sequences between the groups to build a null
 distribution per edge.
 
@@ -450,7 +450,7 @@ share most of their structure.
 
 ### The metric panel
 
-[`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html)
+[`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.html)
 condenses the pair into matrix-comparison metrics.
 
 ``` r
@@ -508,9 +508,9 @@ meaningful default pair.
 
 ### Bootstrap and Bayesian certainty per group
 
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.html)
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html)
 resamples sequences within each group;
-[`certainty()`](https://saqr.me/Nestimate/reference/certainty.html)
+[`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.html)
 reaches a similar verdict from a Dirichlet posterior, without
 resampling.
 
@@ -559,7 +559,7 @@ not a formality.
 
 ### Is first order enough, per group?
 
-[`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.html)
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.html)
 (after Anderson & Goodman, 1957) checks the Markov assumption group by
 group.
 
@@ -610,9 +610,9 @@ visibly incomplete of the two.
 ### Stability under case dropping
 
 Two checks ask whether the results would survive a smaller sample:
-[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.html)
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.html)
 for the centrality *orderings*,
-[`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.html)
+[`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html)
 for the edge weights themselves (both after Epskamp, Borsboom & Fried,
 2018).
 
@@ -658,7 +658,7 @@ number has done its job.
 
 ## Pruning the collection
 
-[`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html)
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.html)
 applies group-wise and returns the same class, so a pruned collection
 flows back into every verb above.
 

@@ -193,7 +193,7 @@ ts_atna(
 - ...:
 
   Passed on to the corresponding Nestimate builder
-  ([`Nestimate::build_tna()`](https://saqr.me/Nestimate/reference/build_tna.html)
+  ([`Nestimate::build_tna()`](https://pak.dynasite.org/Nestimate/reference/build_tna.html)
   and friends), e.g. `start`, `end`, `scaling`, `threshold`.
 
 ## Value

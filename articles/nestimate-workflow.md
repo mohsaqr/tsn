@@ -423,7 +423,7 @@ is over-interpreted.
 ## Pruning
 
 Not every edge deserves a place in the picture.
-[`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html)
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.html)
 returns a model of the same class with weak edges removed, so its result
 flows straight back into any verb above.
 
@@ -459,7 +459,7 @@ bootstrap in the next section shows exactly this happening.
 
 ## Bootstrap: which edges survive resampling?
 
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.html)
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html)
 resamples the sequences with replacement, re-estimates the network on
 each resample, and reports a confidence interval for every edge.
 
@@ -530,7 +530,7 @@ not.
 
 ## Stability: would the same states rank first in a smaller study?
 
-[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.html)
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.html)
 repeatedly drops a proportion of the sequences, re-computes the
 centralities, and reports the largest proportion that can be dropped
 while the ordering still tracks the original, a correlation-stability
@@ -615,7 +615,7 @@ localized in any single state.
 ## Comparing two periods
 
 The tests so far describe one network.
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.html)
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.html)
 compares two, shuffling the group labels to build a null distribution
 for every edge. The `srl` panel covers 156 occasions per student;
 splitting at occasion 78 contrasts the first half of the course with the
@@ -651,9 +651,10 @@ second_half <- ts_tna(
 comparison <- permutation(first_half, second_half, iter = 2000, seed = 2026)
 
 comparison
-#> Permutation Test:Transition Network (relative probabilities) [directed]
+#> Permutation Test: Transition Network (relative probabilities) [directed]
 #>   Iterations: 2000  |  Alpha: 0.05
 #>   Nodes: 3  |  Edges tested: 9  |  Significant: 0
+#>   Global test (networks differ overall?): M = 0.129 (p = 0.985)  |  S = 0.033 (p = 0.981)
 ```
 
 ``` r
@@ -749,12 +750,12 @@ networks rest on one set of thresholds and share a node set, the same
 discipline the fixed `breaks` enforced earlier, applied automatically.
 And the result is a Nestimate `netobject_group`, so the compatible
 grouped verbs take it directly:
-[`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html),
-[`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html),
-[`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html),
-[`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html),
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.html),
-[`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html),
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.html),
+[`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.html),
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.html),
+[`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.html),
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.html),
+[`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html),
 and their neighbours, while
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) with a `group`
 argument draws one selected network. Not every verb applies: those

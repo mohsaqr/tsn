@@ -116,14 +116,14 @@ extract_edges(effort_model)
 ```
 
 One difference matters for transition networks:
-[`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.html)
+[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.html)
 **excludes self-transitions**, returning the six between-state edges
 sorted by weight and omitting the diagonal. For this model the diagonal
 is where most of the probability lives (`high → high` is 0.575), so use
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) or
-[`extract_transition_matrix()`](https://saqr.me/Nestimate/reference/extract_transition_matrix.html)
+[`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.html)
 whenever persistence is part of the question, and
-[`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.html)
+[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.html)
 when only between-state movement is.
 
 The initial-state probabilities say the panel starts engaged: 41.7% of
@@ -131,9 +131,9 @@ students’ first recorded day is a `high`-effort day, 19.4% a `low` one.
 
 ## Where the process spends its time
 
-[`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html)
+[`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.html)
 and
-[`state_frequencies()`](https://saqr.me/Nestimate/reference/state_frequencies.html)
+[`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.html)
 count observations per state, the marginal composition before any
 dynamics.
 
@@ -159,7 +159,7 @@ mosaic_plot(effort_model)
 moderate days forming most of the area and low days a narrower
 band.](nestimate-compatibility_files/figure-html/mosaic-1.png)
 
-[`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.html)
+[`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.html)
 is the sequence carpet, one row per student, one coloured cell per day:
 
 ``` r
@@ -173,7 +173,7 @@ colour.](nestimate-compatibility_files/figure-html/carpet-1.png)
 
 The streaks are persistence made visible: students hold a state for
 spells, not single days.
-[`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.html)
+[`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.html)
 stacks the day-by-day state mix of the whole panel:
 
 ``` r
@@ -188,12 +188,12 @@ effort.](nestimate-compatibility_files/figure-html/composition-time-1.png)
 This is composition over course time, the view in which a
 first-to-second-half shift would appear, and the workflow vignette’s
 period comparison shows there is none.
-[`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.html)
+[`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.html)
 offers a fourth, marimekko-style variant of the same information.
 
 ## Which states and edges carry the structure?
 
-[`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html)
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.html)
 ranks states. Self-transitions are excluded by default, because for a
 transition network the diagonal would otherwise dominate every strength
 measure.
@@ -224,7 +224,7 @@ behind.](nestimate-compatibility_files/figure-html/centrality-plot-1.png)
 (0.38); the betweenness column is uniformly zero because in a fully
 connected three-state network no state is an obligatory bridge.
 
-[`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.html)
+[`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html)
 asks the same question of edges:
 
 ``` r
@@ -260,7 +260,7 @@ not funnel through any single corridor.
 
 ### Mean first passage times
 
-[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.html)
+[`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.html)
 converts the transition matrix into expected travel times between states
 (Kemeny & Snell, 1976).
 
@@ -298,7 +298,7 @@ where the chain settles regardless of its start.
 
 ### Persistence, return, and sojourn
 
-[`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.html)
+[`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.html)
 summarizes each state’s dynamics in one row: the self-transition
 probability, the stationary share, the mean recurrence time, and the
 mean sojourn (how long a visit lasts once entered).
@@ -336,7 +336,7 @@ rare state can still be sticky.
 
 ### Is the chain well-behaved?
 
-[`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.html)
+[`chain_structure()`](https://pak.dynasite.org/Nestimate/reference/chain_structure.html)
 reports the Markov-chain diagnostics that other verbs quietly assume:
 irreducibility (every state reachable from every other), aperiodicity,
 and reversibility.
@@ -365,9 +365,9 @@ routes up the effort scale and the routes down are not mirror images.
 
 ## How predictable is the process?
 
-[`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.html)
+[`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.html)
 gives the point estimate;
-[`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.html)
+[`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.html)
 adds a posterior credible interval by placing a Dirichlet prior on each
 row.
 
@@ -406,7 +406,7 @@ knowing today’s effort removes under 5% of tomorrow’s uncertainty. Daily
 effort is mostly noise around a weak first-order signal, and every edge
 below should be read with that in mind.
 
-[`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.html)
+[`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.html)
 maps the same quantity onto the edges, each entry an edge’s contribution
 to the row’s unpredictability, and returns a network of the same class,
 so it can be plotted or pruned like any other:
@@ -432,7 +432,7 @@ entropy_network(effort_model)
 ## Does history beyond one step matter?
 
 The model assumes the next state depends only on the current one.
-[`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.html)
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.html)
 (Anderson & Goodman, 1957) tests that assumption.
 
 ``` r
@@ -469,7 +469,7 @@ one.](nestimate-compatibility_files/figure-html/markov-order-plot-1.png)
 
 AIC and the permutation LRT select order 3 and BIC selects order 2:
 yesterday carries information about tomorrow beyond today.
-[`path_dependence()`](https://saqr.me/Nestimate/reference/path_dependence.html)
+[`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.html)
 says how much:
 
 ``` r
@@ -523,7 +523,7 @@ a first-order model: detectable is not the same as large. The
 first-order network remains a fair one-step summary; it is not the full
 process.
 
-[`path_counts()`](https://saqr.me/Nestimate/reference/path_counts.html)
+[`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.html)
 is the raw material, every observed two-step path with its count:
 
 ``` r
@@ -543,7 +543,7 @@ path_counts(effort_model)
 
 `high → high` alone is 24.0% of all transitions. And when the order test
 demands more than one step,
-[`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.html)
+[`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.html)
 estimates a higher-order network under its own per-node promotion rule:
 
 ``` r
@@ -556,18 +556,18 @@ pathways(hon)
 
 HON promotes no node here, because no single context shifts the
 next-step distribution enough to justify splitting a state, which is why
-[`pathways()`](https://saqr.me/Nestimate/reference/pathways.html) comes
-back empty. Two criteria disagreeing is a result, not a bug: the
+[`pathways()`](https://pak.dynasite.org/Nestimate/reference/pathways.html)
+comes back empty. Two criteria disagreeing is a result, not a bug: the
 likelihood test sees aggregate improvement, HON asks a stricter per-node
 question. Report both.
 
 ## Simplifying the model
 
-[`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html)
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.html)
 removes weak edges and returns the same class;
-[`net_pruning_details()`](https://saqr.me/Nestimate/reference/net_pruning_details.html)
+[`net_pruning_details()`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.html)
 is the audit trail;
-[`net_deprune()`](https://saqr.me/Nestimate/reference/net_deprune.html)
+[`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.html)
 undoes it.
 
 ``` r
@@ -619,7 +619,7 @@ and a posterior.
 
 ### Sequence bootstrap
 
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.html)
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html)
 resamples the 36 sequences and re-estimates.
 
 ``` r
@@ -671,7 +671,7 @@ pruning section named.
 
 ### Bayesian edge certainty
 
-[`certainty()`](https://saqr.me/Nestimate/reference/certainty.html)
+[`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.html)
 reaches its verdict from a Dirichlet posterior on each row, with no
 resampling.
 
@@ -696,8 +696,8 @@ certainty(effort_model)
 
 All nine edges are posterior-certain, with intervals a few hundredths
 wide. The two verbs disagree because they ask different questions:
-[`certainty()`](https://saqr.me/Nestimate/reference/certainty.html) asks
-whether an edge’s posterior excludes instability given the pooled
+[`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.html)
+asks whether an edge’s posterior excludes instability given the pooled
 transitions, while the bootstrap asks whether the estimate survives
 swapping *students* in and out. An edge can be precisely estimated from
 the pooled data and still depend on who is in the panel, which is
@@ -705,7 +705,7 @@ exactly what befalls the four edges the bootstrap could not confirm.
 
 ### Whole-network statistics: the vertex bootstrap
 
-[`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.html)
+[`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.html)
 implements the Snijders and Borgatti (1999) vertex bootstrap for
 network-level statistics.
 
@@ -729,9 +729,9 @@ deliberately conservative design for small node sets.
 
 ### Case dropping, in two flavours
 
-[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.html)
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.html)
 tracks the centrality *ordering* as sequences are dropped;
-[`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.html)
+[`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html)
 tracks the edge weights themselves. Both report the CS-coefficient of
 Epskamp, Borsboom & Fried (2018).
 
@@ -829,7 +829,7 @@ second_half <- ts_tna(
 
 ### The difference itself
 
-[`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.html)
+[`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.html)
 returns the edge-by-edge difference as an object cograph can draw:
 
 ``` r
@@ -865,13 +865,13 @@ The largest gap on any edge is 0.033 (`low → moderate`).
 
 ### Four more verdicts on the same pair
 
-[`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html)
+[`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.html)
 condenses the pair into a metric panel;
-[`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.html)
+[`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.html)
 asks whether each edge difference is credibly nonzero;
-[`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.html)
+[`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.html)
 tests the network-level statistics; and the workflow vignette’s
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.html)
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.html)
 run supplies the sequence-level test.
 
 ``` r
@@ -977,7 +977,7 @@ students.
 
 ## Link prediction
 
-[`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.html)
+[`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.html)
 scores unobserved dyads by six structural predictors:
 
 ``` r
@@ -996,26 +996,26 @@ on larger, pruned alphabets, where a missing edge is a real hypothesis.
 When the comparison variable is a column of the data,
 `ts_tna(group = ...)` builds one network per level and returns a
 Nestimate `netobject_group`. The grouped verbs verified against it are
-[`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html),
-[`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html),
-[`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.html),
-[`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.html),
-[`certainty()`](https://saqr.me/Nestimate/reference/certainty.html),
-[`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html),
-[`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html),
-[`permutation()`](https://saqr.me/Nestimate/reference/permutation.html),
-[`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.html),
-[`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.html),
-[`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.html),
-[`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.html),
+[`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.html),
+[`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.html),
+[`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.html),
+[`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.html),
+[`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.html),
+[`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.html),
+[`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.html),
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.html),
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html),
+[`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.html),
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.html),
+[`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html),
 and
-[`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html);
+[`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html);
 [`summary()`](https://rdrr.io/r/base/summary.html) and
 [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) return
 tidy per-group tables, and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws one
 selected group.
-[`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.html)
+[`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html)
 also runs, but its result drops back to a plain `netobject_group`. The
 dedicated vignette
 [`vignette("group-models", package = "tsn")`](https://pak.dynasite.org/tsn/articles/group-models.md)
@@ -1027,57 +1027,59 @@ Three families of Nestimate verbs reject a transition model, each for a
 principled reason rather than a missing feature:
 
 - **Sequence-data verbs.**
-  [`frequencies()`](https://saqr.me/Nestimate/reference/frequencies.html),
-  [`mark_first_state()`](https://saqr.me/Nestimate/reference/mark_first_state.html),
-  [`mark_terminal_state()`](https://saqr.me/Nestimate/reference/mark_terminal_state.html),
-  [`entropy_trajectory()`](https://saqr.me/Nestimate/reference/entropy_trajectory.html),
-  [`mosaic_analysis()`](https://saqr.me/Nestimate/reference/mosaic_analysis.html),
-  [`plot_mosaic()`](https://saqr.me/Nestimate/reference/plot_mosaic.html),
-  and [`as_htna()`](https://saqr.me/Nestimate/reference/as_htna.html)
+  [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.html),
+  [`mark_first_state()`](https://pak.dynasite.org/Nestimate/reference/mark_first_state.html),
+  [`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.html),
+  [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.html),
+  [`mosaic_analysis()`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.html),
+  [`plot_mosaic()`](https://pak.dynasite.org/Nestimate/reference/plot_mosaic.html),
+  and
+  [`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.html)
   operate on a raw wide data frame of sequences, not on an estimated
   model. They belong *before* model construction in a workflow, applied
   to sequence data you hold yourself.
 - **Psychometric-network verbs.**
-  [`predictability()`](https://saqr.me/Nestimate/reference/predictability.html)
+  [`predictability()`](https://pak.dynasite.org/Nestimate/reference/predictability.html)
   and the `glasso`/`pcor`/`cor` estimator family need a precision or
   correlation structure estimated from multivariate data. A transition
   matrix is a conditional-probability object, not a
   conditional-independence one; the quantities these verbs compute are
   undefined for it.
 - **Verbs that need extra structure.**
-  [`cluster_network()`](https://saqr.me/Nestimate/reference/cluster_network.html)
+  [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.html)
   and
-  [`build_clusters()`](https://saqr.me/Nestimate/reference/build_clusters.html)
+  [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.html)
   require a chosen number of clusters and are aimed at multi-sequence
-  typologies; [`wtna()`](https://saqr.me/Nestimate/reference/wtna.html)
+  typologies;
+  [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.html)
   needs one-hot action data;
-  [`sequence_compare()`](https://saqr.me/Nestimate/reference/sequence_compare.html)
+  [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.html)
   wants sequence data plus a grouping vector. And
-  [`as_tna()`](https://saqr.me/Nestimate/reference/as_tna.html) is
-  unnecessary by design: a tsn model needs no conversion, which is the
-  point of this vignette.
+  [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.html)
+  is unnecessary by design: a tsn model needs no conversion, which is
+  the point of this vignette.
 
 ## The compatibility map
 
 | Question | Verb | Tidy access | Plot | Notes |
 |----|----|----|----|----|
-| What are the estimates? | [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html), [`as.matrix()`](https://rdrr.io/r/base/matrix.html), [`extract_transition_matrix()`](https://saqr.me/Nestimate/reference/extract_transition_matrix.html), [`extract_initial_probs()`](https://saqr.me/Nestimate/reference/extract_initial_probs.html) | direct | via [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on the model | tsn accessors include the diagonal |
-| Between-state edges only | [`extract_edges()`](https://saqr.me/Nestimate/reference/extract_edges.html) | direct | \- | **excludes self-transitions** |
-| Marginal composition | [`state_distribution()`](https://saqr.me/Nestimate/reference/state_distribution.html), [`state_frequencies()`](https://saqr.me/Nestimate/reference/state_frequencies.html) | data frame | [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html), [`plot_state_frequencies()`](https://saqr.me/Nestimate/reference/plot_state_frequencies.html) |  |
-| Composition over time / carpet | [`distribution_plot()`](https://saqr.me/Nestimate/reference/distribution_plot.html), [`sequence_plot()`](https://saqr.me/Nestimate/reference/sequence_plot.html) | \- | draws directly | stacked area; sequence heatmap |
-| State/edge importance | [`net_centrality()`](https://saqr.me/Nestimate/reference/net_centrality.html), [`net_edge_betweenness()`](https://saqr.me/Nestimate/reference/net_edge_betweenness.html) | data frame / network | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on both | loops excluded from centrality by default |
-| Travel times between states | [`passage_time()`](https://saqr.me/Nestimate/reference/passage_time.html) | print | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Kemeny & Snell (1976) |
-| Persistence, recurrence, sojourn | [`markov_stability()`](https://saqr.me/Nestimate/reference/markov_stability.html) | `$stability` table | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) |  |
-| Chain diagnostics | [`chain_structure()`](https://saqr.me/Nestimate/reference/chain_structure.html) | [`summary()`](https://rdrr.io/r/base/summary.html) | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) heatmap | irreducibility, reversibility |
-| Predictability | [`transition_entropy()`](https://saqr.me/Nestimate/reference/transition_entropy.html), [`entropy_bayes()`](https://saqr.me/Nestimate/reference/entropy_bayes.html), [`entropy_network()`](https://saqr.me/Nestimate/reference/entropy_network.html) | print / [`summary()`](https://rdrr.io/r/base/summary.html) | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on both entropy results | rate in bits; ceiling `log2(n_states)` |
-| History beyond one step | [`markov_order_test()`](https://saqr.me/Nestimate/reference/markov_order_test.html), [`path_dependence()`](https://saqr.me/Nestimate/reference/path_dependence.html), [`path_counts()`](https://saqr.me/Nestimate/reference/path_counts.html), [`build_hon()`](https://saqr.me/Nestimate/reference/build_hon.html) + [`pathways()`](https://saqr.me/Nestimate/reference/pathways.html) | print / data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on test and dependence | test the size, not only the p |
-| Simplification | [`net_prune()`](https://saqr.me/Nestimate/reference/net_prune.html), [`net_pruning_details()`](https://saqr.me/Nestimate/reference/net_pruning_details.html), [`net_deprune()`](https://saqr.me/Nestimate/reference/net_deprune.html) | same class back | via model [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | prune after testing |
-| Edge uncertainty | [`bootstrap_network()`](https://saqr.me/Nestimate/reference/bootstrap_network.html), [`certainty()`](https://saqr.me/Nestimate/reference/certainty.html) | [`summary()`](https://rdrr.io/r/base/summary.html) | none | resampling vs Bayesian; they can disagree |
-| Network-level uncertainty | [`vertex_bootstrap()`](https://saqr.me/Nestimate/reference/vertex_bootstrap.html) | data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Snijders & Borgatti (1999) |
-| Sample-size reliability | [`centrality_stability()`](https://saqr.me/Nestimate/reference/centrality_stability.html), [`casedrop_reliability()`](https://saqr.me/Nestimate/reference/casedrop_reliability.html), [`network_reliability()`](https://saqr.me/Nestimate/reference/network_reliability.html) | print | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on all three | CS-coefficient bar: 0.5 / 0.7 |
-| Two-model comparison | [`permutation()`](https://saqr.me/Nestimate/reference/permutation.html), [`compare_model()`](https://saqr.me/Nestimate/reference/compare_model.html), [`subtract_networks()`](https://saqr.me/Nestimate/reference/subtract_networks.html), [`bayes_compare()`](https://saqr.me/Nestimate/reference/bayes_compare.html), [`vertex_compare()`](https://saqr.me/Nestimate/reference/vertex_compare.html) | [`summary()`](https://rdrr.io/r/base/summary.html) / data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html); [`cograph::plot_difference()`](https://sonsoles.me/cograph/reference/plot_difference.html) | report magnitudes with tests |
-| Link prediction | [`predict_links()`](https://saqr.me/Nestimate/reference/predict_links.html) | print | none | needs a sparse alphabet to be informative |
-| Many-group comparison | `ts_tna(group=)` + grouped verbs | [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) | `plot(x, group=)`, [`mosaic_plot()`](https://saqr.me/Nestimate/reference/mosaic_plot.html) | see [`vignette("group-models")`](https://pak.dynasite.org/tsn/articles/group-models.md) |
+| What are the estimates? | [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html), [`as.matrix()`](https://rdrr.io/r/base/matrix.html), [`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.html), [`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.html) | direct | via [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on the model | tsn accessors include the diagonal |
+| Between-state edges only | [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.html) | direct | \- | **excludes self-transitions** |
+| Marginal composition | [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.html), [`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.html) | data frame | [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html), [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.html) |  |
+| Composition over time / carpet | [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.html), [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.html) | \- | draws directly | stacked area; sequence heatmap |
+| State/edge importance | [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.html), [`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.html) | data frame / network | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on both | loops excluded from centrality by default |
+| Travel times between states | [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.html) | print | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Kemeny & Snell (1976) |
+| Persistence, recurrence, sojourn | [`markov_stability()`](https://pak.dynasite.org/Nestimate/reference/markov_stability.html) | `$stability` table | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) |  |
+| Chain diagnostics | [`chain_structure()`](https://pak.dynasite.org/Nestimate/reference/chain_structure.html) | [`summary()`](https://rdrr.io/r/base/summary.html) | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) heatmap | irreducibility, reversibility |
+| Predictability | [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.html), [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.html), [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.html) | print / [`summary()`](https://rdrr.io/r/base/summary.html) | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on both entropy results | rate in bits; ceiling `log2(n_states)` |
+| History beyond one step | [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.html), [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.html), [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.html), [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.html) + [`pathways()`](https://pak.dynasite.org/Nestimate/reference/pathways.html) | print / data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on test and dependence | test the size, not only the p |
+| Simplification | [`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.html), [`net_pruning_details()`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.html), [`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.html) | same class back | via model [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | prune after testing |
+| Edge uncertainty | [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.html), [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.html) | [`summary()`](https://rdrr.io/r/base/summary.html) | none | resampling vs Bayesian; they can disagree |
+| Network-level uncertainty | [`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.html) | data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) | Snijders & Borgatti (1999) |
+| Sample-size reliability | [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.html), [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html), [`network_reliability()`](https://pak.dynasite.org/Nestimate/reference/network_reliability.html) | print | [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on all three | CS-coefficient bar: 0.5 / 0.7 |
+| Two-model comparison | [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.html), [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.html), [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.html), [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.html), [`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.html) | [`summary()`](https://rdrr.io/r/base/summary.html) / data frame | [`plot()`](https://rdrr.io/r/graphics/plot.default.html); [`cograph::plot_difference()`](https://sonsoles.me/cograph/reference/plot_difference.html) | report magnitudes with tests |
+| Link prediction | [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.html) | print | none | needs a sparse alphabet to be informative |
+| Many-group comparison | `ts_tna(group=)` + grouped verbs | [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) | `plot(x, group=)`, [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html) | see [`vignette("group-models")`](https://pak.dynasite.org/tsn/articles/group-models.md) |
 | Rendering | [`plot()`](https://rdrr.io/r/graphics/plot.default.html), [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html) | none | none | requires cograph |
 
 ## References

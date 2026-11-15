@@ -58,16 +58,24 @@ trend(
 
 - method:
 
-  Trend metric: `"slope"` (default) or `"growth_factor"`.
+  Trend metric: `"slope"` (default) or `"growth_factor"`. The growth
+  factor is the last non-missing value in the window divided by the
+  first; it is only meaningful for strictly positive values, and a
+  warning of class `tsn_trend_nonpositive_growth` is raised when the
+  data contain a zero or negative value.
 
 - slope:
 
   Slope estimator when `method = "slope"`: `"robust"` (Theil-Sen, the
-  default), `"ols"`, `"spearman"`, or `"kendall"`.
+  median of all pairwise slopes; the default), `"ols"` (least-squares
+  slope), `"spearman"`, or `"kendall"`. The two rank options rescale the
+  rank correlation (Kendall's tau-b under ties) by
+  `sd(value) / sd(time)`, so they share the units of a slope.
 
 - epsilon:
 
-  Flat-band half-width. Default `0.05`.
+  Flat-band half-width, in metric units (value units per time unit for
+  slopes). Default `0.05`.
 
 - turbulence_threshold:
 
@@ -82,7 +90,8 @@ trend(
 
   Window alignment: `"center"` (default), `"right"`, or `"left"`. The
   metric is assigned to the centre, rightmost, or leftmost point of the
-  window respectively.
+  window respectively. For an even `window` the centre is the earlier of
+  the two middle points.
 
 ## Value
 
@@ -101,6 +110,20 @@ the range factor of the metric) then overrides these labels with
 labelled `"Flat"` use the higher threshold
 `turbulence_threshold * flat_to_turbulent_factor`, making them more
 resistant to noise-driven reclassification.
+
+The thresholds are strict: a metric exactly equal to `+epsilon` or
+`-epsilon` is flat. Metrics are computed against the real time
+coordinates, so irregular spacing is respected and the slope is in value
+units per time unit: per day for `Date` time and per second for
+`POSIXct` time (choose `epsilon` accordingly). Character or factor time
+labels are replaced by their position `1, 2, ...`. Each window uses its
+non-missing values; a window whose values are all identical has a slope
+of `0` under every estimator.
+
+`"Missing Data"` marks observations whose value is `NA`. `"Initial"`
+marks observations without a defined metric: the edge positions that
+lack a full window (both ends for `align = "center"`), and windows whose
+metric is undefined, such as a growth factor whose first value is `0`.
 
 ## Examples
 

@@ -56,14 +56,16 @@ tsn(
 
 - method:
 
-  Network selector. The base families are `"distance"` and
-  `"visibility"`. Convenience shortcuts resolve to a family with
-  sensible defaults: `"nvg"`/`"natural"` (natural visibility graph),
-  `"hvg"`/ `"horizontal"` (horizontal visibility graph), and any
+  Network selector (default `"visibility"`). The base families are
+  `"distance"` and `"visibility"`. Convenience shortcuts resolve to a
+  family with sensible defaults: `"nvg"`/`"natural"` (natural visibility
+  graph), `"hvg"`/ `"horizontal"` (horizontal visibility graph), and any
   discretizer name (`"ordinal"`, `"quantile"`, `"symbolic"`, ...) which
   builds a visibility network on states from that discretizer. Shortcuts
   only set defaults; the granular arguments (`unit`, `visibility`,
-  `discretization`) still apply.
+  `discretization`) still apply, and one that contradicts the shortcut
+  is an error. Unique abbreviations (`"hv"`, `"quant"`) are completed as
+  by [`match.arg()`](https://rdrr.io/r/base/match.arg.html).
 
 - value:
 
@@ -89,33 +91,44 @@ tsn(
 
   Node unit. Distance networks use `"series"`, `"window"`, or `"time"`
   (one node per time point); visibility networks use `"time"` or
-  `"state"`. When `NULL`, the natural unit for the selected method is
-  inferred.
+  `"state"`. When `NULL`, visibility networks use `"time"` (discretizer
+  shortcuts use `"state"`), and distance networks use `"series"` for two
+  or more series and `"window"` for a single series.
 
 - distance:
 
-  Distance measure for distance networks. One of `"euclidean"`,
-  `"manhattan"`, `"maximum"`, `"canberra"`, `"minkowski"`, `"binary"`,
-  `"cosine"`, `"correlation"`, `"spearman"`, `"dtw"`, `"ccf"` (one minus
-  the maximum absolute cross-correlation across lags), `"nmi"` (one
-  minus normalized mutual information after separately quantile-binning
-  each series), `"voi"` (variation of information after the same
-  marginal binning), `"event_sync"` (one minus the Quiroga
-  event-synchronization index; units are interpreted as event times), or
-  `"van_rossum"` (exact van Rossum spike-train distance; units are
-  interpreted as event times).
+  Distance measure for distance networks (default `"euclidean"`). One of
+  `"euclidean"`, `"manhattan"`, `"maximum"`, `"canberra"`,
+  `"minkowski"`, `"binary"`, `"cosine"`, `"correlation"`, `"spearman"`,
+  `"dtw"`, `"ccf"` (one minus the maximum absolute cross-correlation
+  across lags), `"nmi"` (one minus normalized mutual information after
+  separately quantile-binning each series), `"voi"` (variation of
+  information after the same marginal binning), `"event_sync"` (one
+  minus the Quiroga event-synchronization index; units are interpreted
+  as event times), or `"van_rossum"` (exact van Rossum spike-train
+  distance; units are interpreted as event times).
 
 - connect:
 
-  Distance-to-network rule.
+  Distance-to-network rule (default `"full"`): `"full"` connects every
+  evaluated dyad; `"nearest"` keeps each node's `neighbors` closest
+  dyads (the union over both endpoints when undirected); `"threshold"`
+  keeps dyads with distance `<= threshold`; `"percentile"` keeps dyads
+  at or below the `percentile` quantile of the distances; `"gaussian"`
+  connects every dyad with Gaussian kernel weights
+  `exp(-d^2 / (2 * bandwidth^2))`. `neighbors`, `threshold`, and
+  `percentile` are each required by their own rule and an error with any
+  other.
 
 - window:
 
-  Sliding-window width when `unit = "window"`.
+  Sliding-window width when `unit = "window"`. When `NULL`,
+  `max(2, n %/% 10)` for the shortest series length `n`; two windows
+  then need `n >= 3`.
 
 - step:
 
-  Sliding-window step.
+  Sliding-window step (default `1`). Only valid when `unit = "window"`.
 
 - neighbors:
 
@@ -127,8 +140,8 @@ tsn(
 
 - percentile:
 
-  Proportion of shortest distances retained when
-  `connect = "percentile"`.
+  Distance quantile in `[0, 1]` when `connect = "percentile"`; dyads at
+  or below it are kept.
 
 - bandwidth:
 
@@ -143,7 +156,7 @@ tsn(
 - bins:
 
   Number of marginal quantile bins for `distance = "nmi"` and
-  `distance = "voi"`.
+  `distance = "voi"`. `NULL` uses `10`.
 
 - lag:
 
@@ -161,38 +174,45 @@ tsn(
 
 - similarity:
 
-  Optional similarity kernel mapping edge distances to weights:
-  `"inverse"` (the default weight rule, `1 / (1 + d)`),
-  `"normalized_inverse"` (`1 - d / max(d)`), `"negative_exp"`
-  (`exp(-d / bandwidth)`), or `"gaussian"`
-  (`exp(-d^2 / (2 * bandwidth^2))`).
+  Optional similarity kernel mapping edge distances to weights. `NULL`
+  uses `"inverse"`, except under `connect = "gaussian"`, which supplies
+  its own kernel and cannot be combined with `similarity`. One of
+  `"inverse"` (`1 / (1 + d)`), `"normalized_inverse"`
+  (`1 - d / max(d)`), `"negative_exp"` (`exp(-d / bandwidth)`), or
+  `"gaussian"` (`exp(-d^2 / (2 * bandwidth^2))`).
 
 - visibility:
 
-  Visibility rule: `"natural"` or `"horizontal"`.
+  Visibility rule: `"natural"` (default) or `"horizontal"`.
 
 - state:
 
-  Optional state-column name or state vector.
+  Optional state-column name or state vector, used with `unit = "state"`
+  in place of the internal discretizer. For long data a vector is
+  aligned with the rows of `data` (and follows `series` selection); for
+  other inputs it is aligned with the observations of the selected
+  series in series order.
 
 - discretization:
 
-  Internal state-discretization method. One of `"threshold"`, `"width"`,
-  `"quantile"`, `"kde"`, `"kmeans"`, `"gaussian"`, `"hclust"`,
-  `"ordinal"`, `"symbolic"`, `"change_points"`, `"entropy"`,
-  `"magnitude"`, `"adaptive_magnitude"`, `"percentile_magnitude"`, or
-  `"dtw"`.
+  Internal state-discretization method (default `"gaussian"`). One of
+  `"threshold"`, `"width"`, `"quantile"`, `"kde"`, `"kmeans"`,
+  `"gaussian"`, `"hclust"`, `"ordinal"`, `"symbolic"`,
+  `"change_points"`, `"entropy"`, `"magnitude"`, `"adaptive_magnitude"`,
+  `"percentile_magnitude"`, or `"dtw"`.
 
 - n_states:
 
-  Number of states. Not consumed by `discretization = "ordinal"`, whose
-  state count follows the embedding arguments `m` and `tau`; supplying
-  both is an error.
+  Number of states (default `3`). Not consumed by
+  `discretization = "ordinal"`, whose state count follows the embedding
+  arguments `m` and `tau`; supplying both is an error.
 
 - breaks:
 
-  Optional internal thresholds when `discretization = "threshold"`. An
-  error with any other discretizer, which computes its own boundaries.
+  Interior thresholds, required when `discretization = "threshold"`.
+  When `n_states` is not supplied it is taken as `length(breaks) + 1`.
+  An error with any other discretizer, which computes its own
+  boundaries.
 
 - m:
 
@@ -207,9 +227,11 @@ tsn(
 - directed:
 
   Whether edges follow their ordered direction. Visibility edges then
-  run forward in time; distance edges follow the evaluated unit order.
-  With `FALSE`, reciprocal distance relations are represented by one
-  undirected edge.
+  run forward in time; distance edges follow the evaluated unit order:
+  for a symmetric distance measure the direction of an all-pairs edge is
+  the order of the units in the input, so `directed = TRUE` is mainly
+  meaningful with `chain = TRUE`. With `FALSE` (default), reciprocal
+  distance relations are represented by one undirected edge.
 
 - limit:
 
@@ -218,16 +240,21 @@ tsn(
 
 - penetrable:
 
-  Number of intermediate points allowed to block visibility.
+  Number of intermediate points allowed to block visibility (default
+  `0`).
 
 - decay:
 
   Non-negative exponential edge-decay rate per unit of `time` (or per
-  observation step when no numeric/date-time axis is supplied).
+  observation step when no numeric/date-time axis is supplied). The
+  default `0` gives every visibility edge weight `1`.
 
 - aggregation:
 
-  State-edge aggregation rule.
+  How visibility edges between time points are combined into one state
+  edge when `unit = "state"`: `"sum"` (default), `"mean"`, or `"max"` of
+  the time-point edge weights, or `"count"` of time-point edges. The
+  state edge's `distance` is always the mean temporal lag.
 
 - chain:
 
@@ -249,12 +276,19 @@ tsn(
 ## Value
 
 A list-backed network object of class
-`c("tsn", "netobject", "cograph_network")`. Its `$table` component is
-the tidy dyad table; use
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) for that
-table, `as.data.frame(x, what = "series")` for the canonical source
-observations, and [`as.matrix()`](https://rdrr.io/r/base/matrix.html)
-for the weighted adjacency matrix.
+`c("tsn", "netobject", "cograph_network")`. Read it with verbs:
+`as.data.frame(x)` returns the tidy dyad table, one row per evaluated
+dyad, with columns `from`, `to`, `distance`, `weight`, `connected`,
+`method`, `unit`, `distance_method` (`NA` for visibility networks),
+`connection_method` (the connection rule, or the visibility rule),
+`directed`, and the observation positions `from_start`, `from_end`,
+`to_start`, `to_end` (`NA` for state nodes);
+`as.data.frame(x, what = "series")` returns the canonical source
+observations (`id`, `time`, `value`, plus `state` for state networks);
+`as.matrix(x)` returns the weighted adjacency matrix; `summary(x)` and
+`print(x)` describe the network. The list also carries the fields the
+cograph renderer reads (`nodes`, `edges`, `directed`, `weights`, `meta`,
+`node_groups`, `n_nodes`, `n_edges`) and the construction `parameters`.
 
 ## Details
 
@@ -271,7 +305,8 @@ contradict what the shortcut implies.
 
 For state networks, caller-supplied `state` values fix the node order:
 factors keep their declared level order (an unused level becomes a
-zero-degree node), and plain character states are ordered by first
+zero-degree node), numeric, logical, and date-time codes follow their
+sorted value order, and plain character states are ordered by first
 appearance. Discretized states follow the discretizer's numeric state
 order. The `state` column of the stored source series preserves this
 factor.
@@ -376,6 +411,7 @@ tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "distance")
 #>        euclidean              full    FALSE          2        3        3      4
 #>        euclidean              full    FALSE          2        3        4      5
 #>        euclidean              full    FALSE          2        3        5      6
+#> Showing 10 of 28 dyads; as.data.frame(x) returns the full table.
 #> Use plot(x) for the network or plot(x, "series") for the source series.
 #> With cograph installed, splot(x) renders a publication-quality network.
 
@@ -393,8 +429,8 @@ tsn(
 #>  from to  distance weight connected     method  unit distance_method
 #>     1  2  1.590909     66      TRUE visibility state            <NA>
 #>     2  2  2.550847    118      TRUE visibility state            <NA>
-#>     2  3  4.888889    117      TRUE visibility state            <NA>
-#>     3  3 17.592593     81      TRUE visibility state            <NA>
+#>     2  3  4.862069    116      TRUE visibility state            <NA>
+#>     3  3 17.512500     80      TRUE visibility state            <NA>
 #>     1  3  2.125000     32      TRUE visibility state            <NA>
 #>     1  1  1.000000     13      TRUE visibility state            <NA>
 #>  connection_method directed from_start from_end to_start to_end

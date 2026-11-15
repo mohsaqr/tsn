@@ -38,7 +38,11 @@ discretize(
 - data:
 
   A numeric vector, `ts`, matrix, named list of numeric vectors, data
-  frame, or a `tsn` object (its source series are used).
+  frame, or a `tsn` object (its source series are used, so `value`,
+  `id`, and `time` cannot be supplied with it). Missing or non-finite
+  values are an error rather than being dropped or kept as an `NA`
+  state; remove them first, for example with
+  [`subset()`](https://rdrr.io/r/base/subset.html).
 
 - value:
 
@@ -65,19 +69,27 @@ discretize(
 
 - n_states:
 
-  Number of states. Not consumed by `"ordinal"`, whose state count
-  follows the embedding arguments `m` and `tau`; supplying both is an
-  error.
+  Number of states requested. Not consumed by `"ordinal"`, whose state
+  count follows the embedding arguments `m` and `tau`; supplying both is
+  an error. Bins that receive no observation are dropped (with a
+  `tsn_state_shortfall` warning), so the realized count (reported in the
+  printed header) can be smaller, for example with `"threshold"` breaks
+  that leave a bin empty, an empty middle `"width"` bin, or a `"dtw"`
+  cluster that wins no observation's vote.
 
 - breaks:
 
-  Optional interior thresholds for `method = "threshold"`. An error with
-  any other method, which computes its own boundaries.
+  Interior thresholds for `method = "threshold"`, which requires them:
+  finite values strictly inside the data range. When `n_states` is not
+  supplied it is set to `length(breaks) + 1`; an explicit `n_states`
+  must equal that. An error with any other method, which computes its
+  own boundaries.
 
 - labels:
 
-  Optional custom state labels. Length must equal the number of states
-  produced. When `NULL`, states are numbered consecutively.
+  Optional custom state labels: unique, non-missing, non-empty strings,
+  one per realized state (in increasing state order). When `NULL`,
+  states are numbered consecutively.
 
 - transform:
 
@@ -86,11 +98,13 @@ discretize(
 
 - m:
 
-  Embedding dimension for `method = "ordinal"` (default `3`).
+  Embedding dimension for `method = "ordinal"` (default `3`). An error
+  with any other method.
 
 - tau:
 
-  Embedding lag for `method = "ordinal"` (default `1`).
+  Embedding lag for `method = "ordinal"` (default `1`). An error with
+  any other method.
 
 - seed:
 
@@ -99,10 +113,17 @@ discretize(
 
 ## Value
 
-A tidy data frame of class `tsn_states` with columns `id`, `time`,
-`value`, `state` (a factor), and `probability`. The discretization model
-and any bin boundaries are stored in the `model` and `breaks`
-attributes.
+A tidy data frame of class `tsn_states`, one row per observation, with
+columns `id` (character), `time`, `value`, `state` (a factor whose
+levels are the realized states in increasing order), and `probability`
+(the assignment confidence; `1` for hard assignments). Rows are grouped
+by series in order of first appearance and, when `time` is supplied,
+sorted by it within each series. `time` is the supplied time column for
+long data with `time` and the series time for a `ts`; otherwise it
+numbers the observations within each series (long data with `id` only,
+named lists) or is the row index (vectors, matrices, wide data frames).
+The discretization model and any bin boundaries are stored in the
+`model` and `breaks` attributes.
 
 ## References
 
@@ -154,13 +175,14 @@ discretize(c(3, 1, 4, 1, 5, 9, 2, 6), method = "ordinal", m = 3)
 #>  series_1    7     2     5           1
 #>  series_1    8     6     5           1
 
-discretize(c(10, 12, 8, 40, 44, 9), method = "width", transform = "log")
-#> <tsn_states> width discretization (transform: log): 6 observations, 2 states
+discretize(c(10, 12, 8, 25, 40, 44, 9), method = "width", transform = "log")
+#> <tsn_states> width discretization (transform: log): 7 observations, 3 states
 #>        id time value state probability
 #>  series_1    1    10     1           1
 #>  series_1    2    12     1           1
 #>  series_1    3     8     1           1
-#>  series_1    4    40     2           1
-#>  series_1    5    44     2           1
-#>  series_1    6     9     1           1
+#>  series_1    4    25     2           1
+#>  series_1    5    40     3           1
+#>  series_1    6    44     3           1
+#>  series_1    7     9     1           1
 ```

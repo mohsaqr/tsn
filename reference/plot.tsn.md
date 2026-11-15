@@ -43,7 +43,10 @@ original observations rather than a generic network.
 For `type = "network"`, use cograph arguments such as `layout`,
 `labels`, `scale_nodes_by`, `node_size_range`, and `edge_label_style`.
 For `type = "series"`, `...` accepts `series`, `overlay`, `points`,
-`trend`, `columns`, `max_series`, `scales`, and `palette`.
+`trend`, `columns`, `max_series`, `scales`, and `palette`; an
+unrecognised (for example misspelled) argument is an error rather than
+being ignored. A named `palette` must name a colour for every state
+shown. Network options must be named, and each may be given once.
 
 ## Examples
 

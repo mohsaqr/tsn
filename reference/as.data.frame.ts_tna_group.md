@@ -28,7 +28,8 @@ as.data.frame(
 
 - row.names:
 
-  Optional row names.
+  Optional row names for the returned table; `NULL` (the default)
+  numbers the rows.
 
 - optional:
 

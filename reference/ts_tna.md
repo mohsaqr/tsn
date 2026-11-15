@@ -169,6 +169,7 @@ ts_atna(
   observations, so they are not independent and intervals computed from
   them run narrow. Partition for conservative intervals that tolerate
   dependence beyond one lag; slide to preserve the estimate exactly.
+  Requires `segment`: `overlap = TRUE` without it is an error.
 
 - group:
 
@@ -233,8 +234,10 @@ per condition, cohort, or context, all cut from one shared state
 alphabet so they can be compared. The result is a Nestimate
 `netobject_group`, so the grouped Nestimate verbs that suit a transition
 model apply to it directly. Verbs needing a precision matrix or a
-clustering attribute do not, and there is no grouped
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method.
+clustering attribute do not.
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws one group
+at a time; see
+[`plot.ts_tna_group()`](https://pak.dynasite.org/tsn/reference/plot.ts_tna_group.md).
 
 Multiple series are supported through every tsn input form (named list,
 matrix, wide or long data frame). Scalar discretizers learn from pooled
@@ -254,7 +257,7 @@ series <- list(
   c = cumsum(rnorm(60))
 )
 network <- ts_tna(series, n_states = 3, labels = c("low", "mid", "high"))
-network$weights
+as.matrix(network)
 #>            low        mid      high
 #> low  0.9322034 0.06779661 0.0000000
 #> mid  0.0500000 0.81666667 0.1333333

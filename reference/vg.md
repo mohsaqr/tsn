@@ -35,7 +35,8 @@ vg(data, type = c("natural", "horizontal"), ...)
   argument relevant to visibility networks, for example `value`, `id`,
   `time`, `series`, `unit`, `state`, `discretization`, `n_states`, `m`,
   `tau`, `directed`, `limit`, `penetrable`, `decay`, `aggregation`, and
-  `seed`.
+  `seed`. `method` and `visibility` are fixed by `vg()` itself and are
+  rejected here.
 
 ## Value
 
@@ -44,6 +45,15 @@ A tidy `tsn` network object (also a `netobject` and a
 [`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md) call. The
 stored provenance call records `vg()` rather than
 [`tsn()`](https://pak.dynasite.org/tsn/reference/tsn.md).
+
+## Details
+
+With a numeric, `Date`, or `POSIXct` time axis, the natural rule,
+`limit`, and `decay` use elapsed time (days for `Date`, seconds for
+`POSIXct`), so irregular sampling changes which points see each other;
+otherwise observations are one step apart. The horizontal rule depends
+only on the order of the values. Ties block under both rules, as in the
+strict published definitions, and `limit` is inclusive.
 
 ## See also
 
@@ -77,6 +87,7 @@ vg(c(3, 1, 4, 2, 5, 3, 6, 2, 7))
 #>             <NA>           natural    FALSE          5        5        7      7
 #>             <NA>           natural    FALSE          6        6        7      7
 #>             <NA>           natural    FALSE          7        7        8      8
+#> Showing 10 of 12 dyads; as.data.frame(x) returns the full table.
 #> Use plot(x) for the network or plot(x, "series") for the source series.
 #> With cograph installed, splot(x) renders a publication-quality network.
 vg(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "horizontal")
@@ -103,6 +114,7 @@ vg(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "horizontal")
 #>             <NA>        horizontal    FALSE          5        5        7      7
 #>             <NA>        horizontal    FALSE          6        6        7      7
 #>             <NA>        horizontal    FALSE          7        7        8      8
+#> Showing 10 of 12 dyads; as.data.frame(x) returns the full table.
 #> Use plot(x) for the network or plot(x, "series") for the source series.
 #> With cograph installed, splot(x) renders a publication-quality network.
 

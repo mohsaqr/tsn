@@ -15,13 +15,13 @@ Source:
 [`DESCRIPTION`](https://github.com/mohsaqr/tsn/blob/main/DESCRIPTION)
 
 Saqr M, López-Pernas S, Gomez M (2026). *tsn: Time-Series Network
-Construction*. R package version 1.4.1,
+Construction*. R package version 1.4.2,
 <https://github.com/mohsaqr/tsn/>.
 
     @Manual{,
       title = {tsn: Time-Series Network Construction},
       author = {Mohammed Saqr and Sonsoles López-Pernas and Manuel J. Gomez},
       year = {2026},
-      note = {R package version 1.4.1},
+      note = {R package version 1.4.2},
       url = {https://github.com/mohsaqr/tsn/},
     }

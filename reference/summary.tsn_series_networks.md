@@ -36,4 +36,8 @@ print(x, ...)
 
 ## Value
 
-A tidy data frame with one row per series.
+A base data frame with one row per series and the columns `series`
+(series ID), `type` (network type: `"tna"`, `"ftna"`, `"cna"` or
+`"atna"`), `observations` (rows of that series' source table), `states`
+(nodes) and `edges` (non-zero edges, self-transitions included).
+[`print()`](https://rdrr.io/r/base/print.html) returns `x` invisibly.

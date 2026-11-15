@@ -1,6 +1,8 @@
 # Print a state discretization
 
-Print a state discretization
+Prints a one-line header (method, transform, observation count, and the
+realized state count, with the requested count when fewer states were
+realized) followed by the first ten rows.
 
 ## Usage
 

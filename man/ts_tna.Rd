@@ -135,7 +135,8 @@ transition — at \code{segment = 2} the blocks are the consecutive lag-1 pairs
 and the network is identical to the unsegmented one — but the blocks share
 observations, so they are not independent and intervals computed from them
 run narrow. Partition for conservative intervals that tolerate dependence
-beyond one lag; slide to preserve the estimate exactly.}
+beyond one lag; slide to preserve the estimate exactly. Requires
+\code{segment}: \code{overlap = TRUE} without it is an error.}
 
 \item{group}{Optional name of a column of \code{data} holding each observation's
 group, e.g. a condition, a cohort, or a context. Supplying it returns one
@@ -195,8 +196,8 @@ The \code{group} argument splits the model instead of pooling it: one network pe
 condition, cohort, or context, all cut from one shared state alphabet so they
 can be compared. The result is a Nestimate \code{netobject_group}, so the grouped
 Nestimate verbs that suit a transition model apply to it directly. Verbs
-needing a precision matrix or a clustering attribute do not, and there is no
-grouped \code{plot()} method.
+needing a precision matrix or a clustering attribute do not. \code{plot()} draws
+one group at a time; see \code{\link[=plot.ts_tna_group]{plot.ts_tna_group()}}.
 
 Multiple series are supported through every tsn input form (named list,
 matrix, wide or long data frame). Scalar discretizers learn from pooled
@@ -214,7 +215,7 @@ series <- list(
   c = cumsum(rnorm(60))
 )
 network <- ts_tna(series, n_states = 3, labels = c("low", "mid", "high"))
-network$weights
+as.matrix(network)
 
 # Frequency counts instead of probabilities:
 counts <- ts_ftna(series, n_states = 3)

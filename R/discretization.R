@@ -25,6 +25,11 @@
 #'   methods also store their boundaries in the `breaks` attribute. Integer
 #'   state labels increase with the within-state mean for every method except
 #'   `"ordinal"`, whose labels follow lexicographic permutation-pattern order.
+#'   `model$n_states` is the realized (occupied) state count and
+#'   `model$n_states_requested` the requested one (`NA` for `"ordinal"`).
+#'   When fewer states are occupied than requested, a warning of class
+#'   `tsn_state_shortfall` is raised and labels run from 1 to the realized
+#'   count.
 #' @keywords internal
 #' @noRd
 .tsn_discretize <- function(
@@ -114,6 +119,23 @@
     state <- ordered$state
     state_means <- ordered$means
   }
+  requested_states <- if (method == "ordinal") NA_integer_ else n_states
+  # Binning and clustering can leave a requested state empty (an empty bin, a
+  # collapsed mixture component, a duplicated medoid). The labels are then
+  # renumbered over the occupied states, so the shortfall must be surfaced.
+  if (method != "ordinal" && length(state_means) < n_states) {
+    warning(warningCondition(
+      sprintf(
+        paste0(
+          "`%s` discretization produced %d of the %d requested states; ",
+          "empty states were dropped and the occupied states renumbered 1 to %d."
+        ),
+        method, length(state_means), n_states, length(state_means)
+      ),
+      class = "tsn_state_shortfall",
+      call = NULL
+    ))
+  }
   result <- data.frame(
     index = seq_along(values),
     state = state,
@@ -124,6 +146,7 @@
     list(
       method = method,
       n_states = length(state_means),
+      n_states_requested = requested_states,
       state_means = state_means
     ),
     fit$model
@@ -137,12 +160,17 @@
 #' @keywords internal
 #' @noRd
 .tsn_check_count <- function(value, name, lower) {
+  # Compare against round() rather than as.integer(): coercing a value beyond
+  # the integer range yields NA and turned this guard into an R-level error.
   valid <- is.numeric(value) && length(value) == 1L && !is.na(value) &&
-    is.finite(value) && value == as.integer(value) && value >= lower
+    is.finite(value) && value == round(value) && value >= lower &&
+    value <= .Machine$integer.max
   if (!valid) {
     stop(
-      sprintf("`%s` must be a single integer greater than or equal to %d.",
-              name, lower),
+      sprintf(
+        "`%s` must be a single integer between %d and %d.",
+        name, lower, .Machine$integer.max
+      ),
       call. = FALSE
     )
   }
@@ -189,15 +217,20 @@
   if (!is.numeric(thresholds) || length(thresholds) != n_states - 1L ||
       anyNA(thresholds) || any(!is.finite(thresholds))) {
     stop(
-      sprintf("`thresholds` must contain exactly %d finite numeric value(s).",
-              n_states - 1L),
+      sprintf(
+        paste0(
+          "`breaks` must contain exactly %d finite numeric value(s) ",
+          "(n_states - 1 interior thresholds for n_states = %d)."
+        ),
+        n_states - 1L, n_states
+      ),
       call. = FALSE
     )
   }
   thresholds <- sort(as.numeric(thresholds))
   if (anyDuplicated(thresholds) ||
       any(thresholds <= min(values)) || any(thresholds >= max(values))) {
-    stop("`thresholds` must be distinct and strictly inside the data range.",
+    stop("`breaks` must be distinct and strictly inside the data range.",
          call. = FALSE)
   }
   .tsn_cut_fit(values, c(-Inf, thresholds, Inf), "threshold")
@@ -222,18 +255,48 @@
   internal <- proposed[-c(1L, n_states + 1L)]
   if (length(unique(internal)) == length(internal) &&
       all(internal > min(values)) && all(internal < max(values))) {
-    return(c(-Inf, internal, Inf))
+    breaks <- c(-Inf, internal, Inf)
+    counts <- tabulate(
+      cut(values, breaks = breaks, labels = FALSE,
+          include.lowest = TRUE, right = TRUE),
+      nbins = n_states
+    )
+    if (all(counts > 0L)) {
+      return(breaks)
+    }
   }
 
+  # Tie-aware fallback: when tied values collapse the sample quantiles, cut
+  # at the gaps between consecutive distinct values whose empirical
+  # cumulative proportion is closest to each target probability j / n_states.
+  # Earlier versions spaced the gaps evenly over the distinct-value ranks,
+  # which isolated the single largest value on zero-inflated data.
   unique_values <- sort(unique(values))
-  gap_indices <- unique(round(seq(
-    1,
-    length(unique_values) - 1L,
-    length.out = n_states - 1L
-  )))
-  if (length(gap_indices) != n_states - 1L) {
-    stop("Unable to construct distinct quantile boundaries.", call. = FALSE)
+  n_gaps <- length(unique_values) - 1L
+  if (n_gaps < n_states - 1L) {
+    stop(
+      sprintf(
+        "Quantile boundaries for %d states need at least %d distinct values; found %d.",
+        n_states, n_states, length(unique_values)
+      ),
+      call. = FALSE
+    )
   }
+  cumulative <- cumsum(
+    tabulate(match(values, unique_values), nbins = length(unique_values))
+  )[seq_len(n_gaps)] / length(values)
+  targets <- seq_len(n_states - 1L) / n_states
+  gap_indices <- Reduce(
+    function(chosen, target_index) {
+      lower <- if (length(chosen)) chosen[length(chosen)] + 1L else 1L
+      upper <- n_gaps - (n_states - 1L - target_index)
+      candidates <- seq.int(lower, upper)
+      distance <- abs(cumulative[candidates] - targets[target_index])
+      c(chosen, candidates[which.min(distance)])
+    },
+    seq_along(targets),
+    integer(0)
+  )
   midpoints <- (
     unique_values[gap_indices] + unique_values[gap_indices + 1L]
   ) / 2
@@ -318,7 +381,10 @@
       withinss = fit$withinss,
       total_withinss = fit$tot.withinss,
       iterations = fit$iter,
-      converged = fit$ifault == 0L
+      # For Lloyd, stats::kmeans() leaves `ifault` empty on success (so the
+      # old `ifault == 0L` gave logical(0)) and reports iter > iter.max on
+      # failure, alongside its own "did not converge" warning.
+      converged = isTRUE(fit$iter <= max_iterations)
     ),
     breaks = NULL
   )
@@ -398,57 +464,54 @@
     iteration = 1L,
     previous_log_likelihood = -Inf
 ) {
-  expectation <- .tsn_gmm_expectation(values, weights, means, variances)
-  log_likelihood <- expectation$log_likelihood
-  converged <- is.finite(previous_log_likelihood) &&
-    abs(log_likelihood - previous_log_likelihood) <=
-      tolerance * (1 + abs(previous_log_likelihood))
-  if (converged || iteration >= max_iterations) {
-    return(list(
-      weights = weights,
-      means = means,
-      variances = variances,
-      posterior = expectation$posterior,
-      log_likelihood = log_likelihood,
-      iterations = iteration,
-      converged = converged
-    ))
+  # An explicit loop, not recursion: one stack frame per EM step overflowed
+  # the C stack ("node stack overflow") for max_iterations in the thousands.
+  repeat {
+    expectation <- .tsn_gmm_expectation(values, weights, means, variances)
+    log_likelihood <- expectation$log_likelihood
+    converged <- is.finite(previous_log_likelihood) &&
+      abs(log_likelihood - previous_log_likelihood) <=
+        tolerance * (1 + abs(previous_log_likelihood))
+    if (converged || iteration >= max_iterations) {
+      return(list(
+        weights = weights,
+        means = means,
+        variances = variances,
+        posterior = expectation$posterior,
+        log_likelihood = log_likelihood,
+        iterations = iteration,
+        converged = converged
+      ))
+    }
+
+    posterior <- expectation$posterior
+    effective_counts <- colSums(posterior)
+    collapsed <- !is.finite(effective_counts) |
+      effective_counts <= max(1e-8, length(values) * 1e-10)
+    safe_counts <- pmax(effective_counts, 1e-8)
+    updated_means <- colSums(posterior * values) / safe_counts
+    centered <- sweep(
+      matrix(values, nrow = length(values), ncol = length(weights)),
+      2L,
+      updated_means,
+      "-"
+    )
+    updated_variances <- colSums(posterior * centered^2) / safe_counts
+    updated_weights <- effective_counts / length(values)
+    updated_means[collapsed] <- recovery_means[collapsed]
+    updated_variances[collapsed] <- max(stats::var(values), variance_floor)
+    updated_weights[collapsed] <- 1 / length(values)
+    updated_variances <- pmax(updated_variances, variance_floor)
+    updated_weights <- pmax(updated_weights, .Machine$double.eps)
+    updated_weights <- updated_weights / sum(updated_weights)
+    component_order <- order(updated_means)
+
+    weights <- updated_weights[component_order]
+    means <- updated_means[component_order]
+    variances <- updated_variances[component_order]
+    iteration <- iteration + 1L
+    previous_log_likelihood <- log_likelihood
   }
-
-  posterior <- expectation$posterior
-  effective_counts <- colSums(posterior)
-  collapsed <- !is.finite(effective_counts) |
-    effective_counts <= max(1e-8, length(values) * 1e-10)
-  safe_counts <- pmax(effective_counts, 1e-8)
-  updated_means <- colSums(posterior * values) / safe_counts
-  centered <- sweep(
-    matrix(values, nrow = length(values), ncol = length(weights)),
-    2L,
-    updated_means,
-    "-"
-  )
-  updated_variances <- colSums(posterior * centered^2) / safe_counts
-  updated_weights <- effective_counts / length(values)
-  updated_means[collapsed] <- recovery_means[collapsed]
-  updated_variances[collapsed] <- max(stats::var(values), variance_floor)
-  updated_weights[collapsed] <- 1 / length(values)
-  updated_variances <- pmax(updated_variances, variance_floor)
-  updated_weights <- pmax(updated_weights, .Machine$double.eps)
-  updated_weights <- updated_weights / sum(updated_weights)
-  component_order <- order(updated_means)
-
-  .tsn_gmm_iterate(
-    values = values,
-    weights = updated_weights[component_order],
-    means = updated_means[component_order],
-    variances = updated_variances[component_order],
-    variance_floor = variance_floor,
-    recovery_means = recovery_means,
-    max_iterations = max_iterations,
-    tolerance = tolerance,
-    iteration = iteration + 1L,
-    previous_log_likelihood = log_likelihood
-  )
 }
 
 #' @keywords internal
@@ -600,7 +663,15 @@
     },
     character(1L)
   )
-  pattern_levels <- sort(unique(window_keys))
+  # Order patterns lexicographically by their numeric rank vectors. A string
+  # sort agrees only while every rank is one digit (m <= 9); from m = 10 it
+  # put "1-10-..." before "1-2-..." and depended on the collation locale.
+  observed_keys <- unique(window_keys)
+  rank_columns <- as.data.frame(do.call(
+    rbind,
+    lapply(strsplit(observed_keys, "-", fixed = TRUE), as.integer)
+  ))
+  pattern_levels <- observed_keys[do.call(order, unname(as.list(rank_columns)))]
   window_state <- match(window_keys, pattern_levels)
   trailing <- n - n_windows
   state <- c(window_state, rep.int(window_state[n_windows], trailing))
@@ -741,7 +812,10 @@
     stop("`magnitude` discretization requires a range of magnitudes.",
          call. = FALSE)
   }
-  internal <- exp(seq(log(lo), log(hi), length.out = n_states + 1L))[
+  # Base-10 spacing keeps decade boundaries exact (10, 100, ...), so a value
+  # on a boundary falls in the lower, right-closed bin like every other
+  # binning engine; exp(log()) placed them a rounding error below.
+  internal <- 10^seq(log10(lo), log10(hi), length.out = n_states + 1L)[
     seq.int(2L, n_states)
   ]
   fit <- .tsn_cut_fit(magnitudes, c(-Inf, internal, Inf), "magnitude")
@@ -944,6 +1018,9 @@
 }
 
 #' Assign per-point states by majority vote of covering windows
+#'
+#' A tied vote goes to the smallest cluster index (`which.max()`), i.e. the
+#' medoid selected earliest by the PAM build phase, so ties are deterministic.
 #'
 #' @param window_cluster Integer cluster of each sliding window.
 #' @param window Window width.

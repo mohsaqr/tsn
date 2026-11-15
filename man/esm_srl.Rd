@@ -48,4 +48,8 @@ here additionally carries the \code{day_type} column, derived from \code{date}, 
 grouped models (see the \code{group} argument of \code{\link[=ts_tna]{ts_tna()}}) need no
 caller-side preparation.
 }
+\examples{
+data(esm_srl)
+str(esm_srl)
+}
 \keyword{datasets}

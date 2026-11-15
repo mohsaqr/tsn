@@ -15,19 +15,22 @@
 #'   authoritative for every input form: long rows are reordered to it exactly
 #'   as wide, matrix, and list input are, so chained or directed edges do not
 #'   depend on the input container.
-#' @param method Network selector. The base families are `"distance"` and
-#'   `"visibility"`. Convenience shortcuts resolve to a family with sensible
+#' @param method Network selector (default `"visibility"`). The base families
+#'   are `"distance"` and `"visibility"`. Convenience shortcuts resolve to a family with sensible
 #'   defaults: `"nvg"`/`"natural"` (natural visibility graph), `"hvg"`/
 #'   `"horizontal"` (horizontal visibility graph), and any discretizer name
 #'   (`"ordinal"`, `"quantile"`, `"symbolic"`, ...) which builds a visibility
 #'   network on states from that discretizer. Shortcuts only set defaults; the
-#'   granular arguments (`unit`, `visibility`, `discretization`) still apply.
+#'   granular arguments (`unit`, `visibility`, `discretization`) still apply,
+#'   and one that contradicts the shortcut is an error. Unique abbreviations
+#'   (`"hv"`, `"quant"`) are completed as by [match.arg()].
 #' @param unit Node unit. Distance networks use `"series"`, `"window"`, or
 #'   `"time"` (one node per time point); visibility networks use `"time"` or
-#'   `"state"`. When `NULL`, the natural unit for the selected method is
-#'   inferred.
-#' @param distance Distance measure for distance networks. One of
-#'   `"euclidean"`, `"manhattan"`, `"maximum"`, `"canberra"`, `"minkowski"`,
+#'   `"state"`. When `NULL`, visibility networks use `"time"` (discretizer
+#'   shortcuts use `"state"`), and distance networks use `"series"` for two
+#'   or more series and `"window"` for a single series.
+#' @param distance Distance measure for distance networks (default
+#'   `"euclidean"`). One of `"euclidean"`, `"manhattan"`, `"maximum"`, `"canberra"`, `"minkowski"`,
 #'   `"binary"`, `"cosine"`, `"correlation"`, `"spearman"`, `"dtw"`, `"ccf"`
 #'   (one minus the maximum absolute cross-correlation across lags), `"nmi"`
 #'   (one minus normalized mutual information after separately quantile-binning
@@ -36,19 +39,30 @@
 #'   `"event_sync"` (one minus the Quiroga event-synchronization index; units
 #'   are interpreted as event times), or `"van_rossum"` (exact van Rossum
 #'   spike-train distance; units are interpreted as event times).
-#' @param connect Distance-to-network rule.
-#' @param window Sliding-window width when `unit = "window"`.
-#' @param step Sliding-window step.
+#' @param connect Distance-to-network rule (default `"full"`): `"full"`
+#'   connects every evaluated dyad; `"nearest"` keeps each node's `neighbors`
+#'   closest dyads (the union over both endpoints when undirected);
+#'   `"threshold"` keeps dyads with distance `<= threshold`;
+#'   `"percentile"` keeps dyads at or below the `percentile` quantile of the
+#'   distances; `"gaussian"` connects every dyad with Gaussian kernel weights
+#'   `exp(-d^2 / (2 * bandwidth^2))`. `neighbors`, `threshold`, and
+#'   `percentile` are each required by their own rule and an error with any
+#'   other.
+#' @param window Sliding-window width when `unit = "window"`. When `NULL`,
+#'   `max(2, n %/% 10)` for the shortest series length `n`; two windows then
+#'   need `n >= 3`.
+#' @param step Sliding-window step (default `1`). Only valid when
+#'   `unit = "window"`.
 #' @param neighbors Number of neighbours when `connect = "nearest"`.
 #' @param threshold Maximum distance when `connect = "threshold"`.
-#' @param percentile Proportion of shortest distances retained when
-#'   `connect = "percentile"`.
+#' @param percentile Distance quantile in `[0, 1]` when
+#'   `connect = "percentile"`; dyads at or below it are kept.
 #' @param bandwidth Positive kernel scale. Used by `connect = "gaussian"` and
 #'   by the `"negative_exp"` and `"gaussian"` similarity kernels; defaults to
 #'   the median positive distance.
 #' @param p Minkowski power.
 #' @param bins Number of marginal quantile bins for `distance = "nmi"` and
-#'   `distance = "voi"`.
+#'   `distance = "voi"`. `NULL` uses `10`.
 #' @param lag Maximum cross-correlation lag for `distance = "ccf"`. `NULL`
 #'   uses the `stats::ccf()` default.
 #' @param tolerance Event-time scale for the event-based distances: an optional
@@ -58,22 +72,31 @@
 #'   uncapped adaptive local window. For van Rossum, `NULL` uses the median
 #'   positive inter-event interval of each pooled pair.
 #' @param similarity Optional similarity kernel mapping edge distances to
-#'   weights: `"inverse"` (the default weight rule, `1 / (1 + d)`),
+#'   weights. `NULL` uses `"inverse"`, except under `connect = "gaussian"`,
+#'   which supplies its own kernel and cannot be combined with `similarity`.
+#'   One of `"inverse"` (`1 / (1 + d)`),
 #'   `"normalized_inverse"` (`1 - d / max(d)`), `"negative_exp"`
 #'   (`exp(-d / bandwidth)`), or `"gaussian"`
 #'   (`exp(-d^2 / (2 * bandwidth^2))`).
-#' @param visibility Visibility rule: `"natural"` or `"horizontal"`.
-#' @param state Optional state-column name or state vector.
-#' @param discretization Internal state-discretization method. One of
+#' @param visibility Visibility rule: `"natural"` (default) or
+#'   `"horizontal"`.
+#' @param state Optional state-column name or state vector, used with
+#'   `unit = "state"` in place of the internal discretizer. For long data a
+#'   vector is aligned with the rows of `data` (and follows `series`
+#'   selection); for other inputs it is aligned with the observations of the
+#'   selected series in series order.
+#' @param discretization Internal state-discretization method (default
+#'   `"gaussian"`). One of
 #'   `"threshold"`, `"width"`, `"quantile"`, `"kde"`, `"kmeans"`, `"gaussian"`,
 #'   `"hclust"`, `"ordinal"`, `"symbolic"`, `"change_points"`, `"entropy"`,
 #'   `"magnitude"`, `"adaptive_magnitude"`, `"percentile_magnitude"`, or
 #'   `"dtw"`.
-#' @param n_states Number of states. Not consumed by
+#' @param n_states Number of states (default `3`). Not consumed by
 #'   `discretization = "ordinal"`, whose state count follows the embedding
 #'   arguments `m` and `tau`; supplying both is an error.
-#' @param breaks Optional internal thresholds when
-#'   `discretization = "threshold"`. An error with any other discretizer,
+#' @param breaks Interior thresholds, required when
+#'   `discretization = "threshold"`. When `n_states` is not supplied it is
+#'   taken as `length(breaks) + 1`. An error with any other discretizer,
 #'   which computes its own boundaries.
 #' @param m Embedding dimension for `discretization = "ordinal"` (default `3`).
 #'   Only valid with the ordinal discretizer.
@@ -81,14 +104,21 @@
 #'   valid with the ordinal discretizer.
 #' @param directed Whether edges follow their ordered direction. Visibility
 #'   edges then run forward in time; distance edges follow the evaluated unit
-#'   order. With `FALSE`, reciprocal distance relations are represented by one
-#'   undirected edge.
+#'   order: for a symmetric distance measure the direction of an all-pairs
+#'   edge is the order of the units in the input, so `directed = TRUE` is
+#'   mainly meaningful with `chain = TRUE`. With `FALSE` (default),
+#'   reciprocal distance relations are represented by one undirected edge.
 #' @param limit Optional maximum visibility distance in the units of `time`
 #'   (or observation steps when no numeric/date-time axis is supplied).
-#' @param penetrable Number of intermediate points allowed to block visibility.
+#' @param penetrable Number of intermediate points allowed to block visibility
+#'   (default `0`).
 #' @param decay Non-negative exponential edge-decay rate per unit of `time`
 #'   (or per observation step when no numeric/date-time axis is supplied).
-#' @param aggregation State-edge aggregation rule.
+#'   The default `0` gives every visibility edge weight `1`.
+#' @param aggregation How visibility edges between time points are combined
+#'   into one state edge when `unit = "state"`: `"sum"` (default), `"mean"`,
+#'   or `"max"` of the time-point edge weights, or `"count"` of time-point
+#'   edges. The state edge's `distance` is always the mean temporal lag.
 #' @param chain When `TRUE`, distance networks connect only consecutive series
 #'   or windows (a transition chain) instead of all pairs.
 #' @param normalize Distance rescaling applied before the connection rule.
@@ -110,15 +140,25 @@
 #'
 #' For state networks, caller-supplied `state` values fix the node order:
 #' factors keep their declared level order (an unused level becomes a
-#' zero-degree node), and plain character states are ordered by first
+#' zero-degree node), numeric, logical, and date-time codes follow their
+#' sorted value order, and plain character states are ordered by first
 #' appearance. Discretized states follow the discretizer's numeric state
 #' order. The `state` column of the stored source series preserves this
 #' factor.
 #' @return A list-backed network object of class
-#'   `c("tsn", "netobject", "cograph_network")`. Its `$table` component is the
-#'   tidy dyad table; use `as.data.frame()` for that table,
-#'   `as.data.frame(x, what = "series")` for the canonical source observations,
-#'   and `as.matrix()` for the weighted adjacency matrix.
+#'   `c("tsn", "netobject", "cograph_network")`. Read it with verbs:
+#'   `as.data.frame(x)` returns the tidy dyad table, one row per evaluated
+#'   dyad, with columns `from`, `to`, `distance`, `weight`, `connected`,
+#'   `method`, `unit`, `distance_method` (`NA` for visibility networks),
+#'   `connection_method` (the connection rule, or the visibility rule),
+#'   `directed`, and the observation positions `from_start`, `from_end`,
+#'   `to_start`, `to_end` (`NA` for state nodes);
+#'   `as.data.frame(x, what = "series")` returns the canonical source
+#'   observations (`id`, `time`, `value`, plus `state` for state networks);
+#'   `as.matrix(x)` returns the weighted adjacency matrix; `summary(x)` and
+#'   `print(x)` describe the network. The list also carries the fields the
+#'   cograph renderer reads (`nodes`, `edges`, `directed`, `weights`, `meta`,
+#'   `node_groups`, `n_nodes`, `n_edges`) and the construction `parameters`.
 #' @references
 #' Lacasa, L., Luque, B., Ballesteros, F., Luque, J., & Nuño, J. C. (2008).
 #' From time series to complex networks: The visibility graph. *Proceedings of
@@ -185,6 +225,20 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
     function(name) is.null(frame[[name]]),
     logical(1L)
   )]
+  # Complete partially matched selectors ("hv", "quant", "mink") once, up
+  # front, so the consumption checks and the stored metadata see full names
+  # and an abbreviation cannot bypass a conflict check. Invalid values pass
+  # through unchanged and are rejected by the component that validates them.
+  method <- .tsn_match_method(method)
+  unit <- .tsn_complete_choice(unit, c("series", "window", "time", "state"))
+  distance <- .tsn_complete_choice(distance, .tsn_distance_methods)
+  connect <- .tsn_complete_choice(connect, .tsn_connect_methods())
+  similarity <- .tsn_complete_choice(similarity, .tsn_similarity_kernels())
+  visibility <- .tsn_complete_choice(visibility, c("natural", "horizontal"))
+  discretization <- .tsn_complete_choice(discretization,
+                                         .tsn_discretizer_names())
+  aggregation <- .tsn_complete_choice(aggregation,
+                                      c("sum", "mean", "max", "count"))
   .tsn_validate_shortcut_conflicts(
     method = method, supplied = supplied, unit = unit,
     visibility = visibility, discretization = discretization
@@ -195,12 +249,24 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   unit <- resolved$unit
   visibility <- resolved$visibility
   discretization <- resolved$discretization
-  stopifnot(is.logical(chain), length(chain) == 1L, !is.na(chain))
+  stopifnot(
+    "`chain` must be TRUE or FALSE" =
+      is.logical(chain) && length(chain) == 1L && !is.na(chain)
+  )
   normalize <- .tsn_resolve_normalize(normalize)
   .tsn_validate_distance_options(
     method = method, distance = distance, bins = bins, lag = lag,
     tolerance = tolerance, similarity = similarity
   )
+  # A state vector aligned with the rows of long data travels with those rows
+  # through `series` selection, exactly like a named state column does.
+  if (is.data.frame(data) && !is.null(value) && is.atomic(state) &&
+      is.null(dim(state)) && !(is.character(state) && length(state) == 1L) &&
+      length(state) == nrow(data)) {
+    state_column <- utils::tail(make.unique(c(names(data), ".tsn_state")), 1L)
+    data[[state_column]] <- state
+    state <- state_column
+  }
   selected_data <- .tsn_select_data(
     data,
     series = series,
@@ -232,8 +298,13 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   )
   .tsn_validate_argument_use(
     supplied = supplied, method = method, unit = unit, distance = distance,
-    discretization = discretization
+    discretization = discretization, connect = connect,
+    similarity = similarity
   )
+  # Explicit thresholds fix the state count; `n_states` need not repeat it.
+  if ("breaks" %in% supplied && !"n_states" %in% supplied) {
+    n_states <- length(breaks) + 1L
+  }
 
   result <- if (method == "distance") {
     constructed <- switch(
@@ -245,6 +316,13 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
     if (length(constructed$units) < 2L) {
       stop("Distance networks require at least two series, windows, or points.",
            call. = FALSE)
+    }
+    shortest_unit <- min(lengths(constructed$units))
+    if (!is.null(lag) && lag >= shortest_unit) {
+      stop(sprintf(
+        "`lag` (%s) must be smaller than the shortest unit length (%d).",
+        format(lag), shortest_unit
+      ), call. = FALSE)
     }
     dyads <- if (chain) {
       .tsn_chain_distance(
@@ -334,16 +412,8 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
 #'   `discretization`.
 #' @noRd
 .tsn_resolve_method <- function(method, unit, visibility, discretization) {
-  discretizers <- c(
-    "threshold", "width", "quantile", "kde", "kmeans", "gaussian", "hclust",
-    "ordinal", "symbolic", "change_points", "entropy", "magnitude",
-    "adaptive_magnitude", "percentile_magnitude", "dtw"
-  )
-  method <- match.arg(method, c(
-    "distance", "visibility", "nvg", "natural", "hvg", "horizontal",
-    discretizers
-  ))
-  if (method %in% discretizers) {
+  method <- .tsn_match_method(method)
+  if (method %in% .tsn_discretizer_names()) {
     return(list(
       method = "visibility",
       unit = if (is.null(unit)) "state" else unit,
@@ -367,10 +437,74 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   )
 }
 
+#' Names of the internal discretizers usable as `method` shortcuts
+#'
+#' @return A character vector of discretizer names.
+#' @noRd
+.tsn_discretizer_names <- function() {
+  c(
+    "threshold", "width", "quantile", "kde", "kmeans", "gaussian", "hclust",
+    "ordinal", "symbolic", "change_points", "entropy", "magnitude",
+    "adaptive_magnitude", "percentile_magnitude", "dtw"
+  )
+}
+
+#' Connection rules accepted by `connect`
+#' @return A character vector of connection-rule names.
+#' @noRd
+.tsn_connect_methods <- function() {
+  c("full", "nearest", "threshold", "percentile", "gaussian")
+}
+
+#' Similarity kernels accepted by `similarity`
+#' @return A character vector of kernel names.
+#' @noRd
+.tsn_similarity_kernels <- function() {
+  c("inverse", "normalized_inverse", "negative_exp", "gaussian")
+}
+
+#' Complete an abbreviated choice to its full name
+#'
+#' Uses the same rule as `match.arg()` (exact match first, then a unique
+#' partial match), but returns anything that does not match unchanged so the
+#' component owning the argument raises its own error.
+#'
+#' @param value The public argument value.
+#' @param choices The full names it may abbreviate.
+#' @return The completed name, or `value` unchanged.
+#' @noRd
+.tsn_complete_choice <- function(value, choices) {
+  if (!is.character(value) || length(value) != 1L || is.na(value)) {
+    return(value)
+  }
+  matched <- pmatch(value, choices)
+  if (is.na(matched)) value else choices[matched]
+}
+
+#' Complete the public `method` value to its full name
+#'
+#' Partial matching is resolved here, once, so every later check sees the
+#' full shortcut name (`"hv"` becomes `"hvg"`).
+#'
+#' @param method The public `method` value.
+#' @return The full method name.
+#' @noRd
+.tsn_match_method <- function(method) {
+  stopifnot(
+    "`method` must be a single non-missing character string" =
+      is.character(method) && length(method) == 1L && !is.na(method)
+  )
+  match.arg(method, c(
+    "distance", "visibility", "nvg", "natural", "hvg", "horizontal",
+    .tsn_discretizer_names()
+  ))
+}
+
 #' Adaptive default sliding-window width for distance networks
 #'
-#' Uses `max(2, n %/% 10)` where `n` is the shortest series length, capped so
-#' at least two windows fit.
+#' Uses `max(2, n %/% 10)` where `n` is the shortest series length. The
+#' `n - 1` cap never binds (`n %/% 10 <= n - 1`), so a series of length 2
+#' yields a single window and the caller's two-unit check rejects it.
 #'
 #' @param source Canonical long input.
 #' @return A positive integer window width.
@@ -403,13 +537,23 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
     stop("`m` and `tau` are only valid with `discretization = \"ordinal\"`.",
          call. = FALSE)
   }
-  stopifnot(is.logical(directed), length(directed) == 1L, !is.na(directed))
-  stopifnot(is.numeric(penetrable), length(penetrable) == 1L,
-            is.finite(penetrable), penetrable >= 0, penetrable == as.integer(penetrable))
-  stopifnot(is.numeric(decay), length(decay) == 1L, is.finite(decay), decay >= 0)
+  stopifnot(
+    "`directed` must be TRUE or FALSE" =
+      is.logical(directed) && length(directed) == 1L && !is.na(directed),
+    "`penetrable` must be a single non-negative whole number" =
+      is.numeric(penetrable) && length(penetrable) == 1L &&
+      is.finite(penetrable) && penetrable >= 0 &&
+      penetrable == round(penetrable),
+    "`decay` must be a single finite non-negative number" =
+      is.numeric(decay) && length(decay) == 1L && is.finite(decay) &&
+      decay >= 0
+  )
   if (!is.null(limit)) {
-    stopifnot(is.numeric(limit), length(limit) == 1L, is.finite(limit),
-              limit > 0)
+    stopifnot(
+      "`limit` must be a single finite positive number" =
+        is.numeric(limit) && length(limit) == 1L && is.finite(limit) &&
+        limit > 0
+    )
   }
   if (method == "distance" && unit == "window" && is.null(window)) {
     stop("`window` is required when `unit = \"window\"`.", call. = FALSE)
@@ -417,14 +561,6 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   if (method == "distance" && unit %in% c("series", "time") &&
       !is.null(window)) {
     stop("`window` is only valid when `unit = \"window\"`.", call. = FALSE)
-  }
-  if (method == "visibility" && any(vapply(
-    list(window, neighbors, threshold, percentile, bandwidth),
-    Negate(is.null),
-    logical(1L)
-  ))) {
-    stop("Distance-network arguments cannot be used with visibility networks.",
-         call. = FALSE)
   }
   if (unit != "state" && !is.null(state)) {
     stop("`state` is only valid when `unit = \"state\"`.", call. = FALSE)
@@ -461,7 +597,7 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
 #' @noRd
 .tsn_validate_shortcut_conflicts <- function(method, supplied, unit,
                                              visibility, discretization) {
-  stopifnot(is.character(method), length(method) == 1L, !is.na(method))
+  method <- .tsn_match_method(method)
   implied_visibility <- switch(
     method,
     nvg = ,
@@ -477,12 +613,7 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
       method, implied_visibility, as.character(visibility)[1L]
     ), call. = FALSE)
   }
-  discretizers <- c(
-    "threshold", "width", "quantile", "kde", "kmeans", "gaussian", "hclust",
-    "ordinal", "symbolic", "change_points", "entropy", "magnitude",
-    "adaptive_magnitude", "percentile_magnitude", "dtw"
-  )
-  if (method %in% discretizers) {
+  if (method %in% .tsn_discretizer_names()) {
     if ("discretization" %in% supplied && !identical(discretization, method)) {
       stop(sprintf(
         "`method = \"%s\"` implies `discretization = \"%s\"`; it cannot be combined with `discretization = \"%s\"`.",
@@ -512,10 +643,13 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
 #' @param unit Resolved node unit.
 #' @param distance Selected distance measure.
 #' @param discretization Resolved discretization method.
+#' @param connect Selected connection rule (distance networks).
+#' @param similarity Selected similarity kernel, or `NULL`.
 #' @return `NULL`, invisibly.
 #' @noRd
 .tsn_validate_argument_use <- function(supplied, method, unit, distance,
-                                       discretization) {
+                                       discretization, connect = "full",
+                                       similarity = NULL) {
   reject <- function(arguments, reason) {
     unusable <- intersect(supplied, arguments)
     if (length(unusable) > 0L) {
@@ -548,6 +682,13 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
           discretization
         ))
       }
+      if (identical(discretization, "threshold") && !"breaks" %in% supplied) {
+        stop(
+          "`discretization = \"threshold\"` requires `breaks`: the ",
+          "`n_states - 1` interior thresholds.",
+          call. = FALSE
+        )
+      }
       if (identical(discretization, "ordinal")) {
         reject("n_states", "with `discretization = \"ordinal\"`, whose state count follows `m` and `tau`")
       }
@@ -569,6 +710,44 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
     }
     if (!identical(distance, "minkowski")) {
       reject("p", "unless `distance = \"minkowski\"`")
+    }
+    # A point node holds one value: these measures need a sequence per unit
+    # (cosine would reduce to comparing signs).
+    sequence_measures <- c("correlation", "spearman", "ccf", "nmi", "voi",
+                           "cosine")
+    if (identical(unit, "time") && isTRUE(distance %in% sequence_measures)) {
+      stop(sprintf(
+        paste0(
+          "`distance = \"%s\"` compares sequences and cannot be used with ",
+          "`unit = \"time\"`, whose nodes hold a single value; use ",
+          "`unit = \"series\"` or `unit = \"window\"`."
+        ), distance
+      ), call. = FALSE)
+    }
+    # Each connection rule consumes only its own tuning argument; `bandwidth`
+    # is also the scale of the negative-exponential and Gaussian kernels.
+    rule_arguments <- c(nearest = "neighbors", threshold = "threshold",
+                        percentile = "percentile")
+    lapply(names(rule_arguments), function(rule) {
+      argument <- rule_arguments[[rule]]
+      if (identical(connect, rule) && !argument %in% supplied) {
+        stop(sprintf("`connect = \"%s\"` requires `%s`.", rule, argument),
+             call. = FALSE)
+      }
+      if (!identical(connect, rule)) {
+        reject(argument, sprintf("unless `connect = \"%s\"`", rule))
+      }
+    })
+    if (identical(connect, "gaussian")) {
+      reject("similarity", paste(
+        "with `connect = \"gaussian\"`, whose Gaussian kernel already",
+        "sets the edge weights; use `connect = \"full\"` with a kernel"
+      ))
+    } else if (!isTRUE(similarity %in% c("negative_exp", "gaussian"))) {
+      reject("bandwidth", paste(
+        "unless `connect = \"gaussian\"` or `similarity` is",
+        "\"negative_exp\" or \"gaussian\""
+      ))
     }
   }
   invisible(NULL)
@@ -688,8 +867,8 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
 #' Caller-supplied factors keep their declared levels — including unused
 #' levels, which become zero-degree nodes — so an ordered scale like
 #' low/mid/high is never reordered by observation. Discretized states use the
-#' engine's numeric state order, and plain character states use
-#' first-appearance order.
+#' engine's numeric state order, numeric/logical/date-time codes use their
+#' sorted order, and plain character states use first-appearance order.
 #'
 #' @param source Canonical long input.
 #' @param state `NULL`, a state-column name, or a state vector.
@@ -716,6 +895,10 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   }
   states <- if (is.character(state) && length(state) == 1L &&
                 state %in% names(source)) source[[state]] else state
+  if (!is.atomic(states) || !is.null(dim(states))) {
+    stop("`state` must be a state-column name or an atomic vector of states.",
+         call. = FALSE)
+  }
   if (length(states) != nrow(source) || anyNA(states)) {
     stop("`state` must provide one non-missing value per observation.",
          call. = FALSE)
@@ -725,9 +908,16 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
       stop("`state` factor levels must be non-empty labels.", call. = FALSE)
     }
     factor(as.character(states), levels = levels(states))
+  } else if (is.character(states)) {
+    if (any(!nzchar(states))) {
+      stop("`state` values must be non-empty labels.", call. = FALSE)
+    }
+    factor(states, levels = unique(states))
   } else {
+    # Numeric, logical, and date-time codes carry their own order, so nodes
+    # follow it (as discretized states do) rather than first appearance.
     values <- as.character(states)
-    factor(values, levels = unique(values))
+    factor(values, levels = unique(as.character(sort(unique(states)))))
   }
 }
 
@@ -791,6 +981,11 @@ tsn <- function(data, method = "visibility", value = NULL, id = NULL,
   if (is.null(mode) || length(distances) == 0L) {
     return(distances)
   }
+  stopifnot(
+    "distances must be finite and non-negative before rescaling" =
+      is.numeric(distances) && all(is.finite(distances)) &&
+      all(distances >= 0)
+  )
   switch(
     mode,
     max = {

@@ -31,6 +31,9 @@
 #'   (\url{https://creativecommons.org/licenses/by-nc-sa/4.0/}). Rows are
 #'   ordered by `name` and `day`; values are unchanged. See the package
 #'   `COPYRIGHTS` file for full attribution.
+#' @examples
+#' data(srl)
+#' str(srl)
 "srl"
 
 #' Momentary Self-Regulated Learning Experience-Sampling Data
@@ -70,4 +73,7 @@
 #'   authors and anonymized as described above (fictional identifiers,
 #'   constant-shifted dates). Distributed with the package under its
 #'   license.
+#' @examples
+#' data(esm_srl)
+#' str(esm_srl)
 "esm_srl"

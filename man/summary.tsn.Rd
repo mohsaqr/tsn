@@ -21,8 +21,18 @@ because a state can follow itself, while series, window, and time-point
 networks never do, because their units cannot pair with themselves. The
 denominator therefore depends only on the network type, never on which
 edges happen to be observed, so densities are comparable across models
-of the same family.
+of the same family. Directed series, window, and time-point networks
+orient every pair forward in unit order, so only one of the
+\code{nodes * (nodes - 1)} ordered pairs per dyad can ever be an edge and a
+complete directed network has density 0.5 (the \code{igraph::edge_density()}
+convention); compare such a network with its undirected counterpart
+through \code{edges}, not \code{density}. \code{minimum_weight} and \code{maximum_weight}
+summarize the connected edges only and are \code{NA} when no edge is
+connected.
 }
 \description{
 Summarize a TSN network
+}
+\examples{
+summary(tsn(c(3, 1, 4, 1, 5, 9, 2, 6), method = "visibility"))
 }

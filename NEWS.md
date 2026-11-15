@@ -1,3 +1,129 @@
+# tsn 1.4.2
+
+A function-by-function audit of the package. Every function was run against
+synthetic data and, where it implements a formula, against an independent
+base-R or hand computation. The fixes below are each pinned by a regression
+test in the new `tests/testthat/test-audit-*.R` files.
+
+## Behaviour changes (results can differ from 1.4.1)
+
+- **Natural visibility with exact ties.** Collinear points were decided by
+  floating-point rounding, so `c(1.1, 1.2, 1.3)` produced a different graph
+  from `c(11, 12, 13)`. The slope comparison now carries an explicit rounding
+  tolerance and agrees with an exact integer reference on every tested
+  configuration. `limit` is now inclusive on decimal elapsed time. Integer
+  data and data without exact ties are unchanged.
+- **Canberra distance.** The whole-series network used `stats::dist()`, which
+  drops positions where both values are zero and rescales, while the chain
+  network used the textbook form. Both paths now use the textbook form, so
+  default Canberra networks on data with shared zeros change. Two all-zero
+  units now have distance 0 rather than `NA`.
+- **Coded states order nodes by value.** Numeric, integer, logical and Date
+  `state` vectors now order nodes by their sorted value, matching the
+  internal discretizers. Character states keep first-appearance order and
+  factors keep their levels.
+- **Quantile fallback on tied data.** When type-8 quantile breaks would leave
+  a bin empty, the fallback now follows the empirical distribution instead
+  of spacing distinct values evenly, so heavily tied series (for example
+  zero-inflated ones) get better balanced states.
+- **Event synchronisation of two single-event trains** no longer counts any
+  two events as simultaneous; only exact coincidences count unless
+  `tolerance` is given.
+- **`abbreviated` selectors.** `method`, `unit`, `distance`, `connect`,
+  `similarity`, `visibility`, `discretization` and `aggregation` are
+  completed by partial matching before validation, so `"hv"` or `"quant"`
+  can no longer bypass the shortcut-conflict checks or be stored verbatim
+  in `parameters`.
+
+## Arguments that were silently ignored are now errors
+
+- `value`, `id` and `time` with non-data-frame input; `id`/`time` without
+  `value` on a data frame; `value`/`id`/`time` with a `tsn` input to
+  `discretize()`.
+- `overlap` without `segment` in the `ts_*()` builders; `m`/`tau` outside the
+  ordinal discretizer, including on grouped data; `breaks` missing for the
+  threshold discretizer; `neighbors`/`threshold`/`percentile`/`bandwidth`
+  outside the connection rule that uses them; a `similarity` kernel together
+  with `connect = "gaussian"`.
+- Sequence measures (`correlation`, `spearman`, `ccf`, `nmi`, `voi`,
+  `cosine`) with `unit = "time"`, where each node holds a single value, and a
+  `ccf` `lag` that is not shorter than the units.
+- Unknown plotting arguments in every `plot()` method, unnamed or duplicated
+  network options, a `palette` that is unnamed, misnamed, non-character or
+  does not cover every state, and `plot(x, foo = 1)` on states, trends and
+  networks.
+- Fractional `window`/`step`, non-finite `max_series`, `node_scale`,
+  `network_width`, `penetrable` and `segment`; `labels` that are missing,
+  empty or duplicated; `group` that is not a single column name; distinct
+  double ids or group values that print identically (previously merged into
+  one series or group); duplicate wide column names; impossible ISO dates;
+  `Inf` time.
+
+## New warnings
+
+- `tsn_state_shortfall` (classed) whenever a discretizer realizes fewer states
+  than requested, on every engine path including grouped `dtw` and
+  `adaptive`. `print()` of a `tsn_states` shows "2 states (3 requested)" and
+  the model records `n_states_requested`.
+- `tsn_trend_nonpositive_growth` (classed) when `method = "growth_factor"`
+  meets zero or negative values.
+- `tsn_weight_underflow` (classed) when an exponential kernel weight on a
+  connected dyad underflows to exactly 0.
+
+## Bug fixes
+
+- Minkowski distances with a large `p` overflowed to `Inf`; they are computed
+  in a scaled form.
+- `correlation`, `ccf`, `nmi` and `voi` on single-observation units either
+  failed cryptically or silently returned 0.
+- Gaussian weights with a tiny `bandwidth` produced `0/0`.
+- The percentile connection rule could drop the boundary dyad through
+  type-7 quantile rounding.
+- `difftime` time was treated as unordered labels; `mts` input failed; an
+  unnamed matrix was labelled `V1`/`V2` instead of `series_1`; a partially
+  named list lost its supplied names; `tsn(numeric(0))` gave an unhelpful
+  error.
+- A row-aligned `state` vector failed with long data plus `series` selection
+  and with wide data.
+- `trend()`: OLS, Spearman and Kendall windows containing an `NA` or a
+  constant run were labelled `Initial` instead of using the available
+  values; `print()` failed after `subset()`; `par("cex")` was not restored.
+- Discretization engine: `kmeans` reported a zero-length `converged` flag;
+  the Gaussian EM recursed once per iteration and overflowed the stack for
+  large `max_iterations`; ordinal patterns with `m >= 10` were ordered as
+  strings (locale-dependent) in both the engine and the grouped path;
+  magnitude decade boundaries fell in the wrong bin; out-of-range counts
+  gave a coercion error.
+- `.new_tsn()` now rejects endpoints that are not nodes, `NA` connection
+  flags, duplicated dyads and malformed `parameters`.
+- `as.data.frame()` for `tsn`, `ts_tna` and `ts_tna_group` ignored
+  `row.names`.
+- `print.tsn` says when it truncates to 10 dyads and points at
+  `as.data.frame()`.
+- State networks: `points = TRUE` drew a state with the wrong or a missing
+  colour in a group that never visits every state, and colours shifted
+  between groups; both now colour the full state alphabet.
+- Plotting: the default palette returned `NA` for 11, 21, 23, 27 ... states
+  (an `hcl.colors("Spectral")` midpoint); POSIXct axes printed epoch
+  seconds; character (label) time broke every series view; heatmap edge
+  tiles were half width; an absent factor level gave infinite guides; empty
+  series selections and too many ribbons failed obscurely; `par()` including
+  `cex` and `mai` is restored in every view, also when a renderer errors;
+  z-score guide lines were wrong after `head()`; the `grid` argument now
+  reaches the heatmap views; ribbons built on different times than the
+  series are rejected.
+- `vg()` recorded `tsn()` as its provenance call and failed confusingly when
+  `visibility` or `method` was passed.
+- The penetrable visibility scan is about 60x faster on long series.
+
+## Documentation
+
+- Corrected `@return` and `@param` text across `tsn()`, `discretize()`,
+  `trend()`, `vg()`, the `ts_*()` builders and the accessors; added examples
+  to the accessors, `print.tsn`, `summary.tsn`, `srl` and `esm_srl`; the
+  package page lists every verb and data set. The `ts_tna()` example uses
+  `as.matrix(network)` instead of reaching into the object.
+
 # tsn 1.4.1
 
 ## Documentation

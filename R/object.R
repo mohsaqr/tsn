@@ -28,6 +28,30 @@
   stopifnot(all(is.finite(table$distance)), all(is.finite(table$weight)))
   stopifnot(all(table$distance >= 0), all(table$weight >= 0))
   stopifnot(is.data.frame(source), is.character(nodes), !anyDuplicated(nodes))
+  stopifnot(
+    "`parameters` must be a list" = is.list(parameters),
+    "`parameters$method` must be a single string" =
+      is.character(parameters$method) && length(parameters$method) == 1L,
+    "`parameters$unit` must be a single string" =
+      is.character(parameters$unit) && length(parameters$unit) == 1L,
+    "`parameters$directed` must be TRUE or FALSE" =
+      is.logical(parameters$directed) && length(parameters$directed) == 1L &&
+      !is.na(parameters$directed),
+    "`connected` must have no missing values" = !anyNA(table$connected),
+    "every dyad's `directed` flag must match `parameters$directed`" =
+      all(table$directed == parameters$directed),
+    "every dyad endpoint must be one of `nodes`" =
+      all(table$from %in% nodes) && all(table$to %in% nodes)
+  )
+  # One row per dyad: a repeated pair would be silently overwritten in the
+  # weight matrix while still being counted as two edges. Undirected dyads are
+  # keyed on their unordered endpoint pair.
+  dyad_key <- if (isTRUE(parameters$directed)) {
+    paste(table$from, table$to, sep = "\r")
+  } else {
+    paste(pmin(table$from, table$to), pmax(table$from, table$to), sep = "\r")
+  }
+  stopifnot("the dyad table must hold one row per dyad" = !anyDuplicated(dyad_key))
 
   directed <- isTRUE(parameters$directed)
   weights <- .tsn_weight_matrix(table, nodes, directed = directed)
@@ -97,6 +121,8 @@
 #' @param x A `tsn` result.
 #' @param ... Additional arguments passed to `print.data.frame()`.
 #' @return `x`, invisibly.
+#' @examples
+#' tsn(c(3, 1, 4, 1, 5, 9, 2, 6), method = "visibility")
 #' @export
 print.tsn <- function(x, ...) {
   parameters <- x$parameters
@@ -107,7 +133,14 @@ print.tsn <- function(x, ...) {
     x$n_nodes,
     sum(x$table$connected)
   ))
-  print.data.frame(utils::head(as.data.frame(x), 10L), row.names = FALSE, ...)
+  edges <- as.data.frame(x)
+  print.data.frame(utils::head(edges, 10L), row.names = FALSE, ...)
+  if (nrow(edges) > 10L) {
+    cat(sprintf(
+      "Showing 10 of %d dyads; as.data.frame(x) returns the full table.\n",
+      nrow(edges)
+    ))
+  }
   cat("Use plot(x) for the network or plot(x, \"series\") for the source series.\n")
   cat("With cograph installed, splot(x) renders a publication-quality network.\n")
   invisible(x)
@@ -126,7 +159,16 @@ print.tsn <- function(x, ...) {
 #'   networks never do, because their units cannot pair with themselves. The
 #'   denominator therefore depends only on the network type, never on which
 #'   edges happen to be observed, so densities are comparable across models
-#'   of the same family.
+#'   of the same family. Directed series, window, and time-point networks
+#'   orient every pair forward in unit order, so only one of the
+#'   `nodes * (nodes - 1)` ordered pairs per dyad can ever be an edge and a
+#'   complete directed network has density 0.5 (the `igraph::edge_density()`
+#'   convention); compare such a network with its undirected counterpart
+#'   through `edges`, not `density`. `minimum_weight` and `maximum_weight`
+#'   summarize the connected edges only and are `NA` when no edge is
+#'   connected.
+#' @examples
+#' summary(tsn(c(3, 1, 4, 1, 5, 9, 2, 6), method = "visibility"))
 #' @export
 summary.tsn <- function(object, ...) {
   stopifnot(inherits(object, "tsn"))
@@ -161,7 +203,8 @@ summary.tsn <- function(object, ...) {
 #' Coerce a TSN result to a data frame
 #'
 #' @param x A `tsn` result.
-#' @param row.names Optional row names.
+#' @param row.names Optional row names for the returned table; `NULL` (the
+#'   default) numbers the rows.
 #' @param optional Ignored.
 #' @param what Which table to return: `"edges"` (the stable dyad schema, the
 #'   default) or `"series"` (the tidy source time series, including the
@@ -173,6 +216,10 @@ summary.tsn <- function(object, ...) {
 #' @param ... Ignored.
 #' @return A base data frame: the stable TSN dyad schema when
 #'   `what = "edges"`, or the source time series when `what = "series"`.
+#' @examples
+#' network <- tsn(c(3, 1, 4, 1, 5, 9, 2, 6), method = "visibility")
+#' as.data.frame(network, connected = TRUE)
+#' as.data.frame(network, what = "series")
 #' @export
 as.data.frame.tsn <- function(x, row.names = NULL, optional = FALSE,
                               what = c("edges", "series"), connected = FALSE,
@@ -185,15 +232,26 @@ as.data.frame.tsn <- function(x, row.names = NULL, optional = FALSE,
   )
   what <- match.arg(what)
   if (what == "series") {
-    series <- x$source
-    rownames(series) <- NULL
-    return(series)
+    return(.tsn_set_row_names(x$source, row.names))
   }
   out <- x$table
   if (connected) {
     out <- out[out$connected, , drop = FALSE]
   }
+  .tsn_set_row_names(out, row.names)
+}
+
+#' Reset or set the row names of an accessor's table
+#'
+#' `as.data.frame()` methods number their rows by default; a caller-supplied
+#' `row.names` is applied instead, and a length mismatch errors in
+#' `row.names<-`, never silently.
+#' @noRd
+.tsn_set_row_names <- function(out, row.names) {
   rownames(out) <- NULL
+  if (!is.null(row.names)) {
+    rownames(out) <- row.names
+  }
   out
 }
 
@@ -202,7 +260,11 @@ as.data.frame.tsn <- function(x, row.names = NULL, optional = FALSE,
 #' @param x A `tsn` result.
 #' @param rownames.force Ignored.
 #' @param ... Ignored.
-#' @return A named numeric matrix.
+#' @return A square numeric matrix with one row and one column per node,
+#'   both named by the node labels in node order. Unconnected pairs are 0, and
+#'   an undirected network gives a symmetric matrix.
+#' @examples
+#' as.matrix(tsn(c(3, 1, 4, 1, 5), method = "visibility"))
 #' @export
 as.matrix.tsn <- function(x, rownames.force = NA, ...) {
   x$weights
@@ -236,7 +298,8 @@ as.matrix.ts_tna <- function(x, rownames.force = NA, ...) {
 #' underlying Nestimate object errors, so this method supplies the tidy view.
 #'
 #' @param x A `ts_tna` result.
-#' @param row.names Optional row names.
+#' @param row.names Optional row names for the returned table; `NULL` (the
+#'   default) numbers the rows.
 #' @param optional Ignored.
 #' @param what Which table to return: `"edges"` (one row per state pair, the
 #'   default) or `"series"` (the tidy per-observation source table with `id`,
@@ -254,20 +317,21 @@ as.data.frame.ts_tna <- function(x, row.names = NULL, optional = FALSE,
   stopifnot(inherits(x, "ts_tna"))
   what <- match.arg(what)
   if (what == "series") {
-    series <- x$ts_source
-    rownames(series) <- NULL
-    return(series)
+    return(.tsn_set_row_names(x$ts_source, row.names))
   }
   weights <- x$weights
   states <- rownames(weights)
+  stopifnot(
+    "the model's weight matrix must have identical row and column states" =
+      identical(states, colnames(weights))
+  )
   out <- data.frame(
     from = factor(rep(states, times = ncol(weights)), levels = states),
     to = factor(rep(colnames(weights), each = nrow(weights)), levels = states),
     weight = as.vector(weights),
     stringsAsFactors = FALSE
   )
-  rownames(out) <- NULL
-  out
+  .tsn_set_row_names(out, row.names)
 }
 
 #' Coerce a grouped transition network to a tidy data frame
@@ -279,7 +343,8 @@ as.data.frame.ts_tna <- function(x, row.names = NULL, optional = FALSE,
 #'
 #' @param x A `ts_tna_group` result from [ts_tna()] and friends, built with
 #'   their `group` argument.
-#' @param row.names Optional row names.
+#' @param row.names Optional row names for the returned table; `NULL` (the
+#'   default) numbers the rows.
 #' @param optional Ignored.
 #' @param what Which table to return: `"edges"` (one row per group and state
 #'   pair, the default), `"series"` (the per-observation source table for every
@@ -327,7 +392,5 @@ as.data.frame.ts_tna_group <- function(x, row.names = NULL, optional = FALSE,
     x,
     names(x)
   )
-  out <- do.call(rbind, rows)
-  rownames(out) <- NULL
-  out
+  .tsn_set_row_names(do.call(rbind, rows), row.names)
 }

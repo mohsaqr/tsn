@@ -16,7 +16,8 @@ default) or \code{"horizontal"} (the horizontal visibility graph).}
 \item{...}{Any other \code{\link[=tsn]{tsn()}} argument relevant to visibility networks, for
 example \code{value}, \code{id}, \code{time}, \code{series}, \code{unit}, \code{state}, \code{discretization},
 \code{n_states}, \code{m}, \code{tau}, \code{directed}, \code{limit}, \code{penetrable}, \code{decay},
-\code{aggregation}, and \code{seed}.}
+\code{aggregation}, and \code{seed}. \code{method} and \code{visibility} are fixed by \code{vg()}
+itself and are rejected here.}
 }
 \value{
 A tidy \code{tsn} network object (also a \code{netobject} and a
@@ -31,6 +32,14 @@ visibility graph. It is a thin wrapper around \code{\link[=tsn]{tsn()}} with
 and every visibility-relevant argument that \code{\link[=tsn]{tsn()}} accepts is forwarded
 through \code{...}, and the result is the same dual-class \code{tsn}/\code{netobject}/
 \code{cograph_network} object.
+}
+\details{
+With a numeric, \code{Date}, or \code{POSIXct} time axis, the natural rule, \code{limit},
+and \code{decay} use elapsed time (days for \code{Date}, seconds for \code{POSIXct}), so
+irregular sampling changes which points see each other; otherwise
+observations are one step apart. The horizontal rule depends only on the
+order of the values. Ties block under both rules, as in the strict
+published definitions, and \code{limit} is inclusive.
 }
 \examples{
 vg(c(3, 1, 4, 2, 5, 3, 6, 2, 7))

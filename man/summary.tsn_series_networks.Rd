@@ -22,7 +22,11 @@
 \item{row.names, optional}{Ignored.}
 }
 \value{
-A tidy data frame with one row per series.
+A base data frame with one row per series and the columns \code{series}
+(series ID), \code{type} (network type: \code{"tna"}, \code{"ftna"}, \code{"cna"} or
+\code{"atna"}), \code{observations} (rows of that series' source table), \code{states}
+(nodes) and \code{edges} (non-zero edges, self-transitions included). \code{print()}
+returns \code{x} invisibly.
 }
 \description{
 Summarize Per-Series Transition Networks

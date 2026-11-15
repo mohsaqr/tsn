@@ -162,10 +162,13 @@ test_that("trend supports missing values and nonnumeric time labels", {
 })
 
 test_that("growth factors remain finite and thresholds are validated", {
-  growth <- trend(
-    c(0, 1, 2, 3, 4, 5),
-    window = 3,
-    method = "growth_factor"
+  expect_warning(
+    growth <- trend(
+      c(0, 1, 2, 3, 4, 5),
+      window = 3,
+      method = "growth_factor"
+    ),
+    class = "tsn_trend_nonpositive_growth"
   )
   expect_false(any(is.infinite(growth$metric), na.rm = TRUE))
   expect_error(trend(1:10, window = 3, epsilon = -0.1))

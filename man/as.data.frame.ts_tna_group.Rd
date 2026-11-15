@@ -16,7 +16,8 @@
 \item{x}{A \code{ts_tna_group} result from \code{\link[=ts_tna]{ts_tna()}} and friends, built with
 their \code{group} argument.}
 
-\item{row.names}{Optional row names.}
+\item{row.names}{Optional row names for the returned table; \code{NULL} (the
+default) numbers the rows.}
 
 \item{optional}{Ignored.}
 

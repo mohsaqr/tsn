@@ -16,7 +16,8 @@
 \arguments{
 \item{x}{A \code{tsn} result.}
 
-\item{row.names}{Optional row names.}
+\item{row.names}{Optional row names for the returned table; \code{NULL} (the
+default) numbers the rows.}
 
 \item{optional}{Ignored.}
 
@@ -37,4 +38,9 @@ A base data frame: the stable TSN dyad schema when
 }
 \description{
 Coerce a TSN result to a data frame
+}
+\examples{
+network <- tsn(c(3, 1, 4, 1, 5, 9, 2, 6), method = "visibility")
+as.data.frame(network, connected = TRUE)
+as.data.frame(network, what = "series")
 }

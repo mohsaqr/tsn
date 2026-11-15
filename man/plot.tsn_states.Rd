@@ -127,7 +127,8 @@ multi-ribbon view.}
 
 \item{background}{Panel background colour.}
 
-\item{...}{Reserved for future options.}
+\item{...}{Must be empty. Unknown arguments are an error, so a misspelled
+option is never silently ignored.}
 }
 \value{
 \code{x}, invisibly.
@@ -157,12 +158,12 @@ plot(states, "heatmap", palette = "viridis", max_series = 12)
 
 # Stack: original series read against the states of its rolling volatility.
 one <- subset(complete, name == "Erik")
-volatility <- abs(c(0, diff(one$effort)))
+one <- within(one, volatility <- abs(c(0, diff(effort))))
 vol_states <- discretize(
-  data.frame(name = one$name, day = one$day, vol = volatility),
-  value = "vol", id = "name", time = "day",
+  one,
+  value = "volatility", id = "name", time = "day",
   method = "quantile", n_states = 3
 )
-plot(vol_states, "stack", with = one$effort, with_label = "Effort",
+plot(vol_states, "stack", with = with(one, effort), with_label = "Effort",
      ylab = "Volatility")
 }

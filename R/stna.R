@@ -27,8 +27,8 @@
 #' condition, cohort, or context, all cut from one shared state alphabet so they
 #' can be compared. The result is a Nestimate `netobject_group`, so the grouped
 #' Nestimate verbs that suit a transition model apply to it directly. Verbs
-#' needing a precision matrix or a clustering attribute do not, and there is no
-#' grouped `plot()` method.
+#' needing a precision matrix or a clustering attribute do not. `plot()` draws
+#' one group at a time; see [plot.ts_tna_group()].
 #'
 #' Multiple series are supported through every tsn input form (named list,
 #' matrix, wide or long data frame). Scalar discretizers learn from pooled
@@ -72,7 +72,8 @@
 #'   and the network is identical to the unsegmented one — but the blocks share
 #'   observations, so they are not independent and intervals computed from them
 #'   run narrow. Partition for conservative intervals that tolerate dependence
-#'   beyond one lag; slide to preserve the estimate exactly.
+#'   beyond one lag; slide to preserve the estimate exactly. Requires
+#'   `segment`: `overlap = TRUE` without it is an error.
 #' @param group Optional name of a column of `data` holding each observation's
 #'   group, e.g. a condition, a cohort, or a context. Supplying it returns one
 #'   network per group instead of a single pooled network. States are
@@ -106,7 +107,7 @@
 #'   c = cumsum(rnorm(60))
 #' )
 #' network <- ts_tna(series, n_states = 3, labels = c("low", "mid", "high"))
-#' network$weights
+#' as.matrix(network)
 #'
 #' # Frequency counts instead of probabilities:
 #' counts <- ts_ftna(series, n_states = 3)
@@ -250,6 +251,14 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
       call. = FALSE
     )
   }
+  # Validated before discretizing, so a malformed option fails at once rather
+  # than after the (possibly slow) discretizer has run.
+  if (!is.null(group) &&
+        !(is.character(group) && length(group) == 1L && !is.na(group) &&
+            nzchar(group))) {
+    stop("`group` must be a single column name.", call. = FALSE)
+  }
+  .tsn_check_segment(segment, overlap)
   measured <- data
   if (!is.null(group) && is.data.frame(data) && !inherits(data, "tsn_states")) {
     if (group %in% c(value, id, time)) {
@@ -413,6 +422,18 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
         call. = FALSE
       )
     }
+  }
+  # Groups are named by their rendered labels. Rendering is not injective on
+  # doubles (`0.1 + 0.2` and `0.3` both print as "0.3"), so distinct groups
+  # that share a label would be silently merged into one network.
+  distinct <- unique(values)
+  if (length(unique(as.character(distinct))) != length(distinct)) {
+    stop(
+      "`group` column holds distinct values that print identically ",
+      "(e.g. 0.3 and 0.1 + 0.2), so they cannot name separate groups. ",
+      "Convert it to character or factor labels first.",
+      call. = FALSE
+    )
   }
   # A tsn_states input already carries the canonical id/time columns, so key on
   # those rather than on whatever the caller happened to name. Reading the key
@@ -631,6 +652,41 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   )
 }
 
+#' Validate the Segmentation Options
+#'
+#' `overlap` only has meaning when `segment` cuts the series, so passing it
+#' without `segment` would be silently ignored; it is an error instead.
+#'
+#' @param segment `NULL` or a block width of at least 2 observations.
+#' @param overlap A single `TRUE`/`FALSE`.
+#' @return `TRUE`, invisibly; called for its errors.
+#' @noRd
+.tsn_check_segment <- function(segment, overlap) {
+  if (!(is.logical(overlap) && length(overlap) == 1L && !is.na(overlap))) {
+    stop("`overlap` must be a single TRUE or FALSE.", call. = FALSE)
+  }
+  if (is.null(segment)) {
+    if (overlap) {
+      stop(
+        "`overlap = TRUE` requires `segment`: there are no blocks to slide.",
+        call. = FALSE
+      )
+    }
+    return(invisible(TRUE))
+  }
+  whole <- is.numeric(segment) && length(segment) == 1L &&
+    is.finite(segment) && segment >= 2 &&
+    abs(segment - round(segment)) < sqrt(.Machine$double.eps) &&
+    segment <= .Machine$integer.max
+  if (!whole) {
+    stop(
+      "`segment` must be a single whole number of at least 2 observations.",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
 #' Cut Each Series into Shorter Sequences
 #'
 #' Sequence-based inference (bootstrap, permutation, stability) resamples whole
@@ -658,15 +714,14 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 #' @return The same table with `id` replaced by `<id>.<block>`.
 #' @noRd
 .tsn_segment_source <- function(source, segment, overlap = FALSE) {
-  stopifnot(
-    is.numeric(segment), length(segment) == 1L, !is.na(segment),
-    segment >= 2, segment == as.integer(segment),
-    is.logical(overlap), length(overlap) == 1L, !is.na(overlap)
-  )
-  segment <- as.integer(segment)
+  .tsn_check_segment(segment, overlap)
+  stopifnot("`segment` is required to segment a series" = !is.null(segment))
+  segment <- as.integer(round(segment))
   groups <- split(source, factor(source$id, levels = unique(source$id)))
-  blocks <- lapply(names(groups), function(key) {
-    group <- groups[[key]]
+  # Positional iteration: a lookup by name can miss and return NULL silently.
+  blocks <- lapply(seq_along(groups), function(position) {
+    key <- names(groups)[[position]]
+    group <- groups[[position]]
     n <- nrow(group)
     if (n < 2L) {
       return(NULL)
@@ -755,7 +810,9 @@ ts_atna <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 #' @noRd
 .tsn_state_sequences <- function(source) {
   ids <- unique(source$id)
-  by_id <- split(as.character(source$state), source$id)[ids]
+  # Split on a factor in first-appearance order: positional, so no ID can be
+  # missed by a name lookup and the rows keep the order the series arrived in.
+  by_id <- split(as.character(source$state), factor(source$id, levels = ids))
   max_length <- max(lengths(by_id))
   padded <- lapply(by_id, function(sequence) {
     c(sequence, rep(NA_character_, max_length - length(sequence)))
@@ -843,7 +900,11 @@ series_networks <- function(x, series = NULL) {
 #'
 #' @param object A `tsn_series_networks` result from [series_networks()].
 #' @param ... Ignored.
-#' @return A tidy data frame with one row per series.
+#' @return A base data frame with one row per series and the columns `series`
+#'   (series ID), `type` (network type: `"tna"`, `"ftna"`, `"cna"` or
+#'   `"atna"`), `observations` (rows of that series' source table), `states`
+#'   (nodes) and `edges` (non-zero edges, self-transitions included). `print()`
+#'   returns `x` invisibly.
 #' @export
 summary.tsn_series_networks <- function(object, ...) {
   stopifnot(
@@ -1054,15 +1115,24 @@ plot.ts_tna <- function(x, type = c("combined", "network", "series"),
     is.logical(points), length(points) == 1L, !is.na(points),
     is.logical(show_weights), length(show_weights) == 1L, !is.na(show_weights),
     is.logical(legend), length(legend) == 1L, !is.na(legend),
-    is.numeric(node_scale), length(node_scale) == 1L, node_scale > 0,
+    is.numeric(node_scale), length(node_scale) == 1L, is.finite(node_scale),
+    node_scale > 0,
     is.numeric(network_width), length(network_width) == 1L,
-    network_width > 0,
-    is.numeric(max_series), length(max_series) == 1L, max_series >= 1L,
-    max_series == as.integer(max_series)
+    is.finite(network_width), network_width > 0,
+    is.numeric(max_series), length(max_series) == 1L, is.finite(max_series),
+    max_series >= 1L,
+    abs(max_series - round(max_series)) < sqrt(.Machine$double.eps)
   )
   style <- .tsn_style(cex = cex, grid = grid, background = background)
   source <- x$ts_source
-  state_colors <- .tsn_state_colors(source$state, palette = palette)
+  # Colour the whole alphabet, not just the states this model visits: a group
+  # or a single series that never enters a state would otherwise shift every
+  # later state onto another state's colour, so one state would wear different
+  # colours in the plots of different groups.
+  alphabet <- levels(source$state)
+  state_colors <- .tsn_state_colors(
+    factor(alphabet, levels = alphabet), palette = palette
+  )
   available <- unique(source$id)
   selected <- if (is.null(series)) available else unique(as.character(series))
   unknown <- setdiff(selected, available)
@@ -1070,7 +1140,7 @@ plot.ts_tna <- function(x, type = c("combined", "network", "series"),
     stop(sprintf("Unknown series: %s.", paste(unknown, collapse = ", ")),
          call. = FALSE)
   }
-  selected <- utils::head(selected, as.integer(max_series))
+  selected <- utils::head(selected, as.integer(round(max_series)))
 
   draw_series <- type %in% c("combined", "series")
   draw_network <- type %in% c("combined", "network")
@@ -1085,6 +1155,9 @@ plot.ts_tna <- function(x, type = c("combined", "network", "series"),
   on.exit({
     graphics::layout(1L)
     graphics::par(previous)
+    # Restoring `mfrow`/`mfcol` inside par(previous) resets `cex` to 1, so
+    # put the caller's `cex` back last.
+    graphics::par(cex = previous$cex)
   }, add = TRUE)
 
   last_series <- selected[length(selected)]
@@ -1119,7 +1192,8 @@ plot.ts_tna <- function(x, type = c("combined", "network", "series"),
     if (points) {
       graphics::points(
         one$time, one$value, pch = 21, cex = point_size,
-        bg = unname(state_colors[one$state]), col = background, lwd = 0.6
+        bg = unname(state_colors[as.character(one$state)]),
+        col = background, lwd = 0.6
       )
     }
   }

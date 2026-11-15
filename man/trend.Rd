@@ -35,12 +35,20 @@ data frame, or a \code{tsn} object (its source series are used).}
 \code{max(3, min(n, round(n / 10)))} is used, where \code{n} is the shortest series
 length. Must satisfy \verb{2 < window < n}.}
 
-\item{method}{Trend metric: \code{"slope"} (default) or \code{"growth_factor"}.}
+\item{method}{Trend metric: \code{"slope"} (default) or \code{"growth_factor"}. The
+growth factor is the last non-missing value in the window divided by the
+first; it is only meaningful for strictly positive values, and a warning
+of class \code{tsn_trend_nonpositive_growth} is raised when the data contain a
+zero or negative value.}
 
 \item{slope}{Slope estimator when \code{method = "slope"}: \code{"robust"} (Theil-Sen,
-the default), \code{"ols"}, \code{"spearman"}, or \code{"kendall"}.}
+the median of all pairwise slopes; the default), \code{"ols"} (least-squares
+slope), \code{"spearman"}, or \code{"kendall"}. The two rank options rescale the
+rank correlation (Kendall's tau-b under ties) by
+\code{sd(value) / sd(time)}, so they share the units of a slope.}
 
-\item{epsilon}{Flat-band half-width. Default \code{0.05}.}
+\item{epsilon}{Flat-band half-width, in metric units (value units per time
+unit for slopes). Default \code{0.05}.}
 
 \item{turbulence_threshold}{Baseline volatility threshold for the turbulent
 override. Default \code{5}.}
@@ -50,7 +58,8 @@ for points already classified as flat. Default \code{1.5}.}
 
 \item{align}{Window alignment: \code{"center"} (default), \code{"right"}, or \code{"left"}.
 The metric is assigned to the centre, rightmost, or leftmost point of the
-window respectively.}
+window respectively. For an even \code{window} the centre is the earlier of
+the two middle points.}
 }
 \value{
 A tidy data frame of class \code{tsn_trend} with one row per observation
@@ -74,6 +83,20 @@ factor of the metric) then overrides these labels with \code{"Turbulent"} when i
 exceeds \code{turbulence_threshold}. Segments already labelled \code{"Flat"} use the
 higher threshold \code{turbulence_threshold * flat_to_turbulent_factor}, making
 them more resistant to noise-driven reclassification.
+
+The thresholds are strict: a metric exactly equal to \code{+epsilon} or
+\code{-epsilon} is flat. Metrics are computed against the real time coordinates,
+so irregular spacing is respected and the slope is in value units per time
+unit: per day for \code{Date} time and per second for \code{POSIXct} time (choose
+\code{epsilon} accordingly). Character or factor time labels are replaced by
+their position \verb{1, 2, ...}. Each window uses its non-missing values; a
+window whose values are all identical has a slope of \code{0} under every
+estimator.
+
+\code{"Missing Data"} marks observations whose value is \code{NA}. \code{"Initial"} marks
+observations without a defined metric: the edge positions that lack a full
+window (both ends for \code{align = "center"}), and windows whose metric is
+undefined, such as a growth factor whose first value is \code{0}.
 }
 \examples{
 set.seed(123)

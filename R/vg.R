@@ -15,7 +15,15 @@
 #' @param ... Any other [tsn()] argument relevant to visibility networks, for
 #'   example `value`, `id`, `time`, `series`, `unit`, `state`, `discretization`,
 #'   `n_states`, `m`, `tau`, `directed`, `limit`, `penetrable`, `decay`,
-#'   `aggregation`, and `seed`.
+#'   `aggregation`, and `seed`. `method` and `visibility` are fixed by `vg()`
+#'   itself and are rejected here.
+#' @details
+#' With a numeric, `Date`, or `POSIXct` time axis, the natural rule, `limit`,
+#' and `decay` use elapsed time (days for `Date`, seconds for `POSIXct`), so
+#' irregular sampling changes which points see each other; otherwise
+#' observations are one step apart. The horizontal rule depends only on the
+#' order of the values. Ties block under both rules, as in the strict
+#' published definitions, and `limit` is inclusive.
 #' @return A tidy `tsn` network object (also a `netobject` and a
 #'   `cograph_network`), equivalent to the corresponding [tsn()] call. The
 #'   stored provenance call records `vg()` rather than `tsn()`.
@@ -43,5 +51,18 @@
 #' @export
 vg <- function(data, type = c("natural", "horizontal"), ...) {
   type <- match.arg(type)
-  tsn(data = data, method = "visibility", visibility = type, ...)
+  fixed <- intersect(
+    names(match.call(expand.dots = FALSE)$...),
+    c("method", "visibility")
+  )
+  if (length(fixed) > 0L) {
+    stop(sprintf(
+      "%s cannot be passed to `vg()`, which always builds a visibility graph; choose the rule with `type` (\"natural\" or \"horizontal\") or call `tsn()` directly.",
+      paste0("`", fixed, "`", collapse = " and ")
+    ), call. = FALSE)
+  }
+  network <- tsn(data = data, method = "visibility", visibility = type, ...)
+  # Record the caller's own vg() call as provenance, not the forwarding call.
+  network$parameters$call <- match.call()
+  network
 }

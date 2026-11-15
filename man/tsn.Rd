@@ -46,13 +46,15 @@ tsn(
 \item{data}{A numeric vector, \code{ts}, numeric matrix, named list of numeric
 vectors, or data frame.}
 
-\item{method}{Network selector. The base families are \code{"distance"} and
-\code{"visibility"}. Convenience shortcuts resolve to a family with sensible
+\item{method}{Network selector (default \code{"visibility"}). The base families
+are \code{"distance"} and \code{"visibility"}. Convenience shortcuts resolve to a family with sensible
 defaults: \code{"nvg"}/\code{"natural"} (natural visibility graph), \code{"hvg"}/
 \code{"horizontal"} (horizontal visibility graph), and any discretizer name
 (\code{"ordinal"}, \code{"quantile"}, \code{"symbolic"}, ...) which builds a visibility
 network on states from that discretizer. Shortcuts only set defaults; the
-granular arguments (\code{unit}, \code{visibility}, \code{discretization}) still apply.}
+granular arguments (\code{unit}, \code{visibility}, \code{discretization}) still apply,
+and one that contradicts the shortcut is an error. Unique abbreviations
+(\code{"hv"}, \code{"quant"}) are completed as by \code{\link[=match.arg]{match.arg()}}.}
 
 \item{value}{Optional value-column name for long data.}
 
@@ -68,11 +70,12 @@ depend on the input container.}
 
 \item{unit}{Node unit. Distance networks use \code{"series"}, \code{"window"}, or
 \code{"time"} (one node per time point); visibility networks use \code{"time"} or
-\code{"state"}. When \code{NULL}, the natural unit for the selected method is
-inferred.}
+\code{"state"}. When \code{NULL}, visibility networks use \code{"time"} (discretizer
+shortcuts use \code{"state"}), and distance networks use \code{"series"} for two
+or more series and \code{"window"} for a single series.}
 
-\item{distance}{Distance measure for distance networks. One of
-\code{"euclidean"}, \code{"manhattan"}, \code{"maximum"}, \code{"canberra"}, \code{"minkowski"},
+\item{distance}{Distance measure for distance networks (default
+\code{"euclidean"}). One of \code{"euclidean"}, \code{"manhattan"}, \code{"maximum"}, \code{"canberra"}, \code{"minkowski"},
 \code{"binary"}, \code{"cosine"}, \code{"correlation"}, \code{"spearman"}, \code{"dtw"}, \code{"ccf"}
 (one minus the maximum absolute cross-correlation across lags), \code{"nmi"}
 (one minus normalized mutual information after separately quantile-binning
@@ -82,18 +85,29 @@ binning),
 are interpreted as event times), or \code{"van_rossum"} (exact van Rossum
 spike-train distance; units are interpreted as event times).}
 
-\item{connect}{Distance-to-network rule.}
+\item{connect}{Distance-to-network rule (default \code{"full"}): \code{"full"}
+connects every evaluated dyad; \code{"nearest"} keeps each node's \code{neighbors}
+closest dyads (the union over both endpoints when undirected);
+\code{"threshold"} keeps dyads with distance \verb{<= threshold};
+\code{"percentile"} keeps dyads at or below the \code{percentile} quantile of the
+distances; \code{"gaussian"} connects every dyad with Gaussian kernel weights
+\code{exp(-d^2 / (2 * bandwidth^2))}. \code{neighbors}, \code{threshold}, and
+\code{percentile} are each required by their own rule and an error with any
+other.}
 
-\item{window}{Sliding-window width when \code{unit = "window"}.}
+\item{window}{Sliding-window width when \code{unit = "window"}. When \code{NULL},
+\code{max(2, n \%/\% 10)} for the shortest series length \code{n}; two windows then
+need \code{n >= 3}.}
 
-\item{step}{Sliding-window step.}
+\item{step}{Sliding-window step (default \code{1}). Only valid when
+\code{unit = "window"}.}
 
 \item{neighbors}{Number of neighbours when \code{connect = "nearest"}.}
 
 \item{threshold}{Maximum distance when \code{connect = "threshold"}.}
 
-\item{percentile}{Proportion of shortest distances retained when
-\code{connect = "percentile"}.}
+\item{percentile}{Distance quantile in \verb{[0, 1]} when
+\code{connect = "percentile"}; dyads at or below it are kept.}
 
 \item{bandwidth}{Positive kernel scale. Used by \code{connect = "gaussian"} and
 by the \code{"negative_exp"} and \code{"gaussian"} similarity kernels; defaults to
@@ -102,7 +116,7 @@ the median positive distance.}
 \item{p}{Minkowski power.}
 
 \item{bins}{Number of marginal quantile bins for \code{distance = "nmi"} and
-\code{distance = "voi"}.}
+\code{distance = "voi"}. \code{NULL} uses \code{10}.}
 
 \item{lag}{Maximum cross-correlation lag for \code{distance = "ccf"}. \code{NULL}
 uses the \code{stats::ccf()} default.}
@@ -115,27 +129,36 @@ uncapped adaptive local window. For van Rossum, \code{NULL} uses the median
 positive inter-event interval of each pooled pair.}
 
 \item{similarity}{Optional similarity kernel mapping edge distances to
-weights: \code{"inverse"} (the default weight rule, \code{1 / (1 + d)}),
+weights. \code{NULL} uses \code{"inverse"}, except under \code{connect = "gaussian"},
+which supplies its own kernel and cannot be combined with \code{similarity}.
+One of \code{"inverse"} (\code{1 / (1 + d)}),
 \code{"normalized_inverse"} (\code{1 - d / max(d)}), \code{"negative_exp"}
 (\code{exp(-d / bandwidth)}), or \code{"gaussian"}
 (\code{exp(-d^2 / (2 * bandwidth^2))}).}
 
-\item{visibility}{Visibility rule: \code{"natural"} or \code{"horizontal"}.}
+\item{visibility}{Visibility rule: \code{"natural"} (default) or
+\code{"horizontal"}.}
 
-\item{state}{Optional state-column name or state vector.}
+\item{state}{Optional state-column name or state vector, used with
+\code{unit = "state"} in place of the internal discretizer. For long data a
+vector is aligned with the rows of \code{data} (and follows \code{series}
+selection); for other inputs it is aligned with the observations of the
+selected series in series order.}
 
-\item{discretization}{Internal state-discretization method. One of
+\item{discretization}{Internal state-discretization method (default
+\code{"gaussian"}). One of
 \code{"threshold"}, \code{"width"}, \code{"quantile"}, \code{"kde"}, \code{"kmeans"}, \code{"gaussian"},
 \code{"hclust"}, \code{"ordinal"}, \code{"symbolic"}, \code{"change_points"}, \code{"entropy"},
 \code{"magnitude"}, \code{"adaptive_magnitude"}, \code{"percentile_magnitude"}, or
 \code{"dtw"}.}
 
-\item{n_states}{Number of states. Not consumed by
+\item{n_states}{Number of states (default \code{3}). Not consumed by
 \code{discretization = "ordinal"}, whose state count follows the embedding
 arguments \code{m} and \code{tau}; supplying both is an error.}
 
-\item{breaks}{Optional internal thresholds when
-\code{discretization = "threshold"}. An error with any other discretizer,
+\item{breaks}{Interior thresholds, required when
+\code{discretization = "threshold"}. When \code{n_states} is not supplied it is
+taken as \code{length(breaks) + 1}. An error with any other discretizer,
 which computes its own boundaries.}
 
 \item{m}{Embedding dimension for \code{discretization = "ordinal"} (default \code{3}).
@@ -146,18 +169,25 @@ valid with the ordinal discretizer.}
 
 \item{directed}{Whether edges follow their ordered direction. Visibility
 edges then run forward in time; distance edges follow the evaluated unit
-order. With \code{FALSE}, reciprocal distance relations are represented by one
-undirected edge.}
+order: for a symmetric distance measure the direction of an all-pairs
+edge is the order of the units in the input, so \code{directed = TRUE} is
+mainly meaningful with \code{chain = TRUE}. With \code{FALSE} (default),
+reciprocal distance relations are represented by one undirected edge.}
 
 \item{limit}{Optional maximum visibility distance in the units of \code{time}
 (or observation steps when no numeric/date-time axis is supplied).}
 
-\item{penetrable}{Number of intermediate points allowed to block visibility.}
+\item{penetrable}{Number of intermediate points allowed to block visibility
+(default \code{0}).}
 
 \item{decay}{Non-negative exponential edge-decay rate per unit of \code{time}
-(or per observation step when no numeric/date-time axis is supplied).}
+(or per observation step when no numeric/date-time axis is supplied).
+The default \code{0} gives every visibility edge weight \code{1}.}
 
-\item{aggregation}{State-edge aggregation rule.}
+\item{aggregation}{How visibility edges between time points are combined
+into one state edge when \code{unit = "state"}: \code{"sum"} (default), \code{"mean"},
+or \code{"max"} of the time-point edge weights, or \code{"count"} of time-point
+edges. The state edge's \code{distance} is always the mean temporal lag.}
 
 \item{chain}{When \code{TRUE}, distance networks connect only consecutive series
 or windows (a transition chain) instead of all pairs.}
@@ -172,10 +202,19 @@ rescales by the 5th-95th percentile range, clamped to \verb{[0, 1]}.}
 }
 \value{
 A list-backed network object of class
-\code{c("tsn", "netobject", "cograph_network")}. Its \verb{$table} component is the
-tidy dyad table; use \code{as.data.frame()} for that table,
-\code{as.data.frame(x, what = "series")} for the canonical source observations,
-and \code{as.matrix()} for the weighted adjacency matrix.
+\code{c("tsn", "netobject", "cograph_network")}. Read it with verbs:
+\code{as.data.frame(x)} returns the tidy dyad table, one row per evaluated
+dyad, with columns \code{from}, \code{to}, \code{distance}, \code{weight}, \code{connected},
+\code{method}, \code{unit}, \code{distance_method} (\code{NA} for visibility networks),
+\code{connection_method} (the connection rule, or the visibility rule),
+\code{directed}, and the observation positions \code{from_start}, \code{from_end},
+\code{to_start}, \code{to_end} (\code{NA} for state nodes);
+\code{as.data.frame(x, what = "series")} returns the canonical source
+observations (\code{id}, \code{time}, \code{value}, plus \code{state} for state networks);
+\code{as.matrix(x)} returns the weighted adjacency matrix; \code{summary(x)} and
+\code{print(x)} describe the network. The list also carries the fields the
+cograph renderer reads (\code{nodes}, \code{edges}, \code{directed}, \code{weights}, \code{meta},
+\code{node_groups}, \code{n_nodes}, \code{n_edges}) and the construction \code{parameters}.
 }
 \description{
 \code{tsn()} is the core entry point for constructing networks from time-series
@@ -196,7 +235,8 @@ arguments that contradict what the shortcut implies.
 
 For state networks, caller-supplied \code{state} values fix the node order:
 factors keep their declared level order (an unused level becomes a
-zero-degree node), and plain character states are ordered by first
+zero-degree node), numeric, logical, and date-time codes follow their
+sorted value order, and plain character states are ordered by first
 appearance. Discretized states follow the discretizer's numeric state
 order. The \code{state} column of the stored source series preserves this
 factor.

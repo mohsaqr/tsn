@@ -25,7 +25,16 @@ test_that("every discretizer name is a direct method on a bare vector", {
     "change_points", "entropy", "magnitude", "adaptive_magnitude",
     "percentile_magnitude", "dtw", "ordinal"
   )
-  networks <- lapply(discretizers, function(method) tsn(values, method))
+  # On these 18 values the dtw discretizer realizes 2 of the 3 requested
+  # states, which the engine now reports with a classed warning.
+  quiet <- setdiff(discretizers, "dtw")
+  networks <- lapply(quiet, function(method) tsn(values, method))
+  expect_warning(
+    dtw_network <- tsn(values, "dtw"),
+    class = "tsn_state_shortfall"
+  )
+  networks <- c(networks, list(dtw_network))
+  expect_length(networks, length(discretizers))
   expect_true(all(vapply(networks, inherits, logical(1L), what = "tsn")))
 })
 

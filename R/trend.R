@@ -16,6 +16,20 @@
 #' higher threshold `turbulence_threshold * flat_to_turbulent_factor`, making
 #' them more resistant to noise-driven reclassification.
 #'
+#' The thresholds are strict: a metric exactly equal to `+epsilon` or
+#' `-epsilon` is flat. Metrics are computed against the real time coordinates,
+#' so irregular spacing is respected and the slope is in value units per time
+#' unit: per day for `Date` time and per second for `POSIXct` time (choose
+#' `epsilon` accordingly). Character or factor time labels are replaced by
+#' their position `1, 2, ...`. Each window uses its non-missing values; a
+#' window whose values are all identical has a slope of `0` under every
+#' estimator.
+#'
+#' `"Missing Data"` marks observations whose value is `NA`. `"Initial"` marks
+#' observations without a defined metric: the edge positions that lack a full
+#' window (both ends for `align = "center"`), and windows whose metric is
+#' undefined, such as a growth factor whose first value is `0`.
+#'
 #' @param data A numeric vector, `ts`, matrix, named list of numeric vectors,
 #'   data frame, or a `tsn` object (its source series are used).
 #' @param value Optional value-column name for long data.
@@ -25,17 +39,26 @@
 #' @param window Rolling-window width. When `NULL`, the adaptive default
 #'   `max(3, min(n, round(n / 10)))` is used, where `n` is the shortest series
 #'   length. Must satisfy `2 < window < n`.
-#' @param method Trend metric: `"slope"` (default) or `"growth_factor"`.
+#' @param method Trend metric: `"slope"` (default) or `"growth_factor"`. The
+#'   growth factor is the last non-missing value in the window divided by the
+#'   first; it is only meaningful for strictly positive values, and a warning
+#'   of class `tsn_trend_nonpositive_growth` is raised when the data contain a
+#'   zero or negative value.
 #' @param slope Slope estimator when `method = "slope"`: `"robust"` (Theil-Sen,
-#'   the default), `"ols"`, `"spearman"`, or `"kendall"`.
-#' @param epsilon Flat-band half-width. Default `0.05`.
+#'   the median of all pairwise slopes; the default), `"ols"` (least-squares
+#'   slope), `"spearman"`, or `"kendall"`. The two rank options rescale the
+#'   rank correlation (Kendall's tau-b under ties) by
+#'   `sd(value) / sd(time)`, so they share the units of a slope.
+#' @param epsilon Flat-band half-width, in metric units (value units per time
+#'   unit for slopes). Default `0.05`.
 #' @param turbulence_threshold Baseline volatility threshold for the turbulent
 #'   override. Default `5`.
 #' @param flat_to_turbulent_factor Multiplier applied to `turbulence_threshold`
 #'   for points already classified as flat. Default `1.5`.
 #' @param align Window alignment: `"center"` (default), `"right"`, or `"left"`.
 #'   The metric is assigned to the centre, rightmost, or leftmost point of the
-#'   window respectively.
+#'   window respectively. For an even `window` the centre is the earlier of
+#'   the two middle points.
 #' @return A tidy data frame of class `tsn_trend` with one row per observation
 #'   and columns `id`, `time`, `value`, `metric`, and `state` (a factor over the
 #'   six trend classes). Print, summary, and plot methods are provided.
@@ -54,13 +77,17 @@ trend <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   slope <- match.arg(slope, c("robust", "ols", "spearman", "kendall"))
   align <- match.arg(align, c("center", "right", "left"))
   stopifnot(
-    is.numeric(epsilon), length(epsilon) == 1L, is.finite(epsilon),
-    epsilon >= 0,
-    is.numeric(turbulence_threshold), length(turbulence_threshold) == 1L,
-    is.finite(turbulence_threshold), turbulence_threshold >= 0,
-    is.numeric(flat_to_turbulent_factor),
-    length(flat_to_turbulent_factor) == 1L,
-    is.finite(flat_to_turbulent_factor), flat_to_turbulent_factor > 0
+    "`epsilon` must be a single finite number >= 0" =
+      is.numeric(epsilon) && length(epsilon) == 1L && is.finite(epsilon) &&
+      epsilon >= 0,
+    "`turbulence_threshold` must be a single finite number >= 0" =
+      is.numeric(turbulence_threshold) &&
+      length(turbulence_threshold) == 1L &&
+      is.finite(turbulence_threshold) && turbulence_threshold >= 0,
+    "`flat_to_turbulent_factor` must be a single finite number > 0" =
+      is.numeric(flat_to_turbulent_factor) &&
+      length(flat_to_turbulent_factor) == 1L &&
+      is.finite(flat_to_turbulent_factor) && flat_to_turbulent_factor > 0
   )
 
   source <- if (inherits(data, "tsn")) {
@@ -76,12 +103,33 @@ trend <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   }
 
   n_min <- min(vapply(split(source$value, source$id), length, integer(1L)))
+  if (n_min < 4L) {
+    stop(sprintf(paste0(
+      "Every series needs at least 4 observations for a rolling trend; ",
+      "the shortest has %d."
+    ), n_min), call. = FALSE)
+  }
   window <- if (is.null(window)) {
     max(3L, min(n_min, round(n_min / 10)))
   } else {
-    stopifnot(is.numeric(window), length(window) == 1L, is.finite(window),
-              window == as.integer(window))
-    as.integer(window)
+    stopifnot(
+      "`window` must be a single whole number" =
+        is.numeric(window) && length(window) == 1L && is.finite(window) &&
+        abs(window - round(window)) < sqrt(.Machine$double.eps)
+    )
+    as.integer(round(window))
+  }
+  if (method == "growth_factor") {
+    present_values <- source$value[!is.na(source$value)]
+    non_positive <- sum(present_values <= 0)
+    if (non_positive > 0L) {
+      warning(warningCondition(sprintf(paste0(
+        "Growth factors (last / first value in each window) are only ",
+        "meaningful for strictly positive values; %d value(s) are zero or ",
+        "negative. Windows starting at 0 get no metric, and a rising series ",
+        "of negative values reads as descending."
+      ), non_positive), class = "tsn_trend_nonpositive_growth"))
+    }
   }
   if (!(window > 2L && window < n_min)) {
     stop(sprintf("`window` must be between 3 and %d (the shortest series).",
@@ -236,13 +284,20 @@ trend <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   out
 }
 
-#' Ordinary-least-squares slope metric
+#' Ordinary-least-squares slope metric over the non-missing values
 #' @noRd
 .tsn_metric_ols <- function(values, time) {
-  if (stats::var(time) == 0) {
+  complete <- !is.na(values) & !is.na(time)
+  if (sum(complete) < 2L) {
     return(NA_real_)
   }
-  stats::cov(time, values) / stats::var(time)
+  values <- values[complete]
+  time <- time[complete]
+  time_variance <- stats::var(time)
+  if (!(time_variance > 0)) {
+    return(NA_real_)
+  }
+  stats::cov(time, values) / time_variance
 }
 
 #' Theil-Sen robust slope metric (vectorized pairwise slopes)
@@ -258,28 +313,46 @@ trend <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
   stats::median(slopes, na.rm = TRUE)
 }
 
+#' Rank-correlation slope metric over the non-missing values
+#'
+#' The rank correlation rescaled by `sd(values) / sd(time)`, with both
+#' standard deviations taken over the same complete pairs as the correlation.
+#' A window of identical values has slope `0`: its correlation is undefined
+#' but the spread factor is zero.
+#'
+#' @param method `"spearman"` or `"kendall"` (R computes tau-b under ties).
+#' @noRd
+.tsn_metric_rank_slope <- function(values, time, method) {
+  complete <- !is.na(values) & !is.na(time)
+  if (sum(complete) < 2L) {
+    return(NA_real_)
+  }
+  values <- values[complete]
+  time <- time[complete]
+  time_spread <- stats::sd(time)
+  if (!(time_spread > 0)) {
+    return(NA_real_)
+  }
+  value_spread <- stats::sd(values)
+  if (!is.finite(value_spread)) {
+    return(NA_real_)
+  }
+  if (!(value_spread > 0)) {
+    return(0)
+  }
+  stats::cor(time, values, method = method) * value_spread / time_spread
+}
+
 #' Spearman-based slope metric
 #' @noRd
 .tsn_metric_spearman <- function(values, time) {
-  correlation <- stats::cor(time, values, method = "spearman",
-                            use = "complete.obs")
-  spread <- stats::sd(time, na.rm = TRUE)
-  if (!is.finite(correlation) || !is.finite(spread) || spread == 0) {
-    return(NA_real_)
-  }
-  correlation * stats::sd(values, na.rm = TRUE) / spread
+  .tsn_metric_rank_slope(values, time, method = "spearman")
 }
 
 #' Kendall-based slope metric
 #' @noRd
 .tsn_metric_kendall <- function(values, time) {
-  correlation <- stats::cor(time, values, method = "kendall",
-                            use = "complete.obs")
-  spread <- stats::sd(time, na.rm = TRUE)
-  if (!is.finite(correlation) || !is.finite(spread) || spread == 0) {
-    return(NA_real_)
-  }
-  correlation * stats::sd(values, na.rm = TRUE) / spread
+  .tsn_metric_rank_slope(values, time, method = "kendall")
 }
 
 #' Growth-factor metric (last over first non-missing value)
@@ -304,11 +377,21 @@ trend <- function(data, value = NULL, id = NULL, time = NULL, series = NULL,
 #' @export
 print.tsn_trend <- function(x, ...) {
   parameters <- attr(x, "parameters")
+  # subset() and `[` drop the parameters attribute but keep the class, so the
+  # header falls back to the counts alone rather than failing.
+  settings <- if (is.null(parameters)) {
+    ""
+  } else {
+    sprintf(
+      " %s (%s), window %d",
+      parameters$method,
+      if (identical(parameters$method, "slope")) parameters$slope else "growth",
+      parameters$window
+    )
+  }
   cat(sprintf(
-    "<tsn_trend> %s (%s), window %d: %d observations across %d series\n",
-    parameters$method,
-    if (parameters$method == "slope") parameters$slope else "growth",
-    parameters$window,
+    "<tsn_trend>%s: %d observations across %d series\n",
+    settings,
     nrow(x),
     length(unique(x$id))
   ))
@@ -399,9 +482,7 @@ plot.tsn_trend <- function(x, type = c("points", "ribbon", "heatmap", "panels"),
     metric = x$metric, state = as.character(x$state),
     stringsAsFactors = FALSE
   )
-  trend_palette <- .tsn_trend_colors(
-    if (is.character(palette) && !is.null(names(palette))) palette else NULL
-  )
+  trend_palette <- .tsn_trend_colors(palette)
   switch(
     type,
     points = .tsn_plot_trend_points(
@@ -424,7 +505,7 @@ plot.tsn_trend <- function(x, type = c("points", "ribbon", "heatmap", "panels"),
       source = source, series = series, max_series = max_series,
       palette = trend_palette, legend_title = "Trend", sort = sort,
       border = border, legend = legend, xlab = xlab, cex = cex,
-      background = background, ...
+      grid = grid, background = background, ...
     ),
     panels = .tsn_plot_trend_panels(
       source = source, series = series, max_series = max_series,
@@ -466,6 +547,9 @@ plot.tsn_trend <- function(x, type = c("points", "ribbon", "heatmap", "panels"),
   on.exit({
     graphics::layout(1L)
     graphics::par(previous)
+    # Restoring `mfrow`/`mfcol` inside par(previous) resets `cex` to 1, so
+    # put the caller's `cex` back last.
+    graphics::par(cex = previous$cex)
   }, add = TRUE)
   panel_count <- rows * columns
   if (legend) {
@@ -522,7 +606,21 @@ plot.tsn_trend <- function(x, type = c("points", "ribbon", "heatmap", "panels"),
   if (is.null(palette)) {
     return(default)
   }
-  stopifnot(is.character(palette), !is.null(names(palette)))
+  if (!is.character(palette) || is.null(names(palette)) ||
+        anyNA(names(palette)) || any(!nzchar(names(palette)))) {
+    stop(paste0(
+      "`palette` must be a character vector named by trend state, e.g. ",
+      "c(Ascending = \"forestgreen\")."
+    ), call. = FALSE)
+  }
+  unknown <- setdiff(names(palette), names(default))
+  if (length(unknown) > 0L) {
+    stop(sprintf(
+      "Unknown trend state(s) in `palette`: %s. Valid names: %s.",
+      paste(unknown, collapse = ", "),
+      paste(names(default), collapse = ", ")
+    ), call. = FALSE)
+  }
   default[names(palette)] <- palette
   default
 }
@@ -561,6 +659,9 @@ plot.tsn_trend <- function(x, type = c("points", "ribbon", "heatmap", "panels"),
   on.exit({
     graphics::layout(1L)
     graphics::par(previous)
+    # Restoring `mfrow`/`mfcol` inside par(previous) resets `cex` to 1, so
+    # put the caller's `cex` back last.
+    graphics::par(cex = previous$cex)
   }, add = TRUE)
   panel_rows <- 2L * length(selected)
   layout_rows <- if (legend) panel_rows + 1L else panel_rows

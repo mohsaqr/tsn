@@ -7,9 +7,14 @@
 \description{
 \code{tsn} constructs distance, visibility, and state-transition networks from
 time-series data. \code{\link[=tsn]{tsn()}} is the core network constructor; \code{\link[=vg]{vg()}},
-\code{\link[=discretize]{discretize()}}, \code{\link[=trend]{trend()}}, and the \code{ts_tna()} family provide focused
-workflows. Core construction uses only packages distributed with R, while
-transition-network models require the suggested Nestimate package.
+\code{\link[=discretize]{discretize()}}, \code{\link[=trend]{trend()}}, and the \code{\link[=ts_tna]{ts_tna()}} family (\code{\link[=ts_tna]{ts_tna()}},
+\code{\link[=ts_ftna]{ts_ftna()}}, \code{\link[=ts_cna]{ts_cna()}}, \code{\link[=ts_atna]{ts_atna()}}) provide focused workflows, and
+\code{\link[=series_networks]{series_networks()}} splits a pooled transition model into one network per
+series. Every result is read through \code{print()}, \code{summary()}, \code{plot()}, and
+the \code{as.data.frame()} / \code{as.matrix()} accessors. Core construction uses only
+packages distributed with R, while transition-network models require the
+suggested Nestimate package. Two example data sets ship with the package:
+\link{srl} and \link{esm_srl}.
 }
 \seealso{
 Useful links:

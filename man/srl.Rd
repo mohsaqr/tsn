@@ -44,4 +44,8 @@ indicator values in total.
 The same data set ships with the authors' 'idiographic' package; the copy
 here is identical.
 }
+\examples{
+data(srl)
+str(srl)
+}
 \keyword{datasets}

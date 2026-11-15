@@ -35,7 +35,9 @@ For \code{type = "network"}, use cograph arguments such as \code{layout}, \code{
 \code{scale_nodes_by}, \code{node_size_range}, and \code{edge_label_style}. For
 \code{type = "series"}, \code{...} accepts \code{series},
 \code{overlay}, \code{points}, \code{trend}, \code{columns}, \code{max_series}, \code{scales}, and
-\code{palette}.
+\code{palette}; an unrecognised (for example misspelled) argument is an error
+rather than being ignored. A named \code{palette} must name a colour for every
+state shown. Network options must be named, and each may be given once.
 }
 \examples{
 network <- tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "hvg")

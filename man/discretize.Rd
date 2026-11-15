@@ -22,7 +22,10 @@ discretize(
 }
 \arguments{
 \item{data}{A numeric vector, \code{ts}, matrix, named list of numeric vectors,
-data frame, or a \code{tsn} object (its source series are used).}
+data frame, or a \code{tsn} object (its source series are used, so \code{value},
+\code{id}, and \code{time} cannot be supplied with it). Missing or non-finite
+values are an error rather than being dropped or kept as an \code{NA} state;
+remove them first, for example with \code{\link[=subset]{subset()}}.}
 
 \item{value}{Optional value-column name for long data.}
 
@@ -37,30 +40,48 @@ data frame, or a \code{tsn} object (its source series are used).}
 \code{"symbolic"}, \code{"change_points"}, \code{"entropy"}, \code{"magnitude"},
 \code{"adaptive_magnitude"}, \code{"percentile_magnitude"}, or \code{"dtw"}.}
 
-\item{n_states}{Number of states. Not consumed by \code{"ordinal"}, whose state
-count follows the embedding arguments \code{m} and \code{tau}; supplying both is an
-error.}
+\item{n_states}{Number of states requested. Not consumed by \code{"ordinal"},
+whose state count follows the embedding arguments \code{m} and \code{tau}; supplying
+both is an error. Bins that receive no observation are dropped (with a
+\code{tsn_state_shortfall} warning), so the realized count (reported in the
+printed header) can be smaller, for
+example with \code{"threshold"} breaks that leave a bin empty, an empty middle
+\code{"width"} bin, or a \code{"dtw"} cluster that wins no observation's vote.}
 
-\item{breaks}{Optional interior thresholds for \code{method = "threshold"}. An
-error with any other method, which computes its own boundaries.}
+\item{breaks}{Interior thresholds for \code{method = "threshold"}, which
+requires them: finite values strictly inside the data range. When
+\code{n_states} is not supplied it is set to \code{length(breaks) + 1}; an explicit
+\code{n_states} must equal that. An error with any other method, which
+computes its own boundaries.}
 
-\item{labels}{Optional custom state labels. Length must equal the number of
-states produced. When \code{NULL}, states are numbered consecutively.}
+\item{labels}{Optional custom state labels: unique, non-missing, non-empty
+strings, one per realized state (in increasing state order). When \code{NULL},
+states are numbered consecutively.}
 
 \item{transform}{Pre-discretization transform: \code{"none"} (default), \code{"log"}
 (uses \code{log1p(abs(x))}), or \code{"zscore"} (standardized values).}
 
-\item{m}{Embedding dimension for \code{method = "ordinal"} (default \code{3}).}
+\item{m}{Embedding dimension for \code{method = "ordinal"} (default \code{3}). An
+error with any other method.}
 
-\item{tau}{Embedding lag for \code{method = "ordinal"} (default \code{1}).}
+\item{tau}{Embedding lag for \code{method = "ordinal"} (default \code{1}). An error
+with any other method.}
 
 \item{seed}{Optional seed for the stochastic discretizers (\code{"kmeans"} and
 \code{"gaussian"}). An error with the deterministic methods.}
 }
 \value{
-A tidy data frame of class \code{tsn_states} with columns \code{id}, \code{time},
-\code{value}, \code{state} (a factor), and \code{probability}. The discretization model
-and any bin boundaries are stored in the \code{model} and \code{breaks} attributes.
+A tidy data frame of class \code{tsn_states}, one row per observation,
+with columns \code{id} (character), \code{time}, \code{value}, \code{state} (a factor whose
+levels are the realized states in increasing order), and \code{probability}
+(the assignment confidence; \code{1} for hard assignments). Rows are grouped
+by series in order of first appearance and, when \code{time} is supplied,
+sorted by it within each series. \code{time} is the supplied time column for
+long data with \code{time} and the series time for a \code{ts}; otherwise it numbers
+the observations within each series (long data with \code{id} only, named
+lists) or is the row index (vectors, matrices, wide data frames). The
+discretization model and any bin boundaries are stored in the \code{model} and
+\code{breaks} attributes.
 }
 \description{
 \code{discretize()} exposes every internal state discretizer as a first-class
@@ -86,7 +107,7 @@ discretize(
 
 discretize(c(3, 1, 4, 1, 5, 9, 2, 6), method = "ordinal", m = 3)
 
-discretize(c(10, 12, 8, 40, 44, 9), method = "width", transform = "log")
+discretize(c(10, 12, 8, 25, 40, 44, 9), method = "width", transform = "log")
 }
 \references{
 Bandt, C., & Pompe, B. (2002). Permutation entropy: A natural complexity

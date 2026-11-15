@@ -50,7 +50,8 @@
   )
   method <- match.arg(method, .tsn_distance_methods)
   stopifnot(
-    method %in% .tsn_unequal_length_methods || length(x) == length(y)
+    "Distance method requires series of equal length." =
+      method %in% .tsn_unequal_length_methods || length(x) == length(y)
   )
 
   distance <- switch(
@@ -59,7 +60,7 @@
     manhattan = sum(abs(x - y)),
     maximum = max(abs(x - y)),
     canberra = .tsn_canberra_distance(x, y),
-    minkowski = sum(abs(x - y)^p)^(1 / p),
+    minkowski = .tsn_minkowski_distance(x, y, p = p),
     binary = .tsn_binary_distance(x, y),
     cosine = .tsn_cosine_distance(x, y),
     correlation = .tsn_correlation_distance(x, y, method = "pearson"),
@@ -82,11 +83,10 @@
 #' @param p Minkowski power, at least one.
 #' @param bins,lag,tolerance Method-specific options passed to the scalar
 #'   engine.
-#' @param groups Optional unit-group identifiers. When supplied, consecutive
-#'   links are created only within a group.
 #'
 #' @return A data frame with one unique unordered dyad per row and columns
-#'   `from`, `to`, and `distance`.
+#'   `from`, `to`, and `distance`. Rows follow `utils::combn()` order of the
+#'   unit positions.
 #' @noRd
 .tsn_pairwise_distance <- function(
     units,
@@ -108,10 +108,14 @@
     },
     logical(1)
   )
-  stopifnot(all(valid_units))
+  stopifnot(
+    "Every distance unit must be a non-empty finite numeric vector." =
+      all(valid_units)
+  )
   method <- match.arg(method, .tsn_distance_methods)
   stopifnot(
-    method %in% .tsn_unequal_length_methods ||
+    "Distance method requires series of equal length." =
+      method %in% .tsn_unequal_length_methods ||
       length(unique(vapply(units, length, integer(1)))) == 1L
   )
 
@@ -162,7 +166,13 @@
 #' @param pairs Two-row integer matrix of unique dyads.
 #' @param method Distance method.
 #' @param p Minkowski power.
-#' @return Numeric vector aligned with `pairs`.
+#' @return Numeric vector aligned with `pairs`, equal to the scalar engine.
+#'   `stats::dist()` rescales a Canberra sum by `n / used` when `n - used`
+#'   positions are zero in both vectors; that factor is undone here so the
+#'   full and chain networks share the Lance-Williams definition. Pairs for
+#'   which `stats::dist()` is still non-finite (two all-zero Canberra vectors,
+#'   or Minkowski overflow for a large `p`) are recomputed with the scalar
+#'   engine.
 #' @noRd
 .tsn_pairwise_equal_length <- function(units, pairs, method, p) {
   values <- do.call(rbind, units)
@@ -173,7 +183,26 @@
     if (method == "minkowski") {
       arguments$p <- p
     }
-    return(as.numeric(do.call(stats::dist, arguments)))
+    distances <- as.numeric(do.call(stats::dist, arguments))
+    if (method == "canberra") {
+      both_zero <- tcrossprod((values == 0) * 1)
+      used <- ncol(values) - both_zero[cbind(pairs[1L, ], pairs[2L, ])]
+      distances <- distances * used / ncol(values)
+    }
+    undefined <- which(!is.finite(distances))
+    distances[undefined] <- vapply(
+      undefined,
+      function(index) {
+        .tsn_distance(
+          units[[pairs[1L, index]]],
+          units[[pairs[2L, index]]],
+          method = method,
+          p = p
+        )
+      },
+      numeric(1L)
+    )
+    return(distances)
   }
   similarity <- if (method == "cosine") {
     norms <- sqrt(rowSums(values^2))
@@ -190,7 +219,7 @@
     tcrossprod(values) / outer(norms, norms)
   } else {
     correlation_method <- if (method == "spearman") "spearman" else "pearson"
-    if (any(apply(values, 1L, stats::sd) == 0)) {
+    if (ncol(values) < 2L || any(apply(values, 1L, stats::sd) == 0)) {
       stop("Correlation distance requires non-constant series.", call. = FALSE)
     }
     stats::cor(t(values), method = correlation_method)
@@ -212,8 +241,10 @@
 #' @param p Minkowski power, at least one.
 #' @param bins,lag,tolerance Method-specific options passed to the scalar
 #'   engine.
+#' @param groups Optional unit-group identifiers. When supplied, consecutive
+#'   links are created only within a group.
 #' @return A data frame with columns `from`, `to`, and `distance`, one row per
-#'   consecutive unit pair.
+#'   consecutive unit pair (at most `length(units) - 1` rows, in unit order).
 #' @noRd
 .tsn_chain_distance <- function(
     units,
@@ -264,6 +295,10 @@
 
 #' Calculate Canberra Distance
 #'
+#' Lance and Williams (1966) form: a position where both values are zero
+#' contributes zero. Unlike `stats::dist(method = "canberra")`, the sum is not
+#' rescaled for such positions, and two all-zero vectors have distance zero.
+#'
 #' @param x,y Equal-length numeric vectors.
 #'
 #' @return A numeric scalar.
@@ -272,6 +307,26 @@
   denominators <- abs(x) + abs(y)
   contributions <- ifelse(denominators == 0, 0, abs(x - y) / denominators)
   sum(contributions)
+}
+
+#' Calculate Minkowski Distance Without Overflow
+#'
+#' Evaluates `sum(abs(x - y)^p)^(1 / p)` as
+#' `m * sum((abs(x - y) / m)^p)^(1 / p)` with `m = max(abs(x - y))`, which is
+#' algebraically identical but stays finite for large `p`.
+#'
+#' @param x,y Equal-length numeric vectors.
+#' @param p Minkowski power, at least one.
+#'
+#' @return A numeric scalar.
+#' @noRd
+.tsn_minkowski_distance <- function(x, y, p) {
+  differences <- abs(x - y)
+  largest <- max(differences)
+  if (largest <= 0) {
+    return(0)
+  }
+  largest * sum((differences / largest)^p)^(1 / p)
 }
 
 #' Calculate Binary Distance
@@ -319,7 +374,12 @@
 #' @return One minus the requested correlation.
 #' @noRd
 .tsn_correlation_distance <- function(x, y, method) {
-  stopifnot(length(x) >= 2L, stats::sd(x) > 0, stats::sd(y) > 0)
+  stopifnot(
+    "Correlation distance requires at least two observations per unit." =
+      length(x) >= 2L,
+    "Correlation distance requires non-constant series." =
+      stats::sd(x) > 0 && stats::sd(y) > 0
+  )
   correlation <- stats::cor(x, y, method = method)
   stopifnot(length(correlation) == 1L, is.finite(correlation))
   1 - min(1, max(-1, correlation))
@@ -336,7 +396,12 @@
 #' @return A numeric scalar in `[0, 1]`.
 #' @noRd
 .tsn_ccf_distance <- function(x, y, lag = NULL) {
-  stopifnot(length(x) >= 2L, stats::sd(x) > 0, stats::sd(y) > 0)
+  stopifnot(
+    "Cross-correlation distance requires at least two observations per unit." =
+      length(x) >= 2L,
+    "Cross-correlation distance requires non-constant series." =
+      stats::sd(x) > 0 && stats::sd(y) > 0
+  )
   correlations <- stats::ccf(
     x, y,
     lag.max = lag,
@@ -359,11 +424,16 @@
 #' @param bins Number of quantile bins.
 #' @param type Either `"nmi"` or `"voi"`.
 #'
-#' @return A non-negative numeric scalar; `nmi` lies in `[0, 1]`.
+#' @return A non-negative numeric scalar; `nmi` lies in `[0, 1]`. A single
+#'   observation carries no information, so at least two are required.
 #' @noRd
 .tsn_information_distance <- function(x, y, bins = 10L, type = c("nmi", "voi")) {
   type <- match.arg(type)
   stopifnot(is.numeric(bins), length(bins) == 1L, is.finite(bins), bins >= 2L)
+  stopifnot(
+    "Information distances require at least two observations per unit." =
+      length(x) >= 2L
+  )
   labels <- list(
     x = .tsn_marginal_quantile_bins(x, bins = as.integer(bins)),
     y = .tsn_marginal_quantile_bins(y, bins = as.integer(bins))
@@ -419,7 +489,10 @@
 #' the adaptive Quian Quiroga, Kreuz, and Grassberger (2002) event-
 #' synchronization index. Each event-pair window is half the minimum of the
 #' four adjacent inter-event intervals. `tolerance`, when supplied, caps that
-#' adaptive window. Simultaneous events contribute one half to each temporal
+#' adaptive window. When both trains hold a single event there is no
+#' inter-event interval to define the adaptive window; it is then zero (only
+#' simultaneous events coincide) unless `tolerance` is supplied, which is used
+#' as the window. Simultaneous events contribute one half to each temporal
 #' direction. The distance is one minus the symmetric synchronization index,
 #' normalized by the geometric mean of the event counts.
 #'
@@ -449,9 +522,13 @@
     local_window(y),
     FUN = pmin
   )
-  if (!is.null(tolerance)) {
-    coincidence_window <- pmin(coincidence_window, tolerance)
-  }
+  # Two single-event trains have no interval to adapt to: the window is
+  # infinite and would declare any two events synchronous.
+  coincidence_window <- pmin(
+    coincidence_window,
+    if (is.null(tolerance)) Inf else tolerance
+  )
+  coincidence_window[is.infinite(coincidence_window)] <- 0
 
   signed_gap <- outer(x, y, "-")
   simultaneous <- signed_gap == 0
@@ -471,8 +548,8 @@
 #' rather than a discretized grid.
 #'
 #' @param x,y Event-time vectors (any lengths).
-#' @param tolerance Kernel time constant, or `NULL` for the median inter-event
-#'   interval of the pooled train.
+#' @param tolerance Kernel time constant, or `NULL` for the median positive
+#'   inter-event interval of the pooled pair (one when there is none).
 #'
 #' @return A non-negative numeric scalar.
 #' @noRd

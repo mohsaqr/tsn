@@ -46,11 +46,10 @@
     is.logical(directed),
     length(directed) == 1L,
     !is.na(directed),
-    is.numeric(penetrable),
-    length(penetrable) == 1L,
-    is.finite(penetrable),
-    penetrable >= 0,
-    penetrable == as.integer(penetrable),
+    "`penetrable` must be a single non-negative whole number" =
+      is.numeric(penetrable) && length(penetrable) == 1L &&
+        is.finite(penetrable) && penetrable >= 0 &&
+        identical(as.numeric(penetrable), round(as.numeric(penetrable))),
     is.numeric(decay),
     length(decay) == 1L,
     is.finite(decay),
@@ -66,7 +65,10 @@
     )
     limit <- as.numeric(limit)
   }
-  penetrable <- as.integer(penetrable)
+  # A dyad has at most n - 2 intermediates, so any larger allowance is the
+  # complete graph; capping keeps huge whole numbers (e.g. 1e10) inside the
+  # integer range instead of coercing them to NA.
+  penetrable <- as.integer(min(penetrable, max(length(values) - 2L, 0L)))
 
   if (identical(method, "horizontal") && penetrable == 0L && is.null(limit)) {
     return(.tsn_horizontal_visibility_fast(
@@ -126,6 +128,22 @@
 #' therefore one vectorized pass over its candidate heights instead of an
 #' all-pairs, all-intermediates enumeration.
 #'
+#' Ties block, as in the strict published definitions, and `limit` is
+#' inclusive. Both decisions are made on rounded doubles: decimal inputs such
+#' as `0.1`, `0.2`, `0.3` are not exact in binary, so exactly collinear points
+#' or a lag exactly equal to `limit` would otherwise fall one ulp on either
+#' side of the boundary, and the graph of `c(1.1, 1.2, 1.3)` would differ from
+#' that of `c(11, 12, 13)`. Each natural slope is therefore treated as the
+#' interval `slope +/- error`, where `error` bounds the rounding of its
+#' numerator and denominator (64 ulps of the value magnitude and of the
+#' elapsed time span, over the lag); a candidate is visible only when its
+#' lower bound clears the upper bound of every (or all but `penetrable`)
+#' predecessor. The time term uses the series span rather than the absolute
+#' coordinate, because Date/POSIXct coordinates carry an epoch offset that is
+#' exact for whole days or seconds but would otherwise inflate the bound to a
+#' level that merges genuinely distinct slopes. Horizontal heights are input
+#' values themselves, compared exactly.
+#'
 #' @param values Finite numeric time-series values.
 #' @param times Strictly increasing numeric time coordinates.
 #' @param method `"natural"` or `"horizontal"`.
@@ -133,29 +151,42 @@
 #' @param penetrable Number of intermediate blockers allowed.
 #' @return A list with one integer vector of visible partner indices per
 #'   anchor `seq_len(length(values) - 1L)`.
+#' @references
+#' Lacasa, L., et al. (2008). From time series to complex networks: The
+#' visibility graph. PNAS, 105(13), 4972-4975. doi:10.1073/pnas.0709247105
 #' @noRd
 .tsn_visibility_candidates <- function(values, times, method, limit,
                                        penetrable) {
   n <- length(values)
+  rounding <- 64 * .Machine$double.eps
+  time_span <- times[n] - times[1L]
+  lag_tolerance <- if (is.null(limit)) 0 else
+    rounding * max(abs(times), limit)
   lapply(seq_len(n - 1L), function(left) {
     right <- seq.int(left + 1L, n)
     if (!is.null(limit)) {
-      right <- right[(times[right] - times[left]) <= limit]
+      right <- right[(times[right] - times[left]) <= limit + lag_tolerance]
       if (length(right) == 0L) {
         return(integer())
       }
     }
-    heights <- if (identical(method, "horizontal")) {
-      pmin(values[left], values[right])
+    if (identical(method, "horizontal")) {
+      lower <- pmin(values[left], values[right])
+      upper <- lower
     } else {
-      (values[right] - values[left]) / (times[right] - times[left])
+      lag <- times[right] - times[left]
+      heights <- (values[right] - values[left]) / lag
+      value_scale <- max(abs(values[left]), abs(values[right]))
+      error <- rounding * (value_scale + abs(heights) * time_span) / lag
+      lower <- heights - error
+      upper <- heights + error
     }
     keep <- if (penetrable == 0L) {
-      # A candidate is visible exactly when its height exceeds every earlier
+      # A candidate is visible exactly when its height clears every earlier
       # candidate's height, i.e. the running maximum of its predecessors.
-      heights > cummax(c(-Inf, heights[-length(heights)]))
+      lower > cummax(c(-Inf, upper[-length(upper)]))
     } else {
-      .tsn_penetrable_scan(heights, penetrable)
+      .tsn_penetrable_scan(lower, upper, penetrable)
     }
     right[keep]
   })
@@ -166,26 +197,34 @@
 #' A candidate with `penetrable` allowed blockers is visible exactly when
 #' fewer than `penetrable + 1` earlier candidates reach its height — that is,
 #' when the running `(penetrable + 1)`-th largest predecessor height stays
-#' below it.
+#' below it. Heights are given as rounding intervals: a predecessor reaches a
+#' candidate when its `upper` bound reaches the candidate's `lower` bound.
 #'
-#' @param heights Candidate heights in temporal order.
+#' @param lower,upper Candidate height bounds in temporal order (identical for
+#'   exactly represented heights).
 #' @param penetrable Positive number of allowed blockers.
 #' @return A logical vector marking the visible candidates.
 #' @noRd
-.tsn_penetrable_scan <- function(heights, penetrable) {
+.tsn_penetrable_scan <- function(lower, upper, penetrable) {
   size <- as.integer(penetrable) + 1L
   top <- numeric(0L)
-  keep <- logical(length(heights))
+  keep <- logical(length(lower))
   index <- 1L
   # Sequential by nature: each decision depends on the running top-k heights
   # of every earlier candidate, so the recurrence cannot be vectorized without
   # materializing all pairs again.
-  while (index <= length(heights)) {
-    current <- heights[index]
-    keep[index] <- length(top) < size || top[size] < current
-    top <- sort(c(top, current), decreasing = TRUE)
-    if (length(top) > size) {
-      top <- top[seq_len(size)]
+  while (index <= length(lower)) {
+    current <- upper[index]
+    full <- length(top) == size
+    keep[index] <- !full || top[size] < lower[index]
+    # A height that does not exceed the current (penetrable + 1)-th largest
+    # leaves the running top set unchanged, so the sort is skipped; once the
+    # set has warmed up this is the common case.
+    if (!full || current > top[size]) {
+      top <- sort(c(top, current), decreasing = TRUE)
+      if (length(top) > size) {
+        top <- top[seq_len(size)]
+      }
     }
     index <- index + 1L
   }
@@ -359,7 +398,7 @@
   state_levels <- if (is.factor(states)) levels(states) else
     unique(as.character(states))
   states <- as.character(states)
-  stopifnot(all(nzchar(states)))
+  stopifnot("`states` must not contain empty strings" = all(nzchar(states)))
 
   empty_dyads <- data.frame(
     from = character(),

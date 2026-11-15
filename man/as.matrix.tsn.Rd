@@ -14,8 +14,13 @@
 \item{...}{Ignored.}
 }
 \value{
-A named numeric matrix.
+A square numeric matrix with one row and one column per node,
+both named by the node labels in node order. Unconnected pairs are 0, and
+an undirected network gives a symmetric matrix.
 }
 \description{
 Coerce a TSN result to a weighted adjacency matrix
+}
+\examples{
+as.matrix(tsn(c(3, 1, 4, 1, 5), method = "visibility"))
 }

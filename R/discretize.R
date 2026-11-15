@@ -12,7 +12,10 @@
 #' alphabet or clustering model.
 #'
 #' @param data A numeric vector, `ts`, matrix, named list of numeric vectors,
-#'   data frame, or a `tsn` object (its source series are used).
+#'   data frame, or a `tsn` object (its source series are used, so `value`,
+#'   `id`, and `time` cannot be supplied with it). Missing or non-finite
+#'   values are an error rather than being dropped or kept as an `NA` state;
+#'   remove them first, for example with [subset()].
 #' @param value Optional value-column name for long data.
 #' @param id Optional series-ID column name for long data.
 #' @param time Optional time-column name for long data.
@@ -21,22 +24,40 @@
 #'   `"quantile"`, `"kde"`, `"kmeans"`, `"gaussian"`, `"hclust"`, `"ordinal"`,
 #'   `"symbolic"`, `"change_points"`, `"entropy"`, `"magnitude"`,
 #'   `"adaptive_magnitude"`, `"percentile_magnitude"`, or `"dtw"`.
-#' @param n_states Number of states. Not consumed by `"ordinal"`, whose state
-#'   count follows the embedding arguments `m` and `tau`; supplying both is an
-#'   error.
-#' @param breaks Optional interior thresholds for `method = "threshold"`. An
-#'   error with any other method, which computes its own boundaries.
-#' @param labels Optional custom state labels. Length must equal the number of
-#'   states produced. When `NULL`, states are numbered consecutively.
+#' @param n_states Number of states requested. Not consumed by `"ordinal"`,
+#'   whose state count follows the embedding arguments `m` and `tau`; supplying
+#'   both is an error. Bins that receive no observation are dropped (with a
+#'   `tsn_state_shortfall` warning), so the realized count (reported in the
+#'   printed header) can be smaller, for
+#'   example with `"threshold"` breaks that leave a bin empty, an empty middle
+#'   `"width"` bin, or a `"dtw"` cluster that wins no observation's vote.
+#' @param breaks Interior thresholds for `method = "threshold"`, which
+#'   requires them: finite values strictly inside the data range. When
+#'   `n_states` is not supplied it is set to `length(breaks) + 1`; an explicit
+#'   `n_states` must equal that. An error with any other method, which
+#'   computes its own boundaries.
+#' @param labels Optional custom state labels: unique, non-missing, non-empty
+#'   strings, one per realized state (in increasing state order). When `NULL`,
+#'   states are numbered consecutively.
 #' @param transform Pre-discretization transform: `"none"` (default), `"log"`
 #'   (uses `log1p(abs(x))`), or `"zscore"` (standardized values).
-#' @param m Embedding dimension for `method = "ordinal"` (default `3`).
-#' @param tau Embedding lag for `method = "ordinal"` (default `1`).
+#' @param m Embedding dimension for `method = "ordinal"` (default `3`). An
+#'   error with any other method.
+#' @param tau Embedding lag for `method = "ordinal"` (default `1`). An error
+#'   with any other method.
 #' @param seed Optional seed for the stochastic discretizers (`"kmeans"` and
 #'   `"gaussian"`). An error with the deterministic methods.
-#' @return A tidy data frame of class `tsn_states` with columns `id`, `time`,
-#'   `value`, `state` (a factor), and `probability`. The discretization model
-#'   and any bin boundaries are stored in the `model` and `breaks` attributes.
+#' @return A tidy data frame of class `tsn_states`, one row per observation,
+#'   with columns `id` (character), `time`, `value`, `state` (a factor whose
+#'   levels are the realized states in increasing order), and `probability`
+#'   (the assignment confidence; `1` for hard assignments). Rows are grouped
+#'   by series in order of first appearance and, when `time` is supplied,
+#'   sorted by it within each series. `time` is the supplied time column for
+#'   long data with `time` and the series time for a `ts`; otherwise it numbers
+#'   the observations within each series (long data with `id` only, named
+#'   lists) or is the row index (vectors, matrices, wide data frames). The
+#'   discretization model and any bin boundaries are stored in the `model` and
+#'   `breaks` attributes.
 #' @references
 #' Bandt, C., & Pompe, B. (2002). Permutation entropy: A natural complexity
 #' measure for time series. *Physical Review Letters*, 88, 174102.
@@ -53,7 +74,7 @@
 #'
 #' discretize(c(3, 1, 4, 1, 5, 9, 2, 6), method = "ordinal", m = 3)
 #'
-#' discretize(c(10, 12, 8, 40, 44, 9), method = "width", transform = "log")
+#' discretize(c(10, 12, 8, 25, 40, 44, 9), method = "width", transform = "log")
 #' @export
 discretize <- function(data, value = NULL, id = NULL, time = NULL,
                        series = NULL, method = "quantile", n_states = 3L,
@@ -91,6 +112,55 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
       ), method
     ), call. = FALSE)
   }
+  if ((!is.null(m) || !is.null(tau)) && !identical(method, "ordinal")) {
+    stop(sprintf(
+      paste0(
+        "`m` and `tau` cannot be used with `method = \"%s\"`; only the ",
+        "\"ordinal\" discretizer takes embedding arguments."
+      ), method
+    ), call. = FALSE)
+  }
+  if (identical(method, "threshold")) {
+    if (is.null(breaks)) {
+      stop(
+        "`method = \"threshold\"` requires `breaks`: the interior ",
+        "thresholds between consecutive states.",
+        call. = FALSE
+      )
+    }
+    # Interior breaks define the state count; the default `n_states` must
+    # not override them. An explicit `n_states` has to agree.
+    if (missing(n_states)) {
+      n_states <- length(breaks) + 1L
+    }
+    .tsn_check_count(n_states, "n_states", lower = 2L)
+    expected_breaks <- as.integer(n_states) - 1L
+    if (length(breaks) != expected_breaks) {
+      stop(sprintf(
+        paste0(
+          "`breaks` must hold `n_states - 1` = %d interior threshold(s) for ",
+          "`n_states = %d`, but %d were supplied; set `n_states = %d` to ",
+          "use these breaks."
+        ),
+        expected_breaks, as.integer(n_states), length(breaks),
+        length(breaks) + 1L
+      ), call. = FALSE)
+    }
+  }
+  if (inherits(data, "tsn")) {
+    column_arguments <- c("value", "id", "time")[c(
+      !is.null(value), !is.null(id), !is.null(time)
+    )]
+    if (length(column_arguments) > 0L) {
+      stop(sprintf(
+        paste0(
+          "%s cannot be used when `data` is a `tsn` object, whose source ",
+          "series already carries its `id`, `time`, and `value` columns."
+        ),
+        paste0("`", column_arguments, "`", collapse = ", ")
+      ), call. = FALSE)
+    }
+  }
 
   source <- if (inherits(data, "tsn")) {
     .tsn_select_canonical(
@@ -120,6 +190,17 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
         observed_states
       ), call. = FALSE)
     }
+    # A missing or repeated label would silently turn observations into NA
+    # states or merge two states, so both are contract violations.
+    if (anyNA(labels) || !all(nzchar(labels))) {
+      stop("`labels` must be non-missing, non-empty strings.", call. = FALSE)
+    }
+    if (anyDuplicated(labels) > 0L) {
+      stop(sprintf(
+        "`labels` must be unique; duplicated: %s.",
+        paste(unique(labels[duplicated(labels)]), collapse = ", ")
+      ), call. = FALSE)
+    }
     labels
   }
   out <- data.frame(
@@ -136,8 +217,11 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
     class = c("tsn_states", "data.frame"),
     model = fit$model,
     breaks = fit$breaks,
-    parameters = list(method = method, transform = transform,
-                      n_states = observed_states)
+    parameters = c(
+      list(method = method, transform = transform,
+           n_states = observed_states),
+      fit$scaling
+    )
   )
 }
 
@@ -156,8 +240,10 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
 #' @param groups Optional series identifiers. Temporal discretizers are fitted
 #'   without allowing ordinal, rolling, or DTW windows to cross group
 #'   boundaries, while retaining a shared state alphabet.
-#' @return A list with integer `state`, numeric `probability`, and the `model`
-#'   and `breaks` attributes copied from the engine.
+#' @return A list with integer `state`, numeric `probability`, the `model`
+#'   and `breaks` attributes copied from the engine, and `scaling`: for
+#'   `transform = "zscore"` a list with the `center` and `scale` used (so raw
+#'   guide positions survive row subsetting), otherwise an empty list.
 #' @noRd
 .tsn_discretize_values <- function(values, method, n_states, breaks,
                                    transform = "none", m = NULL, tau = NULL,
@@ -171,6 +257,13 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
       length(groups) == length(values), !anyNA(groups)
     )
   }
+  # m and tau are embedding arguments; the grouped temporal path would
+  # otherwise drop them without a trace for "adaptive_magnitude" and "dtw".
+  if ((!is.null(m) || !is.null(tau)) && !identical(method, "ordinal")) {
+    stop("`m` and `tau` are only used by the \"ordinal\" discretizer.",
+         call. = FALSE)
+  }
+  scaling <- list()
   transformed <- switch(
     transform,
     none = values,
@@ -181,7 +274,8 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
         stop("`transform = \"zscore\"` requires a non-constant series.",
              call. = FALSE)
       }
-      (values - mean(values)) / spread
+      scaling <- list(center = mean(values), scale = spread)
+      (values - scaling$center) / spread
     }
   )
   temporal_methods <- c("ordinal", "adaptive_magnitude", "dtw")
@@ -207,7 +301,8 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
     state = as.integer(fit$state),
     probability = as.numeric(fit$probability),
     model = attr(fit, "model"),
-    breaks = attr(fit, "breaks")
+    breaks = attr(fit, "breaks"),
+    scaling = scaling
   )
 }
 
@@ -280,7 +375,7 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
   pattern_at_point <- character(length(values))
   pattern_at_point[unlist(indices, use.names = FALSE)] <-
     unlist(per_group_patterns, use.names = FALSE)
-  pattern_levels <- sort(unique(pattern_at_point))
+  pattern_levels <- .tsn_order_rank_patterns(unique(pattern_at_point))
   state <- match(pattern_at_point, pattern_levels)
   state_means <- as.numeric(tapply(values, state, mean))
   models <- lapply(fits, `[[`, "model")
@@ -293,6 +388,7 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
   attr(result, "model") <- list(
     method = "ordinal",
     n_states = length(pattern_levels),
+    n_states_requested = NA_integer_,
     state_means = state_means,
     m = models[[1L]]$m,
     tau = models[[1L]]$tau,
@@ -305,6 +401,51 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
     per_series = models
   )
   result
+}
+
+#' Order Ordinal Pattern Keys by Their Numeric Rank Vectors
+#'
+#' Mirrors the engine's ordinal ordering: a string sort agrees only while
+#' every rank is one digit (`m <= 9`) and depends on the collation locale.
+#'
+#' @param keys Character vector of unique `"r1-r2-..."` rank patterns.
+#' @return `keys` reordered lexicographically by their integer ranks.
+#' @noRd
+.tsn_order_rank_patterns <- function(keys) {
+  stopifnot(is.character(keys), length(keys) > 0L, !anyNA(keys))
+  ranks <- lapply(strsplit(keys, "-", fixed = TRUE), as.integer)
+  widths <- vapply(ranks, length, integer(1L))
+  stopifnot(length(unique(widths)) == 1L)
+  columns <- lapply(seq_len(widths[1L]), function(position) {
+    vapply(ranks, function(rank) rank[position], integer(1L))
+  })
+  keys[do.call(order, columns)]
+}
+
+#' Surface a Grouped Temporal Discretization That Lost States
+#'
+#' The grouped temporal paths bypass `.tsn_discretize()`, so they raise the
+#' same classed `tsn_state_shortfall` warning themselves.
+#'
+#' @param method Method name.
+#' @param realized,requested Realized and requested state counts.
+#' @return `NULL`, invisibly.
+#' @noRd
+.tsn_warn_state_shortfall <- function(method, realized, requested) {
+  if (realized < requested) {
+    warning(warningCondition(
+      sprintf(
+        paste0(
+          "`%s` discretization produced %d of the %d requested states; ",
+          "empty states were dropped and the occupied states renumbered 1 to %d."
+        ),
+        method, realized, requested, realized
+      ),
+      class = "tsn_state_shortfall",
+      call = NULL
+    ))
+  }
+  invisible(NULL)
 }
 
 #' Group-Safe Adaptive-Magnitude Discretization
@@ -337,6 +478,8 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
     "adaptive_magnitude"
   )
   ordered <- .tsn_order_states(values, fit$state)
+  .tsn_warn_state_shortfall("adaptive_magnitude", length(ordered$means),
+                            n_states)
   result <- data.frame(
     index = seq_along(values),
     state = ordered$state,
@@ -347,6 +490,7 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
     list(
       method = "adaptive_magnitude",
       n_states = length(ordered$means),
+      n_states_requested = n_states,
       state_means = ordered$means
     ),
     fit$model,
@@ -410,6 +554,7 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
   probability[unlist(indices, use.names = FALSE)] <-
     unlist(lapply(votes, `[[`, "confidence"), use.names = FALSE)
   ordered <- .tsn_order_states(values, raw_state)
+  .tsn_warn_state_shortfall("dtw", length(ordered$means), n_states)
   cluster_order <- match(seq_len(n_states), unique(raw_state[order(ordered$state)]))
   result <- data.frame(
     index = seq_along(values),
@@ -420,6 +565,7 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
   attr(result, "model") <- list(
     method = "dtw",
     n_states = length(ordered$means),
+    n_states_requested = n_states,
     state_means = ordered$means,
     window = window,
     n_windows = length(windows),
@@ -433,15 +579,27 @@ discretize <- function(data, value = NULL, id = NULL, time = NULL,
 
 #' Print a state discretization
 #'
+#' Prints a one-line header (method, transform, observation count, and the
+#' realized state count, with the requested count when fewer states were
+#' realized) followed by the first ten rows.
+#'
 #' @param x A `tsn_states` result.
 #' @param ... Passed to `print.data.frame()`.
 #' @return `x`, invisibly.
 #' @export
 print.tsn_states <- function(x, ...) {
   parameters <- attr(x, "parameters")
+  requested <- attr(x, "model")$n_states_requested
+  shortfall <- if (is.numeric(requested) && length(requested) == 1L &&
+                   !is.na(requested) && requested > parameters$n_states) {
+    sprintf(" (%d requested)", as.integer(requested))
+  } else {
+    ""
+  }
   cat(sprintf(
-    "<tsn_states> %s discretization (transform: %s): %d observations, %d states\n",
-    parameters$method, parameters$transform, nrow(x), parameters$n_states
+    "<tsn_states> %s discretization (transform: %s): %d observations, %d states%s\n",
+    parameters$method, parameters$transform, nrow(x), parameters$n_states,
+    shortfall
   ))
   print.data.frame(utils::head(as.data.frame(x), 10L), row.names = FALSE, ...)
   invisible(x)
@@ -540,7 +698,8 @@ summary.tsn_states <- function(object, ...) {
 #' @param cex Global text size multiplier.
 #' @param grid Whether to draw the background grid.
 #' @param background Panel background colour.
-#' @param ... Reserved for future options.
+#' @param ... Must be empty. Unknown arguments are an error, so a misspelled
+#'   option is never silently ignored.
 #' @return `x`, invisibly.
 #' @examples
 #' data(srl)
@@ -558,13 +717,13 @@ summary.tsn_states <- function(object, ...) {
 #'
 #' # Stack: original series read against the states of its rolling volatility.
 #' one <- subset(complete, name == "Erik")
-#' volatility <- abs(c(0, diff(one$effort)))
+#' one <- within(one, volatility <- abs(c(0, diff(effort))))
 #' vol_states <- discretize(
-#'   data.frame(name = one$name, day = one$day, vol = volatility),
-#'   value = "vol", id = "name", time = "day",
+#'   one,
+#'   value = "volatility", id = "name", time = "day",
 #'   method = "quantile", n_states = 3
 #' )
-#' plot(vol_states, "stack", with = one$effort, with_label = "Effort",
+#' plot(vol_states, "stack", with = with(one, effort), with_label = "Effort",
 #'      ylab = "Volatility")
 #' @export
 plot.tsn_states <- function(x, type = c("overlay", "ribbon", "heatmap",
@@ -584,6 +743,20 @@ plot.tsn_states <- function(x, type = c("overlay", "ribbon", "heatmap",
                             cex = 1, grid = TRUE, background = "#FFFFFF",
                             ...) {
   stopifnot(inherits(x, "tsn_states"))
+  # No renderer consumes `...`, so a misspelled option (`colour =`,
+  # `pallete =`) would otherwise be dropped without a trace.
+  if (...length() > 0L) {
+    extra <- names(list(...))
+    extra <- if (is.null(extra)) {
+      rep("<unnamed>", ...length())
+    } else {
+      ifelse(nzchar(extra), extra, "<unnamed>")
+    }
+    stop(sprintf(
+      "Unknown argument(s) to `plot()` for a `tsn_states` object: %s.",
+      paste0("`", extra, "`", collapse = ", ")
+    ), call. = FALSE)
+  }
   type <- match.arg(type)
   overlay <- match.arg(overlay)
   if (type == "stack" && is.null(with)) {
@@ -632,7 +805,8 @@ plot.tsn_states <- function(x, type = c("overlay", "ribbon", "heatmap",
         lapply(seq_along(ribbons), function(index) {
           .tsn_resolve_ribbon(
             ribbons[[index]], series_id = selected,
-            n_expected = nrow(one), name = names(ribbons)[index]
+            n_expected = nrow(one), name = names(ribbons)[index],
+            time = one$time
           )
         }),
         names(ribbons)
@@ -673,7 +847,7 @@ plot.tsn_states <- function(x, type = c("overlay", "ribbon", "heatmap",
     heatmap = .tsn_plot_state_heatmap(
       source = source, series = series, max_series = max_series,
       palette = palette, sort = sort, border = border, legend = legend,
-      xlab = xlab, cex = cex, background = background, ...
+      xlab = xlab, cex = cex, grid = grid, background = background, ...
     ),
     stack = .tsn_plot_state_stack(
       source = source, with = with, series = series,
@@ -715,8 +889,14 @@ plot.tsn_states <- function(x, type = c("overlay", "ribbon", "heatmap",
   magnitude_space <- method %in% c("magnitude", "percentile_magnitude") ||
     identical(transform, "log")
   if (identical(transform, "zscore")) {
-    center <- mean(x$value)
-    spread <- stats::sd(x$value)
+    # Use the center and scale the discretizer actually applied: recomputing
+    # them from `x$value` is wrong once rows have been dropped (head(), `[`).
+    center <- parameters$center
+    spread <- parameters$scale
+    if (is.null(center) || is.null(spread)) {
+      center <- mean(x$value)
+      spread <- stats::sd(x$value)
+    }
     stopifnot(is.finite(center), is.finite(spread), spread > 0)
     guides <- if (magnitude_space) {
       center + c(-finite * spread, finite * spread)

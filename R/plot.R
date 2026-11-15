@@ -21,7 +21,9 @@
 #' `scale_nodes_by`, `node_size_range`, and `edge_label_style`. For
 #' `type = "series"`, `...` accepts `series`,
 #' `overlay`, `points`, `trend`, `columns`, `max_series`, `scales`, and
-#' `palette`.
+#' `palette`; an unrecognised (for example misspelled) argument is an error
+#' rather than being ignored. A named `palette` must name a colour for every
+#' state shown. Network options must be named, and each may be given once.
 #' @return `x`, invisibly.
 #' @examples
 #' network <- tsn(c(3, 1, 4, 2, 5, 3, 6, 2, 7), "hvg")
@@ -102,20 +104,26 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
                                    xlab = "Time", ylab = "Value",
                                    cex = 1, grid = TRUE,
                                    background = "#FFFFFF", ...) {
-  stopifnot(is.logical(points), length(points) == 1L, !is.na(points))
-  stopifnot(is.logical(trend), length(trend) == 1L, !is.na(trend))
-  stopifnot(is.logical(strip), length(strip) == 1L, !is.na(strip))
-  stopifnot(is.logical(legend), length(legend) == 1L, !is.na(legend))
-  stopifnot(is.numeric(alpha), length(alpha) == 1L, alpha >= 0, alpha <= 1)
-  stopifnot(is.numeric(line_width), length(line_width) == 1L, line_width > 0)
-  stopifnot(is.numeric(point_size), length(point_size) == 1L, point_size > 0)
-  stopifnot(is.numeric(strip_height), length(strip_height) == 1L,
-            strip_height > 0, strip_height <= 0.4)
-  stopifnot(is.numeric(max_series), length(max_series) == 1L,
-            is.finite(max_series), max_series >= 1L,
-            max_series == as.integer(max_series))
-  stopifnot(is.numeric(min_run), length(min_run) == 1L, is.finite(min_run),
-            min_run >= 1L, min_run == as.integer(min_run))
+  .tsn_reject_dots(...)
+  stopifnot(
+    "`points` must be TRUE or FALSE" = .tsn_is_flag(points),
+    "`trend` must be TRUE or FALSE" = .tsn_is_flag(trend),
+    "`strip` must be TRUE or FALSE" = .tsn_is_flag(strip),
+    "`legend` must be TRUE or FALSE" = .tsn_is_flag(legend),
+    "`alpha` must be a single number in [0, 1]" =
+      .tsn_is_number(alpha) && alpha >= 0 && alpha <= 1,
+    "`line_width` must be a single positive number" =
+      .tsn_is_number(line_width) && line_width > 0,
+    "`point_size` must be a single positive number" =
+      .tsn_is_number(point_size) && point_size > 0,
+    "`strip_height` must be a single number in (0, 0.4]" =
+      .tsn_is_number(strip_height) && strip_height > 0 &&
+        strip_height <= 0.4,
+    "`max_series` must be a single positive whole number" =
+      .tsn_is_count(max_series),
+    "`min_run` must be a single positive whole number" =
+      .tsn_is_count(min_run)
+  )
   lines <- match.arg(lines, c("none", "horizontal", "vertical", "both"))
   style <- .tsn_style(cex = cex, grid = grid, background = background)
   if (!"state" %in% names(source)) {
@@ -134,10 +142,16 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
     stop("At least one series must be selected.", call. = FALSE)
   }
   selected <- utils::head(selected, as.integer(max_series))
-  columns <- if (is.null(columns)) ceiling(sqrt(length(selected))) else as.integer(columns)
-  stopifnot(length(columns) == 1L, !is.na(columns), columns >= 1L)
+  stopifnot(
+    "`columns` must be NULL or a single positive whole number" =
+      is.null(columns) || .tsn_is_count(columns)
+  )
+  columns <- if (is.null(columns)) ceiling(sqrt(length(selected))) else
+    as.integer(columns)
   rows <- ceiling(length(selected) / columns)
   plot_source <- source[source$id %in% selected, , drop = FALSE]
+  axis_time <- .tsn_plot_time(plot_source$time)
+  plot_source$time <- axis_time$position
   state_colors <- if (overlay == "none" && !strip && lines == "none") NULL else
     .tsn_state_colors(plot_source$state, palette = palette)
   guide_boundaries <- if (lines %in% c("horizontal", "both")) {
@@ -146,10 +160,7 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
     numeric()
   }
   previous <- graphics::par(no.readonly = TRUE)
-  on.exit({
-    graphics::layout(1L)
-    graphics::par(previous)
-  }, add = TRUE)
+  on.exit(.tsn_restore_par(previous), add = TRUE)
   panel_count <- rows * columns
   show_legend <- legend && !is.null(state_colors)
   if (!show_legend) {
@@ -166,7 +177,7 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
   global_x <- range(plot_source$time)
   global_y <- .tsn_expand_range(plot_source$value)
   invisible(lapply(selected, function(series_id) {
-    series_data <- source[source$id == series_id, , drop = FALSE]
+    series_data <- plot_source[plot_source$id == series_id, , drop = FALSE]
     x_limits <- if (scales %in% c("fixed", "free_y")) global_x else
       range(series_data$time)
     y_limits <- if (scales %in% c("fixed", "free_x")) global_y else
@@ -180,7 +191,7 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
       x = series_data$time, y = series_data$value,
       xlim = x_limits, ylim = y_limits,
       main = as.character(series_id), xlab = xlab, ylab = ylab,
-      style = style
+      style = style, time_labels = axis_time$labels
     )
     if (overlay == "vertical") {
       .tsn_draw_vertical_overlay(series_data, state_colors, alpha = alpha)
@@ -258,10 +269,25 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
   } else {
     sort(unique(as.character(states)))
   }
-  named_palette <- is.character(palette) && !is.null(names(palette)) &&
-    all(levels %in% names(palette))
-  if (named_palette) {
-    return(palette[levels])
+  if (is.character(palette) && !is.null(names(palette))) {
+    # A named palette is a mapping. Falling back to position when a name is
+    # missing would hand a state another state's colour without a trace.
+    uncovered <- setdiff(levels, names(palette))
+    if (length(uncovered) > 0L) {
+      stop(sprintf(
+        "Named `palette` has no colour for state(s): %s.",
+        paste0("\"", uncovered, "\"", collapse = ", ")
+      ), call. = FALSE)
+    }
+    chosen <- palette[levels]
+    invalid <- chosen[!.tsn_is_color(chosen)]
+    if (length(invalid) > 0L) {
+      stop(sprintf(
+        "`palette` contains value(s) that are not colours: %s.",
+        paste0("\"", unique(invalid), "\"", collapse = ", ")
+      ), call. = FALSE)
+    }
+    return(chosen)
   }
   colors <- .tsn_palette_colors(palette, length(levels))
   names(colors) <- levels
@@ -385,6 +411,21 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
 #' @noRd
 .tsn_network_plot_arguments <- function(...) {
   supplied <- list(...)
+  supplied_names <- names(supplied)
+  if (length(supplied) > 0L &&
+        (is.null(supplied_names) || any(!nzchar(supplied_names)))) {
+    stop(paste0(
+      "Network plot options must be named cograph arguments, e.g. ",
+      "plot(x, layout = \"circle\")."
+    ), call. = FALSE)
+  }
+  repeated <- unique(supplied_names[duplicated(supplied_names)])
+  if (length(repeated) > 0L) {
+    stop(sprintf(
+      "Network plot option(s) supplied more than once: %s.",
+      paste0("`", repeated, "`", collapse = ", ")
+    ), call. = FALSE)
+  }
   defaults <- list(
     layout = "spring",
     labels = FALSE,
@@ -459,13 +500,15 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
                                     main = "", xlab = "Time",
                                     tile_gap = 0.06, cex = 1, grid = FALSE,
                                     background = "#FFFFFF", ...) {
-  stopifnot(is.numeric(max_series), length(max_series) == 1L,
-            is.finite(max_series), max_series >= 1L,
-            max_series == as.integer(max_series))
-  stopifnot(is.logical(border), length(border) == 1L, !is.na(border))
-  stopifnot(is.logical(legend), length(legend) == 1L, !is.na(legend))
-  stopifnot(is.numeric(tile_gap), length(tile_gap) == 1L,
-            tile_gap >= 0, tile_gap < 0.5)
+  .tsn_reject_dots(...)
+  stopifnot(
+    "`max_series` must be a single positive whole number" =
+      .tsn_is_count(max_series),
+    "`border` must be TRUE or FALSE" = .tsn_is_flag(border),
+    "`legend` must be TRUE or FALSE" = .tsn_is_flag(legend),
+    "`tile_gap` must be a single number in [0, 0.5)" =
+      .tsn_is_number(tile_gap) && tile_gap >= 0 && tile_gap < 0.5
+  )
   sort <- match.arg(sort)
   style <- .tsn_style(cex = cex, grid = grid, background = background)
   available <- unique(source$id)
@@ -475,8 +518,13 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
     stop(sprintf("Unknown series: %s.", paste(unknown, collapse = ", ")),
          call. = FALSE)
   }
+  if (length(selected) == 0L) {
+    stop("At least one series must be selected.", call. = FALSE)
+  }
   selected <- utils::head(selected, as.integer(max_series))
   plot_source <- source[source$id %in% selected, , drop = FALSE]
+  axis_time <- .tsn_plot_time(plot_source$time)
+  plot_source$time <- axis_time$position
   if (sort == "mean") {
     means <- tapply(plot_source$value, plot_source$id, mean)
     selected <- names(base::sort(means[selected]))
@@ -490,10 +538,7 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
   }
   state_colors <- .tsn_state_colors(plot_source$state, palette = palette)
   previous <- graphics::par(no.readonly = TRUE)
-  on.exit({
-    graphics::layout(1L)
-    graphics::par(previous)
-  }, add = TRUE)
+  on.exit(.tsn_restore_par(previous), add = TRUE)
   if (legend) {
     graphics::layout(matrix(c(1L, 2L), nrow = 2L), heights = c(1, 0.13))
   }
@@ -501,22 +546,30 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
                 mgp = c(2.1, 0.7, 0))
   row_count <- length(selected)
   half <- 0.5 - tile_gap / 2
-  .tsn_panel(
-    x = plot_source$time,
-    y = c(0.5, row_count + 0.5),
-    xlim = range(plot_source$time),
-    ylim = c(0.5, row_count + 0.5),
-    main = main, xlab = xlab, ylab = "",
-    style = style, y_axis = FALSE
-  )
-  invisible(lapply(seq_along(selected), function(row_index) {
-    series_data <- plot_source[plot_source$id == selected[row_index], ,
-                               drop = FALSE]
-    segments <- .tsn_overlay_segments(
+  row_segments <- lapply(selected, function(series_id) {
+    series_data <- plot_source[plot_source$id == series_id, , drop = FALSE]
+    .tsn_overlay_segments(
       position = as.numeric(series_data$time),
       states = series_data$state,
       sort_position = FALSE
     )
+  })
+  # Every observation is one tile; limiting the axis to the observation
+  # times would clip the first and last tiles to half width and so misstate
+  # how long the opening and closing states lasted.
+  tile_limits <- range(unlist(lapply(row_segments, function(segments) {
+    c(segments$start, segments$end)
+  })))
+  .tsn_panel(
+    x = plot_source$time,
+    y = c(0.5, row_count + 0.5),
+    xlim = tile_limits,
+    ylim = c(0.5, row_count + 0.5),
+    main = main, xlab = xlab, ylab = "",
+    style = style, y_axis = FALSE, time_labels = axis_time$labels
+  )
+  invisible(lapply(seq_along(selected), function(row_index) {
+    segments <- row_segments[[row_index]]
     graphics::rect(
       xleft = segments$start,
       ybottom = row_index - half,
@@ -562,16 +615,20 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
                                   ylab = "Value", xlab = "Time",
                                   legend_title = "State", cex = 1,
                                   grid = TRUE, background = "#FFFFFF", ...) {
+  .tsn_reject_dots(...)
   stopifnot(
-    is.numeric(with), length(with) == nrow(source), all(is.finite(with)),
-    is.logical(shade), length(shade) == 1L, !is.na(shade),
-    is.logical(points), length(points) == 1L, !is.na(points),
-    is.logical(color_line), length(color_line) == 1L, !is.na(color_line),
-    is.logical(legend), length(legend) == 1L, !is.na(legend),
-    is.numeric(alpha), length(alpha) == 1L, alpha >= 0, alpha <= 1,
-    is.numeric(max_series), length(max_series) == 1L,
-    is.finite(max_series), max_series >= 1L,
-    max_series == as.integer(max_series)
+    "`with` must be a numeric vector with one value per row of the states" =
+      is.numeric(with) && length(with) == nrow(source),
+    "`with` must not contain NA, NaN, or infinite values" =
+      all(is.finite(with)),
+    "`shade` must be TRUE or FALSE" = .tsn_is_flag(shade),
+    "`points` must be TRUE or FALSE" = .tsn_is_flag(points),
+    "`color_line` must be TRUE or FALSE" = .tsn_is_flag(color_line),
+    "`legend` must be TRUE or FALSE" = .tsn_is_flag(legend),
+    "`alpha` must be a single number in [0, 1]" =
+      .tsn_is_number(alpha) && alpha >= 0 && alpha <= 1,
+    "`max_series` must be a single positive whole number" =
+      .tsn_is_count(max_series)
   )
   style <- .tsn_style(cex = cex, grid = grid, background = background)
   source$companion <- as.numeric(with)
@@ -582,14 +639,16 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
     stop(sprintf("Unknown series: %s.", paste(unknown, collapse = ", ")),
          call. = FALSE)
   }
+  if (length(selected) == 0L) {
+    stop("At least one series must be selected.", call. = FALSE)
+  }
   selected <- utils::head(selected, as.integer(max_series))
   plot_source <- source[source$id %in% selected, , drop = FALSE]
+  axis_time <- .tsn_plot_time(plot_source$time)
+  plot_source$time <- axis_time$position
   state_colors <- .tsn_state_colors(plot_source$state, palette = palette)
   previous <- graphics::par(no.readonly = TRUE)
-  on.exit({
-    graphics::layout(1L)
-    graphics::par(previous)
-  }, add = TRUE)
+  on.exit(.tsn_restore_par(previous), add = TRUE)
   panel_rows <- 2L * length(selected)
   layout_rows <- if (legend) panel_rows + 1L else panel_rows
   graphics::layout(
@@ -605,7 +664,8 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
       x = series_data$time, y = values,
       xlim = range(series_data$time),
       ylim = .tsn_expand_range(values),
-      main = title, xlab = x_label, ylab = label, style = style
+      main = title, xlab = x_label, ylab = label, style = style,
+      time_labels = axis_time$labels
     )
     if (shade) {
       .tsn_draw_vertical_overlay(series_data, state_colors, alpha = alpha)
@@ -672,7 +732,9 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
   if (!"state" %in% names(plot_source)) {
     return(numeric())
   }
-  by_state <- split(plot_source$value, plot_source$state)
+  # drop = TRUE: a factor level absent from the plotted series has no values,
+  # and its empty group would yield min()/max() of nothing (+-Inf guides).
+  by_state <- split(plot_source$value, plot_source$state, drop = TRUE)
   means <- vapply(by_state, mean, numeric(1L))
   ordered <- by_state[order(means)]
   if (length(ordered) < 2L) {
@@ -740,24 +802,35 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
                                    main = "", xlab = "Time", ylab = "Value",
                                    cex = 1, grid = TRUE,
                                    background = "#FFFFFF", ...) {
+  .tsn_reject_dots(...)
   stopifnot(
-    is.list(ribbons), length(ribbons) >= 1L, !is.null(names(ribbons)),
-    all(nzchar(names(ribbons))),
-    is.numeric(strip_height), length(strip_height) == 1L,
-    strip_height > 0, strip_height <= 0.2,
-    is.logical(points), length(points) == 1L, !is.na(points),
-    is.logical(legend), length(legend) == 1L, !is.na(legend)
+    "`ribbons` must be a non-empty, fully named list" =
+      is.list(ribbons) && length(ribbons) >= 1L &&
+        !is.null(names(ribbons)) && all(nzchar(names(ribbons))),
+    "`strip_height` must be a single number in (0, 0.2]" =
+      .tsn_is_number(strip_height) && strip_height > 0 &&
+        strip_height <= 0.2,
+    "`points` must be TRUE or FALSE" = .tsn_is_flag(points),
+    "`legend` must be TRUE or FALSE" = .tsn_is_flag(legend)
   )
   style <- .tsn_style(cex = cex, grid = grid, background = background)
   ribbon_count <- length(ribbons)
   gap <- 0.014
   reserved <- ribbon_count * strip_height + (ribbon_count + 1L) * gap
-  stopifnot(reserved < 0.6)
+  if (reserved >= 0.6) {
+    fitting <- floor((0.6 - gap) / (strip_height + gap) - 1e-9)
+    stop(sprintf(
+      paste0(
+        "%d ribbons do not fit under the series at `strip_height = %s`; ",
+        "at most %d fit. Draw fewer ribbons or lower `strip_height`."
+      ),
+      ribbon_count, format(strip_height), fitting
+    ), call. = FALSE)
+  }
+  axis_time <- .tsn_plot_time(source$time)
+  source$time <- axis_time$position
   previous <- graphics::par(no.readonly = TRUE)
-  on.exit({
-    graphics::layout(1L)
-    graphics::par(previous)
-  }, add = TRUE)
+  on.exit(.tsn_restore_par(previous), add = TRUE)
   if (legend) {
     legend_height <- 0.05 + 0.05 * ribbon_count
     graphics::layout(matrix(c(1L, 2L), nrow = 2L),
@@ -773,18 +846,17 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
   )
   panel_style <- style
   panel_style$grid <- FALSE
-  .tsn_panel(
+  time_ticks <- .tsn_panel(
     x = source$time, y = source$value,
     xlim = range(source$time), ylim = total_limits,
     main = main, xlab = xlab, ylab = "", style = panel_style,
-    y_axis = FALSE
+    y_axis = FALSE, time_labels = axis_time$labels
   )
   value_ticks <- pretty(data_limits)
   value_ticks <- value_ticks[value_ticks >= data_limits[1L] &
                                value_ticks <= data_limits[2L]]
   if (style$grid) {
-    graphics::abline(v = graphics::axTicks(1L), col = style$grid_color,
-                     lwd = 0.9)
+    graphics::abline(v = time_ticks, col = style$grid_color, lwd = 0.9)
     graphics::abline(h = value_ticks, col = style$grid_color, lwd = 0.9)
   }
   graphics::axis(
@@ -878,9 +950,20 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
 #' Accepts a `tsn_states`, a `tsn_trend`, or a plain character/factor vector
 #' and returns the state sequence for one series with its colour mapping.
 #'
+#' @param ribbon The ribbon specification.
+#' @param series_id The series being drawn.
+#' @param n_expected Number of observations of that series.
+#' @param name The ribbon's name (for messages).
+#' @param time Optional observation times of the drawn series. When given and
+#'   the ribbon is a classification object, its times for `series_id` must
+#'   match exactly: equal length alone does not make two classifications of
+#'   different observations comparable.
+#' @return `list(states = <character>, colors = <named colours>)`.
 #' @noRd
-.tsn_resolve_ribbon <- function(ribbon, series_id, n_expected, name) {
-  states <- if (inherits(ribbon, c("tsn_states", "tsn_trend"))) {
+.tsn_resolve_ribbon <- function(ribbon, series_id, n_expected, name,
+                                time = NULL) {
+  classified <- inherits(ribbon, c("tsn_states", "tsn_trend"))
+  states <- if (classified) {
     ribbon$state[as.character(ribbon$id) == series_id]
   } else if (is.character(ribbon) || is.factor(ribbon)) {
     ribbon
@@ -895,6 +978,29 @@ plot.tsn <- function(x, type = c("network", "series"), ...) {
       "Ribbon `%s` provides %d states for series \"%s\" but %d are needed.",
       name, length(states), series_id, n_expected
     ), call. = FALSE)
+  }
+  if (anyNA(states)) {
+    stop(sprintf(
+      "Ribbon `%s` has missing states for series \"%s\"; they would draw as gaps.",
+      name, series_id
+    ), call. = FALSE)
+  }
+  if (classified && !is.null(time) && "time" %in% names(ribbon)) {
+    ribbon_time <- ribbon$time[as.character(ribbon$id) == series_id]
+    ordinal <- is.character(time) || is.factor(time) ||
+      is.character(ribbon_time) || is.factor(ribbon_time)
+    same_time <- if (ordinal) {
+      identical(as.character(ribbon_time), as.character(time))
+    } else {
+      isTRUE(all.equal(as.numeric(ribbon_time), as.numeric(time),
+                       check.attributes = FALSE))
+    }
+    if (!same_time) {
+      stop(sprintf(
+        "Ribbon `%s` classifies different times than series \"%s\".",
+        name, series_id
+      ), call. = FALSE)
+    }
   }
   colors <- if (inherits(ribbon, "tsn_trend")) {
     trend_colors <- .tsn_trend_colors()

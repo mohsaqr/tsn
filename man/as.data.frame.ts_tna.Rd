@@ -15,7 +15,8 @@
 \arguments{
 \item{x}{A \code{ts_tna} result.}
 
-\item{row.names}{Optional row names.}
+\item{row.names}{Optional row names for the returned table; \code{NULL} (the
+default) numbers the rows.}
 
 \item{optional}{Ignored.}
 

@@ -17,3 +17,6 @@
 \description{
 Print a TSN network
 }
+\examples{
+tsn(c(3, 1, 4, 1, 5, 9, 2, 6), method = "visibility")
+}
